@@ -636,8 +636,9 @@ $$(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.t)));
 function goCat(cat){ bf.cat=cat; const el=$("#b_cat"); if(el)el.value=cat; render(); showTab("boq");
 setTimeout(()=>{const r=document.getElementById("cat-"+cat); if(r&&r.scrollIntoView)r.scrollIntoView({block:"start",behavior:"smooth"});},120); };
 $("#b_addgr").addEventListener("click",()=>{cfg.grupos=cfg.grupos||[];cfg.grupos.push({kw:120,con:2,q:1});render();});
-function docHTML(preview){
-const css=`${FONT_FACES}
+function docHTML(preview,inl){
+const A=inl||{fuentes:FONT_FACES,logo:LOGO_SRC};
+const css=`${A.fuentes}
 @page{size:letter;margin:16mm 14mm}
   *{box-sizing:border-box}
   body{margin:0;background:#fff;color:#333330;font-family:Montserrat,system-ui,Arial,sans-serif;font-size:12.5px;line-height:1.5}
@@ -658,38 +659,47 @@ return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
   <title>${(cfg.nom||"Propuesta").replace(/[<>&]/g,"")} — Beyond</title>
     <style>${css}</style></head><body><div class="sheet">
   ${preview?"":'<div class="noprint">Documento listo para imprimir. Usa Imprimir del navegador y elige Guardar como PDF, tamaño Carta. Este aviso no aparece en la impresión.</div>'}
-  ${$("#e_doc").innerHTML}
+  ${$("#e_doc").innerHTML.replace(LOGO_SRC,A.logo)}
   </div></body></html>`;
 }
+/* Un archivo descargado se abre desde el disco, donde las rutas relativas al
+   sitio ya no existen y las fuentes de otro origen quedan bloqueadas. Por eso
+   el documento que se descarga lleva logo y tipografías incrustados. */
+async function comoDataURL(url){
+  const r=await fetch(url); if(!r.ok) throw new Error("No se pudo leer "+url);
+  const b=await r.blob();
+  return await new Promise((ok,mal)=>{ const f=new FileReader();
+    f.onload=()=>ok(f.result); f.onerror=()=>mal(f.error); f.readAsDataURL(b); });
+}
+let _inl=null;
+async function activosIncrustados(){
+  if(_inl) return _inl;
+  const logo=await comoDataURL(LOGO_SRC);
+  const urls=[...FONT_FACES.matchAll(/url\("([^"]+)"\)/g)].map(m=>m[1]);
+  let fuentes=FONT_FACES;
+  for(const u of urls){
+    try{ fuentes=fuentes.replace(u, await comoDataURL(u)); }catch(e){}
+  }
+  _inl={logo,fuentes};
+  return _inl;
+}
 function fileName(){ return (cfg.nom||"propuesta").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase()+"-propuesta.html"; }
-$("#b_dl").addEventListener("click",()=>{
-const msg=$("#e_msg");
+$("#b_dl").addEventListener("click",async e=>{
+const msg=$("#e_msg"), b=e.target, rot=b.textContent;
+b.disabled=true; b.textContent="Preparando…";
+msg.innerHTML='<span class="muted">Incrustando logotipo y tipografías…</span>';
 try{
-const blob=new Blob([docHTML()],{type:"text/html;charset=utf-8"});
+const inl=await activosIncrustados();
+const blob=new Blob([docHTML(false,inl)],{type:"text/html;charset=utf-8"});
 const url=URL.createObjectURL(blob);
 const a=document.createElement("a"); a.href=url; a.download=fileName();
 document.body.appendChild(a); a.click(); a.remove();
 setTimeout(()=>URL.revokeObjectURL(url),4000);
-msg.innerHTML='<span style="color:var(--success)">Archivo generado: '+fileName()+'. Ábrelo y usa Imprimir, Guardar como PDF, tamaño Carta.</span>';
-}catch(e){
-msg.innerHTML='<span style="color:var(--danger)">La descarga quedó bloqueada por el navegador. Usa Abrir en pestaña.</span>';
+msg.innerHTML='<span style="color:var(--success)">Archivo generado: '+fileName()+'. Ábrelo y usa Imprimir, Guardar como PDF, tamaño Carta. Lleva el logotipo y las tipografías dentro, así que se ve igual en cualquier equipo y sin conexión.</span>';
+}catch(err){
+msg.innerHTML='<span style="color:var(--danger)">No se pudo generar el archivo: '+(err&&err.message||err)+'</span>';
 }
-});
-$("#b_open").addEventListener("click",()=>{
-const msg=$("#e_msg");
-try{
-const wnd=window.open("","_blank");
-if(!wnd) throw new Error("bloqueado");
-wnd.document.open(); wnd.document.write(docHTML()); wnd.document.close();
-msg.innerHTML='<span style="color:var(--success)">Abierto en una pestaña nueva. Desde ahí, Imprimir y Guardar como PDF.</span>';
-}catch(e){
-msg.innerHTML='<span style="color:var(--danger)">El navegador bloqueó la ventana nueva. Usa Descargar propuesta.</span>';
-}
-});
-$("#b_print").addEventListener("click",()=>{
-const msg=$("#e_msg");
-try{ window.print(); msg.innerHTML='<span class="muted">Si no apareció el cuadro de impresión, el navegador lo bloqueó: usa Descargar propuesta.</span>'; }
-catch(e){ msg.innerHTML='<span style="color:var(--danger)">Impresión bloqueada. Usa Descargar propuesta.</span>'; }
+b.disabled=false; b.textContent=rot;
 });
 const KEY="beyond:est:proyecto-activo";
 let dirty=false;
