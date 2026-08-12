@@ -1,0 +1,6 @@
+/* Montserrat, subconjunto latino. Se sirven desde el repo: sin dependencia de Google Fonts. */
+@font-face{font-family:Montserrat;font-style:normal;font-weight:200;font-display:swap;src:url("../assets/fonts/Montserrat-ExtraLight.woff2") format("woff2")}
+@font-face{font-family:Montserrat;font-style:normal;font-weight:300;font-display:swap;src:url("../assets/fonts/Montserrat-Light.woff2") format("woff2")}
+@font-face{font-family:Montserrat;font-style:normal;font-weight:400;font-display:swap;src:url("../assets/fonts/Montserrat-Regular.woff2") format("woff2")}
+@font-face{font-family:Montserrat;font-style:normal;font-weight:600;font-display:swap;src:url("../assets/fonts/Montserrat-SemiBold.woff2") format("woff2")}
+@font-face{font-family:Montserrat;font-style:normal;font-weight:700;font-display:swap;src:url("../assets/fonts/Montserrat-Bold.woff2") format("woff2")}

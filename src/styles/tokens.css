@@ -1,0 +1,27 @@
+/* Tokens de marca Beyond.
+   Nota: el naranja se fijó en #FF8700 para coincidir con el archivo del logo
+   (beyond-orange.png). El token histórico decía #FB8722; se corrigió aquí. */
+:root{
+  --beyond-orange:#FF8700;
+  --beyond-orange-300:#FFAF5C;
+  --beyond-orange-600:#E5761A;
+  --beyond-blue:#82D7FB;
+  --beyond-blue-600:#5CB6DE;
+
+  --surface-base:#000; --surface-1:#1A1A1A; --surface-2:#282828; --surface-3:#363636; --surface-4:#444;
+  --text-primary:#fff; --text-secondary:#999; --text-tertiary:#666; --text-on-accent:#000;
+  --border-subtle:rgba(255,255,255,.08); --border-default:rgba(255,255,255,.14);
+
+  --accent:var(--beyond-orange); --accent-2:var(--beyond-blue);
+  --success:#4ADE80; --warning:#FBBF24; --danger:#F87171;
+  --accent-soft:rgba(255,135,0,.14); --accent-2-soft:rgba(130,215,251,.14);
+  --success-soft:rgba(74,222,128,.14); --warning-soft:rgba(251,191,36,.14); --danger-soft:rgba(248,113,113,.14);
+
+  /* Tema claro, para documentos que se leen o se imprimen */
+  --paper-0:#FFFFFF; --paper-1:#F7F7F5; --paper-2:#F0EFEC; --paper-3:#E6E4DF;
+  --doc-ink:#1A1A1A; --doc-body:#333330; --doc-secondary:#5A5A57; --doc-tertiary:#8C8C88;
+  --accent-ink:#B4590C; --accent-2-ink:#1C6E93;
+
+  --font-sans:Montserrat,system-ui,sans-serif;
+  --r-md:10px; --r-lg:14px; --r-pill:999px; --ls-wide:.08em;
+}
