@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estimador paramétrico de electrolineras · Beyond AE</title>
+<link rel="icon" href="/favicon.png">
+</head>
+<body>
+<div id="sesion" class="hide"></div>
+<div class="wrap">
+<div id="bootfail" class="note warn hide" style="margin-bottom:16px"></div>
+<header>
+<div>
+<div class="wordmark" role="img" aria-label="Beyond"></div>
+<div class="eyebrow" style="margin-top:8px">ESTIMADOR PARAMÉTRICO DE ESTACIONES DE CARGA</div>
+</div>
+<div style="text-align:right">
+<div class="eyebrow">Proyecto</div>
+<div style="font-size:20px;font-weight:600;margin-top:3px" id="hProj"></div>
+<div class="tiny muted" id="hMeta"></div>
+<div class="tiny dirty" style="color:var(--text-tertiary);margin-top:2px"></div>
+</div>
+</header>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" aria-selected="true" data-t="conf">Configuración</button>
+<button class="tab" role="tab" aria-selected="false" data-t="alc">Alcance</button>
+<button class="tab" role="tab" aria-selected="false" data-t="res">Resumen</button>
+<button class="tab" role="tab" aria-selected="false" data-t="dist">Distribución</button>
+<button class="tab" role="tab" aria-selected="false" data-t="prec">Precisión</button>
+<button class="tab" role="tab" aria-selected="false" data-t="boq">Catálogo</button>
+<button class="tab" role="tab" aria-selected="false" data-t="gen">Base de datos</button>
+<button class="tab" role="tab" aria-selected="false" data-t="exp">Propuesta</button>
+</div>
+<!-- CONFIGURACIÓN -->
+<section id="p-conf">
+<div class="grid g3" style="align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Identificación</div>
+<label class="f"><span class="lb">Nombre del proyecto</span><input type="text" id="v_nom"></label>
+<label class="f"><span class="lb">Ubicación (municipio, estado)</span><input type="text" id="v_loc"></label>
+<label class="f"><span class="lb">Modelo de negocio</span><select id="v_modo"></select><span class="hint" id="h_modo"></span></label>
+</div>
+<div class="card">
+<div class="row sp" style="margin-bottom:12px"><span class="eyebrow">Equipos de carga</span>
+<button class="btn ghost" id="b_addgr" style="padding:5px 12px;font-size:12px">Agregar grupo</button></div>
+<div id="grBox"></div>
+<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-default)">
+<div class="derived"><span class="muted">Equipos</span><b id="l_eq"></b></div>
+<div class="derived"><span class="muted">Puntos de carga</span><b id="l_con"></b></div>
+<div class="derived"><span class="muted">Potencia instalada</span><b id="l_pot"></b></div>
+</div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Transformación, generación y almacenamiento</div>
+<label class="f"><span class="lb">Transformador (kVA)</span>
+<select id="v_kva"><option>300</option><option>500</option><option>750</option><option>1000</option><option>1500</option><option>2000</option><option>2500</option></select>
+<span class="hint" id="h_kva"></span></label>
+<label class="f"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
+<div id="fvBox">
+<label class="f"><span class="lb">Costeo del fotovoltaico</span>
+<select id="v_fvModo"><option value="llave">Llave en mano por USD/Wp</option><option value="desglose">Desglose por componentes</option></select></label>
+<label class="f" id="fvWpBox"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
+</div>
+<div class="grid g2" style="gap:10px">
+<label class="f"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
+<label class="f"><span class="lb">kWh por módulo</span><input type="number" id="v_besskwh" min="0" step="1"></label>
+</div>
+<label class="f"><span class="lb">Potencia por módulo BESS (kW)</span><input type="number" id="v_besskw" min="0" step="5"></label>
+</div>
+</div>
+<div class="grid g3" style="margin-top:14px;align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Variables de sitio</div>
+<div class="grid g2" style="gap:10px">
+<label class="f"><span class="lb">Trazo BT (m)</span><input type="number" id="v_mbt" min="0" step="5"></label>
+<label class="f"><span class="lb">Trazo MT (m)</span><input type="number" id="v_mmt" min="0" step="5"></label>
+<label class="f"><span class="lb">Piso a demoler (m²)</span><input type="number" id="v_dem" min="0" step="10"></label>
+<label class="f"><span class="lb">Piso nuevo (m²)</span><input type="number" id="v_piso" min="0" step="10"></label>
+</div>
+<div style="border-top:1px solid var(--border-subtle);padding-top:14px">
+<label class="row tiny" style="gap:8px;margin-bottom:10px"><input type="checkbox" id="v_techNueva" style="width:auto"> Techumbre nueva sobre equipos y cajones</label>
+<div id="techBox" class="hide"><label class="f" style="margin-bottom:0"><span class="lb">Superficie de techumbre (m²)</span><input type="number" id="v_tech" min="0" step="5"><span class="hint" id="h_tech"></span></label></div>
+</div>
+<div style="border-top:1px solid var(--border-subtle);padding-top:14px;margin-top:14px">
+<label class="row tiny" style="gap:8px"><input type="checkbox" id="v_sde" style="width:auto"> Incluir sala de espera</label>
+<div id="sdeBox" class="hide" style="margin-top:9px;padding-left:22px">
+<label class="row tiny" style="gap:8px"><input type="checkbox" id="v_sdeBanos" style="width:auto"> Con dos baños, hombres y mujeres</label>
+</div>
+<div class="hint" style="margin-top:6px">Incluye adecuación, estructura interior, mobiliario, climatización y equipamiento menor.</div>
+</div>
+<div style="border-top:1px solid var(--border-subtle);padding-top:14px;margin-top:14px">
+<div class="derived" style="border-bottom:0"><span class="muted">Videovigilancia estimada</span><b id="l_cam"></b></div>
+<div class="hint">Se deriva de los puntos de carga: dos cámaras para cuatro puntos, hasta diez para treinta. Ajustable en el catálogo.</div>
+</div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Parámetros comerciales</div>
+<label class="f"><span class="lb">Indirectos y administración</span><input type="range" id="v_fee" min="0" max="20" step="0.5"><div class="row sp"><span class="hint">No corre sobre legal, pass-through de suministrador ni depósitos</span><b id="l_fee"></b></div></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Reserva de contingencia</span><input type="range" id="v_cont" min="0" max="40" step="1"><div class="row sp"><span class="hint" id="h_cont"></span><b id="l_cont"></b></div></label>
+<div class="note" style="margin-top:18px">El alcance de suministro, las exclusiones y los parámetros financieros se definen en la pestaña Alcance.</div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Balance eléctrico</div>
+<div id="balance" class="stack" style="gap:9px"></div>
+<hr style="margin:18px 0">
+<div class="eyebrow" style="margin-bottom:12px">Categorías activas</div>
+<div class="catlist" id="cats"></div>
+</div>
+</div>
+<div class="card" style="margin-top:14px">
+<div class="row sp" style="align-items:flex-start">
+<div><div class="eyebrow">Respaldo del proyecto</div>
+<p class="tiny muted" style="margin:6px 0 0;max-width:620px">El guardado automático conserva el proyecto en este archivo, pero <b style="color:var(--text-primary)">no cruza de una versión del archivo a la siguiente</b>. Antes de cambiar de versión, copia el respaldo y guárdalo; con eso restauras todo tal cual.</p></div>
+<div class="row" style="gap:8px">
+<button class="btn ghost" id="b_copy">Copiar respaldo</button>
+<button class="btn ghost" id="b_paste">Restaurar respaldo</button>
+</div>
+</div>
+<div id="bkBox" class="hide" style="margin-top:14px">
+<textarea id="bk" rows="5" style="width:100%;background:var(--surface-1);border:1px solid var(--border-default);border-radius:var(--r-md);color:var(--text-primary);font-family:ui-monospace,monospace;font-size:11px;padding:10px" placeholder="Pega aquí el respaldo y presiona Restaurar"></textarea>
+<div class="row" style="margin-top:10px;justify-content:flex-end"><button class="btn" id="b_restore">Restaurar</button></div>
+<div class="tiny" id="bkMsg" style="margin-top:8px"></div>
+</div>
+<div class="row" style="margin-top:16px;justify-content:space-between">
+<span class="chip dirty" id="c_dirty">Guardado automático activo</span><span class="chip" id="c_modo"></span>
+<div class="row" style="gap:8px">
+<button class="btn ghost" id="b_reset2">Restablecer todo</button>
+<button class="btn" id="b_save2">Guardar ahora</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ALCANCE -->
+<section id="p-alc" class="hide">
+<div class="grid g2" style="align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:6px">Reparto de suministro</div>
+<p class="tiny muted" style="margin:0 0 16px">Lo que suministra el cliente sale del costo pero se queda en el alcance de instalación, y debe aparecer por escrito en la lista de exclusiones. Es el punto que más se disputa después de firmar.</p>
+<div class="stack" style="gap:11px">
+<label class="row tiny" style="gap:9px"><input type="checkbox" id="v_cliEvse" style="width:auto"> El cliente suministra los equipos de carga</label>
+<label class="row tiny" style="gap:9px"><input type="checkbox" id="v_cliTrafo" style="width:auto"> El cliente suministra el transformador</label>
+<label class="row tiny" style="gap:9px"><input type="checkbox" id="v_cliCctv" style="width:auto"> El cliente suministra el equipo de videovigilancia</label>
+<label class="row tiny" style="gap:9px"><input type="checkbox" id="v_cliIng" style="width:auto"> El cliente entrega la ingeniería básica (unifilar y layout)</label>
+</div>
+<hr>
+<div class="eyebrow" style="margin-bottom:14px">Derechos y trámites</div>
+<div class="stack" style="gap:11px">
+<label class="row tiny" style="gap:9px"><input type="checkbox" id="v_derechos" style="width:auto"> El precio incluye el pago de derechos oficiales, no solo la gestión</label>
+<label class="row tiny" style="gap:9px"><input type="checkbox" id="v_via" style="width:auto"> El precio incluye derechos de vía y permisos de trayectoria</label>
+</div>
+<hr>
+<div class="eyebrow" style="margin-bottom:14px">Parámetros financieros</div>
+<label class="f" style="margin-bottom:0"><span class="lb">Tipo de cambio (MXN/USD)</span><input type="number" id="v_fx" step="0.1"><span class="hint">Afecta la referencia de mercado del almacenamiento</span></label>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:6px">Lista de exclusiones que se generará</div>
+<p class="tiny muted" style="margin:0 0 14px">Esta es la lista que va a la propuesta. Cualquier cosa que no esté aquí ni en el catálogo se va a interpretar como incluida.</p>
+<div id="a_excl" class="stack" style="gap:9px"></div>
+<hr>
+<div class="eyebrow" style="margin-bottom:12px">Efecto sobre el costo</div>
+<div id="a_efecto" class="stack" style="gap:9px"></div>
+</div>
+</div>
+</section>
+<!-- RESUMEN -->
+<section id="p-res" class="hide">
+<div class="grid g4">
+<div class="card stat"><span class="eyebrow">Costo directo</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_capex"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_capex_x"></span></div>
+<div class="card stat"><span class="eyebrow">Indirectos y contingencia</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_indir"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_indir_d"></span></div>
+<div class="card stat"><span class="eyebrow">Inversión total</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_total" style="color:var(--accent)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_total_x"></span></div>
+<div class="card stat sec"><span class="eyebrow">Depósito en garantía</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_dep"></span><span class="unit">MXN</span></div><span class="tiny muted">Garantía reembolsable, fuera del costo</span></div>
+</div>
+<div class="grid g4" style="margin-top:14px">
+<div class="card stat"><span class="eyebrow">Por kW de carga</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_kw" style="font-size:30px"></span><span class="unit">MXN/kW</span></div></div>
+<div class="card stat"><span class="eyebrow">Por conector</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_conn" style="font-size:30px"></span><span class="unit">MXN</span></div></div>
+<div class="card stat"><span class="eyebrow">Partidas activas</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_lines" style="font-size:30px"></span><span class="unit">renglones</span></div></div>
+<div class="card stat"><span class="eyebrow">Índice de definición</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_idd" style="font-size:30px"></span><span class="unit">de 1.00</span></div></div>
+</div>
+<div class="grid g2" style="margin-top:14px;align-items:start">
+<div class="card">
+<div class="eyebrow">Nivel de definición alcanzado</div>
+<h2 style="margin-top:8px" id="s_class"></h2>
+<div class="tiny muted" id="s_class_n"></div>
+<div class="track" id="s_track"></div>
+<div class="scale"><span>0.00</span><span>Índice de definición</span><span>1.00</span></div>
+<div class="ladder" id="s_ladder"></div>
+<hr>
+<div class="eyebrow" style="margin-bottom:10px">Rango esperado del costo</div>
+<div style="font-size:22px;font-weight:300;letter-spacing:-.02em" id="s_rango"></div>
+<div class="tiny muted" style="margin-top:8px" id="s_rango_n"></div>
+<div class="note warn" style="margin-top:18px" id="s_cap"></div>
+<div id="s_edits" style="margin-top:10px"></div>
+<hr>
+<div class="eyebrow" style="margin-bottom:4px">Qué falta para subir de nivel</div>
+<div id="s_next" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Sustento del precio, ponderado por importe</div>
+<div id="s_qual" class="stack"></div>
+</div>
+</div>
+</section>
+<!-- DISTRIBUCIÓN -->
+<section id="p-dist" class="hide">
+<div class="card">
+<div class="row sp" style="align-items:flex-start;margin-bottom:6px">
+<div><h3>Dónde está el dinero y qué tan firme es</h3>
+<p class="muted tiny" style="margin:6px 0 0;max-width:700px">El área de cada bloque es su importe; el color es el sustento de su precio. Un bloque grande y rojo es dinero comprometido sin base: ahí es donde una cotización cambia el resultado.</p></div>
+<div class="row" style="gap:8px">
+<span class="badge b-validado"><span class="dot"></span>Validado</span>
+<span class="badge b-fuente"><span class="dot"></span>Con fuente</span>
+<span class="badge b-supuesto"><span class="dot"></span>Supuesto</span>
+<span class="badge b-allowance"><span class="dot"></span>Sin base</span>
+</div>
+</div>
+<div id="treemap" style="margin-top:14px"></div>
+</div>
+<div class="grid g2" style="margin-top:14px;align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:6px">Rango de cada partida</div>
+<p class="tiny muted" style="margin:0 0 8px">La barra es el estimado puntual; la línea es el rango que soporta el sustento de sus precios. Las barras con cola larga a la derecha son las que pueden desbordar el presupuesto.</p>
+<div id="rangechart"></div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:6px">Mapa de riesgo</div>
+<p class="tiny muted" style="margin:0 0 8px">Horizontal: cuánto cuesta. Vertical: qué tan arriba puede irse. El tamaño del círculo es el dinero en riesgo. Lo del cuadrante superior derecho es lo que hay que cerrar primero.</p>
+<div id="scatter"></div>
+</div>
+</div>
+</section>
+<!-- PRECISIÓN -->
+<section id="p-prec" class="hide">
+<div class="card">
+<h3>Qué hay que cerrar, en orden de impacto</h3>
+<p class="muted tiny" style="margin:8px 0 0;max-width:760px">El orden es por dinero en riesgo, no por número de renglones: importe de la partida multiplicado por su falta de sustento. Cerrar las tres primeras mueve más el nivel de definición que validar cuarenta renglones chicos.</p>
+<div id="p_list" style="margin-top:10px"></div>
+</div>
+<div class="grid g2" style="margin-top:14px;align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:14px">Cómo se determina la clase</div>
+<p class="tiny muted" style="margin-top:0">Cada renglón recibe un puntaje según el sustento de su precio: dato validado 1.00, estimación con fuente 0.75, supuesto 0.35, sin base 0.00. El índice de definición es el promedio de esos puntajes <b style="color:var(--text-primary)">ponderado por importe</b>, no por conteo.</p>
+<div style="margin-top:14px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);overflow:hidden"><table><thead><tr><th>Índice</th><th>Clase</th><th>Nombre para cliente</th><th class="num">Rango</th></tr></thead><tbody id="p_tabla"></tbody></table></div>
+<div class="note" style="margin-top:16px">Las clases y rangos se mapean a la práctica de AACE International (18R-97). La fórmula de ponderación es propia y debe calibrarse contra proyectos ya cerrados.</div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:14px">Por qué el rango es asimétrico</div>
+<p class="tiny muted" style="margin-top:0">Los sobrecostos no se distribuyen de forma simétrica: la cola larga está del lado alto. Un alcance mal definido casi nunca sale más barato de lo previsto, pero sí puede salir mucho más caro. Al cliente se le puede comunicar un ± simple; la reserva de contingencia se dimensiona contra el extremo superior.</p>
+<hr>
+<div class="eyebrow" style="margin-bottom:14px">Precisión no es lo mismo que avance de ingeniería</div>
+<p class="tiny muted" style="margin:0">Se puede tener ingeniería al 80% y seguir con incertidumbre alta de precio si falta la respuesta del suministrador, las condiciones de media tensión, la obra civil oculta o las cotizaciones de equipo. El índice mide sustento del precio, no avance documental.</p>
+<hr>
+<div class="eyebrow" style="margin-bottom:14px">Modelo de negocio activo</div>
+<div id="p_modo" class="tiny muted"></div>
+</div>
+</div>
+</section>
+<!-- BOQ -->
+<section id="p-boq" class="hide">
+<div class="card" style="padding-bottom:14px">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Catálogo de conceptos del proyecto</h3><div class="tiny muted" style="margin-top:4px">Cantidad y precio unitario son editables. Las cantidades se derivan de las variables de sitio; al editarlas se rompe el vínculo con la variable.</div></div>
+<div class="row"><button class="btn ghost" id="b_save">Guardar</button><button class="btn ghost" id="b_reset">Restablecer precios</button></div>
+</div>
+<div class="filters">
+<input type="text" id="b_q" placeholder="Buscar concepto o código">
+<select id="b_cat"><option value="">Todas las categorías</option></select>
+<span class="chip" id="b_filtered"></span>
+</div>
+<div class="note" id="b_edited" style="margin-bottom:14px"></div>
+<div class="row" style="margin-bottom:14px">
+<span class="badge b-validado"><span class="dot"></span>Dato validado</span>
+<span class="badge b-fuente"><span class="dot"></span>Estimación con fuente</span>
+<span class="badge b-supuesto"><span class="dot"></span>Supuesto</span>
+<span class="badge b-allowance"><span class="dot"></span>Sin base de precio</span>
+<span class="chip" id="b_count"></span>
+</div>
+<div class="scroll">
+<table class="fit">
+<colgroup><col style="width:7%"><col style="width:24%"><col style="width:44px"><col style="width:7%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:24%"></colgroup>
+<thead><tr>
+<th>Código</th><th>Concepto</th><th class="u">Un.</th>
+<th class="num">Cant.</th><th class="num">P.U.</th>
+<th class="num">Importe</th><th>Sustento</th><th>Base del número</th>
+</tr></thead><tbody id="b_body"></tbody></table>
+</div>
+</div>
+</section>
+<!-- BASE DE DATOS -->
+<section id="p-gen" class="hide">
+<div class="grid g4" style="margin-bottom:14px">
+<div class="card stat"><span class="eyebrow">Conceptos en catálogo</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_tot" style="font-size:30px"></span><span class="unit">registros</span></div><span class="tiny muted">Todos con precio de referencia asignado</span></div>
+<div class="card stat"><span class="eyebrow">Con dato validado</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_val" style="font-size:30px;color:var(--success)"></span><span class="unit" style="color:var(--success)">conceptos</span></div><span class="tiny muted">Cotización o acuerdo confirmado</span></div>
+<div class="card stat"><span class="eyebrow">Con fuente identificable</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_fue" style="font-size:30px;color:var(--accent-2)"></span><span class="unit" style="color:var(--accent-2)">conceptos</span></div><span class="tiny muted">Lista de precio o referencia de mercado</span></div>
+<div class="card stat"><span class="eyebrow">Usados en este proyecto</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_use" style="font-size:30px"></span><span class="unit">conceptos</span></div><span class="tiny muted">El catálogo del proyecto se alimenta de aquí</span></div>
+</div>
+<div class="card" style="padding-bottom:14px">
+<div class="row sp" style="margin-bottom:6px">
+<div><h3>Base de datos de conceptos</h3>
+<div class="tiny muted" style="margin-top:4px">Fuente única de precios. Ningún proyecto captura precios por fuera de aquí; cuando un proyecto confirma un precio, se promueve a este catálogo con su fuente y fecha.</div></div>
+</div>
+<div class="filters">
+<input type="text" id="g_q" placeholder="Buscar concepto, código o fuente">
+<select id="g_cat"><option value="">Todas las categorías</option></select>
+<select id="g_tax"><option value="">Todo sustento</option><option value="validado">Dato validado</option><option value="fuente">Estimación con fuente</option><option value="supuesto">Supuesto</option><option value="allowance">Sin base de precio</option></select>
+<select id="g_apl"><option value="">Toda aplicabilidad</option><option value="Base">Base</option><option value="Condicional">Condicional</option><option value="Opcional">Opcional</option></select>
+<span class="chip" id="g_count"></span>
+</div>
+<div class="scroll" style="max-height:700px">
+<table class="fit"><colgroup><col style="width:7%"><col style="width:24%"><col style="width:44px"><col style="width:11%"><col style="width:12%"><col style="width:13%"><col style="width:24%"></colgroup>
+<thead><tr><th>Código</th><th>Concepto</th><th class="u">Un.</th><th class="num">P.U. referencia</th><th>Sustento</th><th>Estado</th><th>Fuente y fecha</th></tr></thead>
+<tbody id="g_body"></tbody></table>
+</div>
+<div class="note" style="margin-top:16px" id="g_gov"></div>
+<div class="note" style="margin-top:10px">Cada concepto tiene al menos una estimación con su base declarada: cotización real, lista de distribuidor, referencia de mercado, o criterio de ingeniería. Los marcados sin base son provisiones calculadas por regla y son los que hay que cotizar primero.</div>
+</div>
+</section>
+<!-- EXPORT -->
+<section id="p-exp" class="hide">
+<div class="card" style="margin-bottom:14px">
+<div class="row sp">
+<div><h3>Salida a propuesta</h3><div class="tiny muted" style="margin-top:4px">Tema claro, porque es un documento que se lee o se imprime.</div></div>
+<div class="row" style="gap:8px">
+<button class="btn" id="b_dl">Descargar propuesta</button>
+<button class="btn ghost" id="b_open">Abrir en pestaña</button>
+<button class="btn ghost" id="b_print">Imprimir aquí</button>
+</div>
+</div>
+<div class="note warn" style="margin-top:18px" id="e_gate"></div>
+<div class="note" style="margin-top:10px">Descargar entrega un archivo listo para abrir e imprimir a PDF en tamaño Carta. Imprimir directo desde aquí puede quedar bloqueado por el navegador, porque el instrumento corre dentro de un marco; si no responde, usa Descargar o Abrir en pestaña.</div>
+<div class="tiny" id="e_msg" style="margin-top:10px"></div>
+</div>
+<div id="e_doc" class="hide"></div>
+<iframe id="e_frame" title="Previsualización de la propuesta" style="width:100%;min-height:1180px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);background:#fff"></iframe>
+</section>
+<div style="margin-top:24px" class="note">
+<b>Herramienta de estimación, no de contratación.</b> Las cantidades se derivan de las variables de sitio mediante reglas paramétricas, no de ingeniería de detalle. Cada renglón declara la base de su número; los marcados sin base son provisiones que deben cotizarse antes de comprometer precio. Ingeniería bajo NOM-001-SEDE-2012; interruptores principales y derivados se verifican contra 125% de la carga continua (Art. 625-21).
+</div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
