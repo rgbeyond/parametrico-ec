@@ -70,7 +70,11 @@ export const PLANTILLA_ATLACOMULCO = {
   estado: { v: 1, cfg: {
     nom: 'Electrolinera Atlacomulco — Fase 1', loc: 'Atlacomulco, Estado de México', modo: 'coinv',
     grupos: [{ kw: 240, con: 2, q: 5 }],
-    kva: '1500', kwp: 615, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
+    /* El balanceo al 30% es lo que sostiene el transformador de 1,500 kVA: la
+       demanda de diseño baja a 840 kW. Sin esa reserva, el criterio de
+       dimensionamiento pediría 2,000 kVA para los 1,200 kW instalados. */
+    kva: '1500', balanceo: 1, balanceoPct: 30,
+    kwp: 615, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
     mbt: 120, mmt: 72, dem: 350, piso: 1200, techNueva: 0, tech: 0, sde: 1, sdeBanos: 1,
     cliEvse: 0, cliTrafo: 0, cliCctv: 0, cliIng: 0, derechos: 0, via: 0,
     fee: 10, cont: 25, fx: 18.5

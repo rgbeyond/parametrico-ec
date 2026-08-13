@@ -40,7 +40,8 @@ const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_R
 
 const cfg={nom:"",loc:"",modo:"propia",
 grupos:[],
-kva:"750",kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
+kva:"750",balanceo:0,balanceoPct:30,
+kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
 fee:10,cont:25,fx:18.5};
@@ -66,6 +67,21 @@ const nCon=g=>grp(g).reduce((a,b)=>a+ +b.con* +b.q,0);
 const circEq=g=>grp(g).reduce((a,b)=>a+ +b.q*(+b.kw/120),0);
 const nCam=g=>{const p=nCon(g); if(p<=0)return 0; return Math.min(10,Math.max(2,Math.round(2+(p-4)*8/26)));};
 const techM2=g=>g.techNueva?(g.tech>0?g.tech:nCon(g)*15):0;
+/* Demanda de diseño: la potencia que la estación puede tomar de la red al
+   mismo tiempo. Con balanceo dinámico se reserva un porcentaje de la carga
+   instalada que el sistema de gestión recorta en el pico, o que cubre el
+   almacenamiento, así que la acometida y el transformador se dimensionan
+   contra la diferencia y no contra la suma de placas. Tiene consecuencia
+   operativa: en el pico los vehículos cargan más lento. */
+const potDis=g=>g.balanceo?potEvse(g)*(1-(+g.balanceoPct||0)/100):potEvse(g);
+/* Conversión de kW a kVA y margen de sobredimensionamiento del transformador.
+   FP_DIM 0.80 es criterio de dimensionamiento de Beyond, no el factor de
+   potencia real del equipo: los cargadores de corriente directa con
+   corrección activa operan entre 0.95 y 0.99, así que este valor ya
+   incorpora del orden de 16% de colchón encima del margen explícito.
+   Sujeto a validación contra proyectos cerrados. */
+const FP_DIM=0.80, MARGEN_TRAFO=1.10;
+const KVA_COM=[300,500,750,1000,1500,2000,2500];
 function sum(rs,codes){return rs.filter(r=>codes.includes(r.c)).reduce((a,b)=>a+b.imp,0);}
 const M=()=>MODOS[cfg.modo];
 let rows=[],edits={};
@@ -177,8 +193,8 @@ add("GE-007","GE","Integración de almacenamiento con gestión de energía y gen
 add("GE-008","GE","Obra civil, contención, ventilación y protección contra incendio del área de baterías","lote",1,0,"allowance","Provisión de 5% del costo del almacenamiento. Los requisitos reales los fija Protección Civil del municipio y pueden diferir de forma importante.", {rule:1});
 }
 const potBess=g.bess*g.besskw;
-if(pot>kva*.95 || g.kwp>0 || g.bess>0)
-add("GE-001","GE","Sistema de gestión de energía con límite total de potencia de estación","sistema",1,750000,"supuesto","Se activa cuando la potencia de los equipos excede la capacidad del transformador o cuando hay generación o almacenamiento en sitio: en esos casos hay despacho a nivel estación. El balanceo nativo de un equipo de carga solo reparte entre sus propios conectores y no lo sustituye. Si la cotización demuestra que el controlador de estación viene incluido, esta partida se pone en cero.");
+if(g.balanceo || pot>kva*FP_DIM || g.kwp>0 || g.bess>0)
+add("GE-001","GE","Sistema de gestión de energía con límite total de potencia de estación","sistema",1,750000,"supuesto","Se activa con balanceo dinámico declarado, cuando la potencia de los equipos excede la capacidad del transformador, o cuando hay generación o almacenamiento en sitio: en esos casos hay despacho a nivel estación. Sin este sistema no se puede sostener una reserva de balanceo, y por lo tanto tampoco se puede dimensionar el transformador por debajo de la suma de placas. El balanceo nativo de un equipo de carga solo reparte entre sus propios conectores y no lo sustituye. Si la cotización demuestra que el controlador de estación viene incluido, esta partida se pone en cero.");
 add("GE-003","GE","Sistema de monitoreo de calidad de la energía","sistema",1,280000,"supuesto","Referencia interna. Otra referencia la ubica en $45,000: la diferencia es de alcance, un punto de medición contra medición por alimentador.");
 add("GE-004","GE","Medidores por alimentador e integración al sistema de gestión","lote",1,350000,"supuesto","Referencia interna.");
 add("GE-002","GE","Medición comercial para mercado eléctrico mayorista","sistema",0,650000,"supuesto","En cero por omisión: migrar al mercado mayorista es una decisión de negocio, no de ingeniería.");
@@ -351,8 +367,19 @@ $("#h_fv").textContent="Equivale a "+mx(cfg.fvUsdWp*1000*cfg.fx)+" por kWp · to
 $("#h_tech").textContent="Sugerido: "+(con*15)+" m² (15 m² por cajón). Deja 0 para usar el sugerido.";
 $("#l_fee").textContent=cfg.fee.toFixed(1)+"%"; $("#l_cont").textContent=cfg.cont+"%";
 $("#h_cont").textContent="Sugerido para Clase "+t.cl.c+": "+t.cl.cont+"%";
-const req=pot/.95, sizes=[300,500,750,1000,1500,2000,2500], sug=sizes.find(s=>s>=req)||2500;
-$("#h_kva").textContent="Carga requiere ~"+Math.round(req).toLocaleString("es-MX")+" kVA a fp 0.95 · siguiente capacidad comercial: "+sug.toLocaleString("es-MX")+" kVA";
+const potD=potDis(cfg), pctBal=Math.round(+cfg.balanceoPct||0);
+$("#balBox").classList.toggle("hide",!cfg.balanceo);
+$("#l_bal").textContent=pctBal+"%";
+$("#h_bal").textContent=cfg.balanceo
+  ?"Recorta "+Math.round(pot-potD).toLocaleString("es-MX")+" kW en el pico"
+  :"";
+/* El kVA que alimenta los costos es el que se elige a mano en el desplegable.
+   Esto es solo la sugerencia, y declara con qué números la calculó. */
+const req=potD/FP_DIM*MARGEN_TRAFO, sug=KVA_COM.find(s=>s>=req)||2500;
+$("#h_kva").textContent=(cfg.balanceo
+  ?"Demanda de diseño "+Math.round(potD).toLocaleString("es-MX")+" kW ("+pot.toLocaleString("es-MX")+" kW instalados menos "+pctBal+"% reservado al balanceo). "
+  :"Demanda de diseño "+pot.toLocaleString("es-MX")+" kW, sin balanceo. ")
+  +"Requiere "+Math.round(req).toLocaleString("es-MX")+" kVA con el criterio de conversión 0.80 y 10% de margen · siguiente capacidad comercial: "+sug.toLocaleString("es-MX")+" kVA";
 $("#grBox").innerHTML=(cfg.grupos||[]).map((x,i)=>`<div class="gr">
     <div><div class="lbl">Potencia</div><select data-i="${i}" data-f="kw">${POT_EVSE.map(p=>`<option value="${p.kw}"${+x.kw===p.kw?" selected":""}>${p.kw} kW CD</option>`).join("")}</select></div>
     <div><div class="lbl">Conectores</div><select data-i="${i}" data-f="con"><option value="1"${+x.con===1?" selected":""}>1</option><option value="2"${+x.con===2?" selected":""}>2</option></select></div>
@@ -364,15 +391,27 @@ const i=+e.target.dataset.i,f=e.target.dataset.f;
 cfg.grupos[i][f]=Math.max(f==="q"?0:1,parseInt(e.target.value)||0); render();}));
 $$("#grBox [data-del]").forEach(el=>el.addEventListener("click",e=>{
 cfg.grupos.splice(+e.target.dataset.del,1); render();}));
-const kw=kva*.95, potB=cfg.bess*cfg.besskw, def=pot-kw;
-const items=[["Potencia de equipos de carga",pot.toLocaleString("es-MX")+" kW"],
-["Capacidad del transformador a fp 0.95",Math.round(kw).toLocaleString("es-MX")+" kW"],
-["Aporte de almacenamiento en descarga",potB.toLocaleString("es-MX")+" kW"],
-["Generación fotovoltaica en corriente alterna",Math.round(cfg.kwp/1.23).toLocaleString("es-MX")+" kW"]];
+/* El balance usa el mismo 0.80 que la sugerencia de kVA: si convirtiera en un
+   sentido con un valor y en el otro con otro, los dos paneles se contradirían. */
+const kw=kva*FP_DIM, potB=cfg.bess*cfg.besskw, def=potD-kw;
+const holgura=potD>0?(kw/potD-1)*100:0;
+const items=[["Potencia instalada de equipos",pot.toLocaleString("es-MX")+" kW"]];
+if(cfg.balanceo) items.push(
+  ["Reservado al balanceo ("+pctBal+"%)","−"+Math.round(pot-potD).toLocaleString("es-MX")+" kW"],
+  ["Demanda de diseño",Math.round(potD).toLocaleString("es-MX")+" kW"]);
+items.push(
+  ["Capacidad del transformador (conversión 0.80)",Math.round(kw).toLocaleString("es-MX")+" kW"],
+  ["Aporte de almacenamiento en descarga",potB.toLocaleString("es-MX")+" kW"],
+  ["Generación fotovoltaica en corriente alterna",Math.round(cfg.kwp/1.23).toLocaleString("es-MX")+" kW"]);
 let msg,col;
-if(def<=0){msg="El transformador cubre la carga instalada sin necesidad de limitar potencia simultánea.";col="var(--text-tertiary)";}
-else if(potB>=def){msg="Déficit de "+Math.round(def).toLocaleString("es-MX")+" kW frente a la red, cubierto por almacenamiento. Requiere despacho coordinado, no solo balanceo en el equipo.";col="var(--warning)";}
-else {msg="Déficit de "+Math.round(def).toLocaleString("es-MX")+" kW no cubierto por almacenamiento. Hay que subir capacidad de transformación o limitar la potencia simultánea por gestión de energía.";col="var(--danger)";}
+const reservaTxt=cfg.balanceo
+  ?" El "+pctBal+"% reservado lo absorbe el sistema de gestión recortando potencia en el pico"
+    +(potB>0?", o el almacenamiento si hay energía disponible":"")+": los vehículos cargan más lento cuando la estación está llena."
+  :"";
+if(def<=0&&holgura>=10){msg="El transformador cubre la demanda de diseño con "+Math.round(holgura)+"% de holgura."+reservaTxt;col="var(--text-tertiary)";}
+else if(def<=0){msg="El transformador cubre la demanda de diseño, pero solo con "+Math.round(Math.max(holgura,0))+"% de holgura; el criterio de dimensionamiento pide 10%."+reservaTxt;col="var(--warning)";}
+else if(potB>=def){msg="Déficit de "+Math.round(def).toLocaleString("es-MX")+" kW frente a la red, cubierto por almacenamiento. Requiere despacho coordinado, no solo balanceo en el equipo."+reservaTxt;col="var(--warning)";}
+else {msg="Déficit de "+Math.round(def).toLocaleString("es-MX")+" kW no cubierto por almacenamiento. Hay que subir capacidad de transformación o reservar más potencia al balanceo."+reservaTxt;col="var(--danger)";}
 $("#balance").innerHTML=items.map(([a,b])=>`<div class="row sp"><span class="tiny muted">${a}</span><b style="font-variant-numeric:tabular-nums">${b}</b></div>`).join("")+
 `<div class="xs" style="color:${col};margin-top:4px">${msg}</div>`;
 const byCat={}; t.capex.forEach(r=>byCat[r.cat]=(byCat[r.cat]||0)+r.imp);
@@ -615,9 +654,9 @@ const bf={q:"",cat:""};
 $("#b_cat").innerHTML='<option value="">Todas las categorías</option>'+Object.entries(CATN).map(([k,v])=>`<option value="${k}">${k} · ${v}</option>`).join("");
 $("#b_q").addEventListener("input",e=>{bf.q=e.target.value;render();});
 $("#b_cat").addEventListener("change",e=>{bf.cat=e.target.value;render();});
-const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_kva:"kva",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
+const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_kva:"kva",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
-const checks={v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
+const checks={v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
 function fill(){ for(const[i,k]of Object.entries(map))$("#"+i).value=cfg[k];
 for(const[i,k]of Object.entries(checks))$("#"+i).checked=!!cfg[k]; }
@@ -642,7 +681,7 @@ window.addEventListener("proyecto:abierto",()=>{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
 if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
 else { edits={}; genEdits={}; genApproved={};
-  Object.assign(cfg,{grupos:[],kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
+  Object.assign(cfg,{grupos:[],balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
   cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
 fill(); render(); showTab("conf",false);
 });

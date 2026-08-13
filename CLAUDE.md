@@ -34,6 +34,24 @@ el cálculo interno, aunque al cliente se le comunique así.
 DOF; no citarla. Interruptores principales y derivados se verifican contra 125%
 de la carga continua, artículo 625-21.
 
+**El transformador se dimensiona contra la demanda de diseño, no contra la suma
+de placas.** Con balanceo dinámico declarado, la demanda de diseño es la
+potencia instalada menos el porcentaje reservado; sin balanceo son iguales. La
+conversión de kW a kVA usa `FP_DIM` 0.80 más `MARGEN_TRAFO` 1.10, ambos en
+`app.js`. Ese 0.80 es **criterio de dimensionamiento de Beyond, no el factor de
+potencia del equipo**: los cargadores de corriente directa con corrección activa
+operan entre 0.95 y 0.99, así que el criterio ya incorpora del orden de 16% de
+colchón encima del margen explícito. No presentarlo como si fuera la física del
+equipo. El balance eléctrico convierte en el sentido inverso con el mismo 0.80,
+a propósito: con dos valores distintos los dos paneles se contradicen. **Sujeto
+a validación contra proyectos cerrados.**
+
+La reserva de balanceo tiene consecuencia operativa, no solo de costo: en el pico
+los vehículos cargan más lento. Es decisión comercial de throughput y debe quedar
+declarada en la propuesta, no escondida en el cálculo. Depende de `GE-001`: sin
+sistema de gestión no se sostiene la reserva, y por lo tanto tampoco se puede
+dimensionar el transformador por debajo de la suma de placas.
+
 **Especificación de cable en corriente directa: RHW-2/XHHW-2 XLPE 1000 V.**
 "THHW-LS 1000 V" no existe comercialmente: el THHW-LS llega a 600 V. Corregirlo
 donde aparezca.
@@ -158,7 +176,10 @@ lo primero a cotizar; el índice de definición las castiga con cero.
 
 ### Caso de referencia: Atlacomulco Fase 1
 
-5 equipos de 240 kW, 10 puntos de carga, 1,200 kW, transformador de 1,500 kVA,
+5 equipos de 240 kW, 10 puntos de carga, 1,200 kW, balanceo dinámico con 30%
+reservado —lo que baja la demanda de diseño a 840 kW y es lo que sostiene el
+transformador de 1,500 kVA; sin esa reserva el criterio pediría 2,000 kVA—,
+transformador de 1,500 kVA,
 615 kWp fotovoltaico llave en mano a 0.79 USD/Wp, 2 módulos de almacenamiento
 de 261 kWh. Costo directo $36,370,522; inversión total $48,670,755; depósito de
 garantía $4,650,000 aparte. Clase 4, índice 0.42.

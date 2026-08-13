@@ -61,17 +61,31 @@
 </div>
 
 <div class="card">
-<div class="eyebrow" style="margin-bottom:16px">Transformación, generación y almacenamiento</div>
-<div class="grid g2" style="gap:12px">
+<div class="eyebrow" style="margin-bottom:16px">Demanda y transformación</div>
+<div class="grid g2" style="gap:18px">
 <label class="f" style="margin-bottom:0"><span class="lb">Transformador (kVA)</span>
 <select id="v_kva"><option>300</option><option>500</option><option>750</option><option>1000</option><option>1500</option><option>2000</option><option>2500</option></select>
 <span class="hint" id="h_kva"></span></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
+<div>
+<label class="row tiny" style="gap:8px"><input type="checkbox" id="v_balanceo" style="width:auto"> Balanceo dinámico de cargas</label>
+<div id="balBox" class="hide" style="margin-top:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Potencia reservada al balanceo</span>
+<input type="range" id="v_balanceoPct" min="0" max="50" step="5">
+<div class="row sp"><span class="hint" id="h_bal"></span><b id="l_bal"></b></div></label>
 </div>
-<div id="fvBox" class="grid g2" style="gap:12px;margin-top:12px">
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Generación y almacenamiento</div>
+<div class="grid g3" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
+<div id="fvBox" class="grid g2" style="gap:12px;grid-column:span 2">
 <label class="f" style="margin-bottom:0"><span class="lb">Costeo del fotovoltaico</span>
 <select id="v_fvModo"><option value="llave">Llave en mano por USD/Wp</option><option value="desglose">Desglose por componentes</option></select></label>
 <label class="f" id="fvWpBox" style="margin-bottom:0"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
+</div>
 </div>
 <div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
 <label class="f" style="margin-bottom:0"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
