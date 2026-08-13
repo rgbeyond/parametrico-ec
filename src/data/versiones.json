@@ -1,5 +1,28 @@
 [
   {
+    "v": "0.5.0",
+    "fecha": "2026-08-13",
+    "tipo": "menor",
+    "commits": ["b45bedb", "054d258", "e8603be", "58c5562"],
+    "resumen": "Tarifa del suministrador capturada como dato del proyecto, y depósito en garantía calculado por tarifa en vez de por provisión.",
+    "agregado": [
+      "Demanda contratada como parámetro, con el piso que fija la tarifa GDMTH en su apartado 4: no menor al 60% de la carga conectada ni a 100 kW.",
+      "Tarjeta de tarifa del suministrador con suministrador, categoría, división, mes y los cargos de capacidad, distribución, fijo mensual, otros por kWh y energía en punta, intermedia y base.",
+      "Costo por kWh todo incluido por periodo horario y diferencial entre punta y base, que es la señal del arbitraje.",
+      "Casilla de suministro calificado en el mercado mayorista. Al marcarla se activa la partida de medición comercial, que estaba fija en cero, y el depósito advierte que la fórmula de la tarifa de suministro básico deja de aplicar."
+    ],
+    "cambiado": [
+      "El depósito en garantía se calcula como tres veces el cargo por capacidad aplicado a la demanda contratada, conforme al apartado 9 de la tarifa GDMTH. Antes se cobraba como $3,100 por kVA de transformador: variable equivocada y sin respaldo.",
+      "Para Atlacomulco, con la tarifa GDMTH de Centro Sur de agosto 2026, el depósito pasa de $4,650,000 a $757,944. No mueve el costo directo ni la inversión total, porque se reporta aparte.",
+      "El cargo por capacidad sólo cuenta como estimación con fuente si declara división y mes: la Comisión Reguladora de Energía aprueba las tarifas cada mes y difieren entre las 17 divisiones tarifarias."
+    ],
+    "corregido": [
+      "En las retículas de captura, una etiqueta de dos renglones empujaba su caja hacia abajo y la desalineaba de las vecinas. Ahora toda etiqueta reserva la altura de dos renglones y se alinea al pie.",
+      "El número del acuerdo de tarifas es A/158/2024; se había registrado como A/T58/2024 por una mala lectura."
+    ],
+    "nota": "El factor de carga de GDMTH es 0.57, según la Tabla 2 del Anexo Único del Acuerdo A/158/2024. De ahí se sigue que la demanda facturada es la medida sólo si el factor de carga del sitio supera 0.57; por debajo manda el término calculado sobre el consumo mensual. Para una electrolinera nueva eso significa que recortar picos con almacenamiento probablemente no baje los cargos de demanda."
+  },
+  {
     "v": "0.4.0",
     "fecha": "2026-08-13",
     "tipo": "menor",

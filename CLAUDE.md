@@ -198,6 +198,11 @@ Numeración por **versionado semántico** (SemVer), `mayor.menor.parche`:
 bien. No confundir dos ejes: la versión mide el software y la clase del estimado
 mide la calidad del dato. Se puede estar en 1.0 con un estimado Clase 4.
 
+**Antes de subir a producción, revisa si la versión debe moverse.** Si el cambio
+agrega capacidad o corrige algo visible, `package.json` y `src/data/versiones.json`
+van en el mismo empujón. Se ha olvidado ya: acumular varios commits con capacidad
+nueva bajo la misma versión deja la bitácora mintiendo sobre qué hay publicado.
+
 La bitácora es `src/data/versiones.json`, y se abre desde el pie de la
 interfaz. Está en el repositorio y no en la base de datos a propósito: describe
 el código, así que se despliega junto con el cambio que documenta y no puede

@@ -54,6 +54,12 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
 .stat.sec .unit{color:var(--accent-2)}
 label.f{display:block;margin-bottom:14px}
 label.f .lb{display:block;font-size:11px;letter-spacing:var(--ls-wide);text-transform:uppercase;color:var(--text-secondary);font-weight:600;margin-bottom:6px}
+/* Regla de diseño: dentro de una retícula, una etiqueta que ocupa dos renglones
+   no debe empujar su caja hacia abajo y desalinearla de las vecinas. Se reserva
+   la altura de dos renglones para toda etiqueta en un .grid y se alinea al pie,
+   así las entradas de una misma fila quedan a la misma altura sin importar el
+   largo del texto. Aplica a toda la aplicación, no solo a la tarjeta de tarifa. */
+.grid>label.f>.lb,.grid>div>label.f>.lb{min-height:3em;display:flex;align-items:flex-end;margin-bottom:6px}
 input,select{width:100%;background:var(--surface-1);border:1px solid var(--border-default);border-radius:var(--r-md);color:var(--text-primary);font-family:inherit;font-size:15px;padding:9px 11px;transition:120ms}
 input:focus,select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,135,0,.25)}
 input[type=range]{padding:0;accent-color:var(--accent);border:0;background:none}
