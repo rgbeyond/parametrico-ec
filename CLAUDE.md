@@ -43,10 +43,22 @@ anterior decía `#FB8722`; se corrigió porque una marca debe coincidir con su
 logo. Para texto naranja sobre papel se usa `--accent-ink` `#B4590C`, que es la
 versión con contraste AA.
 
-**El precio final se aprueba.** Cualquiera propone; solo un administrador
-aplica al catálogo maestro. La verificación vive en la base de datos, en
-`fn_aprobar_precio` y en las políticas RLS. Nunca mover esa validación al
-cliente: un navegador se puede alterar, una política no.
+**Actualizar el precio del catálogo maestro es de admin y editor.** Se
+flexibilizó (2026-08) para no dejar toda aprobación en una sola persona: un
+editor puede escribir precio, taxonomía y fuente directo en `conceptos`, sin
+pasar por propuesta. Lo que sigue siendo exclusivo de administrador es *crear
+o eliminar* un concepto del maestro (`conceptos_alta`, `conceptos_baja` en
+`02_politicas.sql`) y aplicar/rechazar una propuesta formal
+(`fn_aprobar_precio`, `fn_rechazar_precio`). El sistema de propuestas
+(`precio_propuestas`) sigue existiendo para quien prefiera pasar por una
+revisión antes de tocar el maestro, pero ya no es obligatorio.
+
+Para no perder trazabilidad al abrir la escritura directa, cualquier cambio
+de precio en `conceptos` —lo escriba quien lo escriba— queda registrado solo
+una vez en `precio_historial` vía el disparador `tr_registrar_historial_precio`.
+La verificación de quién puede escribir qué vive en la base de datos, en las
+políticas RLS y en las funciones `security definer`. Nunca mover esa
+validación al cliente: un navegador se puede alterar, una política no.
 
 **Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
 en esa estación hasta que un administrador lo promueve con
@@ -103,7 +115,7 @@ Netlify tampoco.
 | Rol | Puede |
 |---|---|
 | `admin` | Todo: aprobar precios, promover conceptos, asignar roles |
-| `editor` | Crear y editar proyectos, proponer precios, agregar conceptos |
+| `editor` | Crear y editar proyectos, actualizar precio/taxonomía/fuente en el catálogo maestro, agregar conceptos |
 | `comentarista` | Leer todo y dejar comentarios |
 | `lector` | Consultar sin modificar |
 

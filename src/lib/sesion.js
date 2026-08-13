@@ -3,8 +3,8 @@ import { supabase, hayNube } from './supabase.js';
 const DOMINIO = (import.meta.env.VITE_DOMINIO_PERMITIDO || 'beyond-ae.com').toLowerCase();
 
 export const ROLES = {
-  admin:        { etiqueta: 'Administrador', desc: 'Todo, incluido aprobar precios y asignar roles' },
-  editor:       { etiqueta: 'Editor',        desc: 'Crea y edita proyectos, propone precios, agrega conceptos' },
+  admin:        { etiqueta: 'Administrador', desc: 'Todo, incluido crear/eliminar conceptos del maestro y asignar roles' },
+  editor:       { etiqueta: 'Editor',        desc: 'Crea y edita proyectos, actualiza precio en el catálogo maestro, agrega conceptos' },
   comentarista: { etiqueta: 'Comentarista',  desc: 'Lee todo y deja comentarios' },
   lector:       { etiqueta: 'Solo lectura',  desc: 'Consulta sin modificar' }
 };

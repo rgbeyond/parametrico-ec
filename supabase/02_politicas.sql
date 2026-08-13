@@ -27,9 +27,15 @@ create policy perfiles_nombre_propio on perfiles for update
   with check (id = auth.uid() and rol = (select rol from perfiles p where p.id = auth.uid()));
 
 -- ---------- Catalogo maestro ----------
+-- Actualizar precio (y su taxonomia/fuente, que van junto con el precio) es
+-- de admin y editor: quitarle a un administrador el cuello de botella de
+-- aprobar cada cambio. Crear o eliminar un concepto del maestro sigue siendo
+-- solo de admin, porque es una decision de alcance del catalogo, no de precio.
 create policy conceptos_lectura on conceptos for select using (auth.uid() is not null);
-create policy conceptos_escritura on conceptos for all
-  using (fn_es_admin()) with check (fn_es_admin());
+create policy conceptos_actualizar on conceptos for update
+  using (fn_puede_editar()) with check (fn_puede_editar());
+create policy conceptos_alta on conceptos for insert with check (fn_es_admin());
+create policy conceptos_baja on conceptos for delete using (fn_es_admin());
 
 -- ---------- Proyectos: todos los ven, editores y admin los modifican ----------
 create policy proyectos_lectura on proyectos for select using (auth.uid() is not null);
@@ -57,7 +63,7 @@ create policy propuestas_alta on precio_propuestas for insert
   with check (fn_puede_editar() and propuesto_por = auth.uid() and estado = 'propuesta');
 create policy propuestas_baja_propia on precio_propuestas for delete
   using (propuesto_por = auth.uid() and estado = 'propuesta');
--- Aprobar o rechazar pasa por fn_aprobar_precio, que valida el rol.
+-- Aprobar o rechazar pasa por fn_aprobar_precio / fn_rechazar_precio, que validan el rol.
 create policy propuestas_resolver on precio_propuestas for update
   using (fn_es_admin()) with check (fn_es_admin());
 
@@ -75,5 +81,6 @@ create policy comentarios_baja on comentarios for delete
   using (autor = auth.uid() or fn_es_admin());
 
 grant execute on function fn_aprobar_precio(uuid, text) to authenticated;
+grant execute on function fn_rechazar_precio(uuid, text) to authenticated;
 grant execute on function fn_promover_concepto(uuid, text) to authenticated;
 grant execute on function fn_asignar_rol(uuid, rol_usuario) to authenticated;

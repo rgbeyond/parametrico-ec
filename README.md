@@ -26,10 +26,10 @@ una marca tiene que coincidir con su propio logo.
 pesos, como WOFF2. Sin dependencia de Google Fonts, así que el documento
 imprime igual con o sin internet.
 
-**El precio final se aprueba.** Cualquiera propone un precio; solo un perfil
-con rol `aprobador` lo aplica al catálogo, y el cambio queda en historial con
-autor, fecha y fuente. Está en la base de datos, no en el cliente: una política
-de RLS no se puede evadir desde el navegador.
+**Actualizar precio es de admin y editor; crear o eliminar un concepto es solo
+de admin.** Cualquier cambio de precio queda en historial con autor, fecha y
+fuente, lo escriba quien lo escriba. La verificación vive en la base de datos,
+no en el cliente: una política de RLS no se puede evadir desde el navegador.
 
 ## Cuentas y roles
 
@@ -39,8 +39,8 @@ de otro dominio se rechazan en la base de datos, no en el navegador.
 
 | Rol | Puede |
 |---|---|
-| Administrador | Todo: aprobar precios, promover conceptos al maestro, asignar roles |
-| Editor | Crear y editar proyectos, proponer precios, agregar conceptos al proyecto |
+| Administrador | Todo: crear/eliminar conceptos del maestro, resolver propuestas de precio, promover conceptos, asignar roles |
+| Editor | Crear y editar proyectos, actualizar precio/taxonomía/fuente en el catálogo maestro, agregar conceptos al proyecto |
 | Comentarista | Leer todo y dejar comentarios |
 | Solo lectura | Consultar sin modificar |
 

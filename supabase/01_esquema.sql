@@ -8,7 +8,7 @@ create extension if not exists "pgcrypto";
 -- USUARIOS Y ROLES
 -- ===============================================================
 -- admin        : todo, incluido aprobar precios y asignar roles
--- editor       : crea y edita proyectos, propone precios, agrega conceptos
+-- editor       : crea y edita proyectos, actualiza precio en el catalogo maestro, agrega conceptos
 -- comentarista : lee todo y deja comentarios
 -- lector       : solo lectura
 do $$ begin
@@ -165,6 +165,14 @@ create table if not exists tipologia_conceptos (
   primary key (tipologia_id, codigo)
 );
 
+-- proyectos.tipologia_id se declaro antes de que existiera tipologias; la
+-- llave foranea se agrega aqui porque este es el primer punto del archivo
+-- donde tipologias ya existe.
+do $$ begin
+  alter table proyectos add constraint fk_proyectos_tipologia
+    foreign key (tipologia_id) references tipologias(id);
+exception when duplicate_object then null; end $$;
+
 -- ===============================================================
 -- GOBIERNO DE PRECIOS
 -- ===============================================================
@@ -202,6 +210,10 @@ create table if not exists precio_historial (
   fecha           timestamptz not null default now()
 );
 
+-- Aplica una propuesta al catalogo. El registro en precio_historial lo hace
+-- aqui mismo (con el vinculo a la propuesta) en vez de dejarselo al disparador
+-- generico de conceptos: por eso marca app.via_propuesta, para que ese
+-- disparador no vuelva a registrar el mismo cambio por duplicado.
 create or replace function fn_aprobar_precio(p_id uuid, p_nota text default null)
 returns void language plpgsql security definer set search_path = public as $$
 declare v_p precio_propuestas; v_ant numeric(14,2);
@@ -213,6 +225,7 @@ begin
   if not found then raise exception 'Propuesta inexistente o ya resuelta'; end if;
 
   select precio into v_ant from conceptos where codigo = v_p.concepto;
+  perform set_config('app.via_propuesta', 'true', true);
   update conceptos set precio = v_p.precio_nuevo, taxonomia = v_p.taxonomia_nueva,
          fuente = v_p.fuente, fecha_ref = to_char(now(),'YYYY-MM'),
          actualizado_en = now(), actualizado_por = auth.uid()
@@ -224,6 +237,40 @@ begin
   update precio_propuestas set estado='aprobada', resuelto_por=auth.uid(),
          resuelto_en=now(), nota_resolucion=p_nota where id = p_id;
 end $$;
+
+-- Rechaza una propuesta sin tocar el catalogo. Deja el mismo rastro de
+-- quien y cuando que una aprobacion, para no depender de que el cliente
+-- arme el UPDATE a mano.
+create or replace function fn_rechazar_precio(p_id uuid, p_nota text default null)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not fn_es_admin() then
+    raise exception 'Solo un administrador puede rechazar una propuesta de precio';
+  end if;
+  update precio_propuestas set estado='rechazada', resuelto_por=auth.uid(),
+         resuelto_en=now(), nota_resolucion=p_nota
+   where id = p_id and estado = 'propuesta';
+  if not found then raise exception 'Propuesta inexistente o ya resuelta'; end if;
+end $$;
+
+-- Registro automatico de historial para cualquier cambio de precio en el
+-- catalogo maestro, sin importar si paso por una propuesta o si un editor
+-- lo escribio directo. Evita duplicar el registro que ya hace
+-- fn_aprobar_precio marcando app.via_propuesta antes de su propio UPDATE.
+create or replace function fn_registrar_historial_precio()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.precio is distinct from old.precio
+     and coalesce(current_setting('app.via_propuesta', true), '') <> 'true' then
+    insert into precio_historial (concepto, precio_anterior, precio_nuevo, taxonomia, fuente, propuesta_id, autor)
+    values (new.codigo, old.precio, new.precio, new.taxonomia, new.fuente, null, auth.uid());
+  end if;
+  return new;
+end $$;
+drop trigger if exists tr_registrar_historial_precio on conceptos;
+create trigger tr_registrar_historial_precio
+  after update on conceptos
+  for each row execute function fn_registrar_historial_precio();
 
 -- Promover un concepto de proyecto al catalogo maestro. Solo admin.
 create or replace function fn_promover_concepto(p_proyecto uuid, p_codigo text)
