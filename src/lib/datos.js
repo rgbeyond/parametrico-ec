@@ -1,0 +1,157 @@
+import { supabase, hayNube } from './supabase.js';
+import { sesion } from './sesion.js';
+import catalogoLocal from '../data/catalogo.json';
+
+/* Repositorio de datos. Con nube lee y escribe en Supabase; sin nube trabaja
+   contra el catalogo incluido y localStorage, para que la herramienta siga
+   siendo usable sin cuenta. */
+
+const CLAVE_LOCAL = 'beyond:proyectos';
+
+const leerLocal = () => { try { return JSON.parse(localStorage.getItem(CLAVE_LOCAL) || '[]'); } catch { return []; } };
+const escribirLocal = (l) => { try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(l)); } catch {} };
+
+export const slug = (t) => String(t || 'proyecto')
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'proyecto';
+
+// ---------------------------------------------------------------- catálogo
+export async function catalogoMaestro(){
+  if(!hayNube || !sesion.perfil) return catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
+  const { data, error } = await supabase.from('conceptos')
+    .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
+    .eq('activo', true).order('codigo');
+  if(error || !data?.length) return catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
+  return data.map(r => ({
+    c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
+    t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref, ambito: 'maestro'
+  }));
+}
+
+export async function conceptosDelProyecto(proyectoId){
+  if(!hayNube || !sesion.perfil || !proyectoId) return [];
+  const { data, error } = await supabase.from('proyecto_conceptos')
+    .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
+    .eq('proyecto_id', proyectoId).order('codigo');
+  if(error) return [];
+  return (data || []).map(r => ({
+    c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
+    t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref, ambito: 'proyecto'
+  }));
+}
+
+export async function agregarConceptoAProyecto(proyectoId, c){
+  const { error } = await supabase.from('proyecto_conceptos').insert({
+    proyecto_id: proyectoId, codigo: c.c, categoria: c.cat, nombre: c.n, unidad: c.u,
+    precio: c.pu, taxonomia: c.t, aplicabilidad: c.ap || 'Condicional',
+    fuente: c.f, fecha_ref: new Date().toISOString().slice(0, 7),
+    creado_por: sesion.perfil.id
+  });
+  if(error) throw error;
+}
+
+export async function borrarConceptoDeProyecto(proyectoId, codigo){
+  const { error } = await supabase.from('proyecto_conceptos')
+    .delete().eq('proyecto_id', proyectoId).eq('codigo', codigo);
+  if(error) throw error;
+}
+
+export async function promoverConcepto(proyectoId, codigo){
+  const { error } = await supabase.rpc('fn_promover_concepto',
+    { p_proyecto: proyectoId, p_codigo: codigo });
+  if(error) throw error;
+}
+
+/* Plantilla con el caso que ya trabajamos, para no arrancar de cero.
+   Se ofrece cuando la organización todavía no tiene proyectos. */
+export const PLANTILLA_ATLACOMULCO = {
+  nombre: 'Electrolinera Atlacomulco — Fase 1',
+  ubicacion: 'Atlacomulco, Estado de México',
+  estado: { v: 1, cfg: {
+    nom: 'Electrolinera Atlacomulco — Fase 1', loc: 'Atlacomulco, Estado de México', modo: 'coinv',
+    grupos: [{ kw: 240, con: 2, q: 5 }],
+    kva: '1500', kwp: 615, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
+    mbt: 120, mmt: 72, dem: 350, piso: 1200, techNueva: 0, tech: 0, sde: 1, sdeBanos: 1,
+    cliEvse: 0, cliTrafo: 0, cliCctv: 0, cliIng: 0, derechos: 0, via: 0,
+    fee: 10, cont: 25, fx: 18.5
+  }, edits: {}, genEdits: {}, genApproved: {} }
+};
+
+// ---------------------------------------------------------------- proyectos
+export async function listarProyectos(){
+  if(!hayNube || !sesion.perfil){
+    return leerLocal().map(p => ({ ...p, local: true }));
+  }
+  const { data, error } = await supabase.from('proyectos')
+    .select('id, clave, nombre, ubicacion, estado, archivado, creado_en, actualizado_en, creado_por, actualizado_por')
+    .order('actualizado_en', { ascending: false });
+  if(error) throw error;
+  return data || [];
+}
+
+export async function crearProyecto({ nombre, ubicacion, estado }){
+  const clave = slug(nombre) + '-' + Math.random().toString(36).slice(2, 6);
+  if(!hayNube || !sesion.perfil){
+    const l = leerLocal();
+    const p = { id: clave, clave, nombre, ubicacion, estado, archivado: false,
+                creado_en: new Date().toISOString(), actualizado_en: new Date().toISOString() };
+    l.unshift(p); escribirLocal(l); return p;
+  }
+  const { data, error } = await supabase.from('proyectos')
+    .insert({ clave, nombre, ubicacion, estado, creado_por: sesion.perfil.id,
+              actualizado_por: sesion.perfil.id })
+    .select().single();
+  if(error) throw error;
+  return data;
+}
+
+export async function guardarProyecto(id, { nombre, ubicacion, estado }){
+  if(!hayNube || !sesion.perfil){
+    const l = leerLocal(); const i = l.findIndex(p => p.id === id);
+    if(i < 0) return null;
+    l[i] = { ...l[i], nombre, ubicacion, estado, actualizado_en: new Date().toISOString() };
+    escribirLocal(l); return l[i];
+  }
+  const { data, error } = await supabase.from('proyectos')
+    .update({ nombre, ubicacion, estado }).eq('id', id).select().single();
+  if(error) throw error;
+  return data;
+}
+
+export async function leerProyecto(id){
+  if(!hayNube || !sesion.perfil) return leerLocal().find(p => p.id === id) || null;
+  const { data, error } = await supabase.from('proyectos').select('*').eq('id', id).maybeSingle();
+  if(error) throw error;
+  return data;
+}
+
+export async function duplicarProyecto(id, nombre){
+  const orig = await leerProyecto(id);
+  if(!orig) throw new Error('Proyecto no encontrado');
+  return await crearProyecto({ nombre, ubicacion: orig.ubicacion, estado: orig.estado });
+}
+
+export async function archivarProyecto(id, archivado){
+  if(!hayNube || !sesion.perfil){
+    const l = leerLocal(); const i = l.findIndex(p => p.id === id);
+    if(i >= 0){ l[i].archivado = archivado; escribirLocal(l); } return;
+  }
+  const { error } = await supabase.from('proyectos').update({ archivado }).eq('id', id);
+  if(error) throw error;
+}
+
+// ---------------------------------------------------------------- comentarios
+export async function comentariosDe(proyectoId){
+  if(!hayNube || !sesion.perfil) return [];
+  const { data, error } = await supabase.from('comentarios')
+    .select('id, concepto, texto, resuelto, creado_en, autor, perfiles(nombre, correo)')
+    .eq('proyecto_id', proyectoId).order('creado_en', { ascending: false });
+  if(error) return [];
+  return data || [];
+}
+
+export async function comentar(proyectoId, texto, concepto = null){
+  const { error } = await supabase.from('comentarios')
+    .insert({ proyecto_id: proyectoId, texto, concepto, autor: sesion.perfil.id });
+  if(error) throw error;
+}

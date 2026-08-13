@@ -7,13 +7,15 @@
 <link rel="icon" href="/favicon.png">
 </head>
 <body>
-<div id="sesion" class="hide"></div>
+<div class="wrap" id="portada"></div>
+<div id="estimador" class="hide">
 <div class="wrap">
 <div id="bootfail" class="note warn hide" style="margin-bottom:16px"></div>
 <header>
 <div>
 <div class="wordmark" role="img" aria-label="Beyond"></div>
 <div class="eyebrow" style="margin-top:8px">ESTIMADOR PARAMÉTRICO DE ESTACIONES DE CARGA</div>
+<button class="btn ghost" id="b_volver" style="margin-top:12px;padding:5px 12px;font-size:12px">Todos los proyectos</button>
 </div>
 <div style="text-align:right">
 <div class="eyebrow">Proyecto</div>
@@ -299,6 +301,27 @@
 <div><h3>Base de datos de conceptos</h3>
 <div class="tiny muted" style="margin-top:4px">Fuente única de precios. Ningún proyecto captura precios por fuera de aquí; cuando un proyecto confirma un precio, se promueve a este catálogo con su fuente y fecha.</div></div>
 </div>
+<div class="row sp" style="margin-bottom:14px">
+<div class="tiny muted" style="flex:1">Los conceptos de ámbito <b style="color:var(--accent)">proyecto</b> existen solo en esta estación. Un administrador los promueve al maestro cuando el precio se confirma.</div>
+<button class="btn ghost" id="g_nuevo">Agregar concepto a este proyecto</button>
+</div>
+<div id="g_nuevoBox" class="hide card" style="background:var(--surface-1);margin-bottom:16px">
+<div class="eyebrow" style="margin-bottom:14px">Concepto nuevo, ámbito de este proyecto</div>
+<div class="grid g3" style="gap:10px">
+<label class="f"><span class="lb">Código</span><input type="text" id="nc_cod" placeholder="OC-030"><span class="hint">Prefijo de la categoría más número</span></label>
+<label class="f"><span class="lb">Categoría</span><select id="nc_cat"></select></label>
+<label class="f"><span class="lb">Unidad</span><input type="text" id="nc_uni" placeholder="m2, pza, lote"></label>
+</div>
+<label class="f"><span class="lb">Concepto</span><input type="text" id="nc_nom" placeholder="Descripción del concepto"></label>
+<div class="grid g3" style="gap:10px">
+<label class="f"><span class="lb">Precio unitario (MXN)</span><input type="number" id="nc_pu" min="0" step="0.01"></label>
+<label class="f"><span class="lb">Sustento</span><select id="nc_tax"><option value="supuesto">Supuesto</option><option value="fuente">Estimación con fuente</option><option value="validado">Dato validado</option><option value="allowance">Sin base de precio</option></select></label>
+<label class="f"><span class="lb">Aplicabilidad</span><select id="nc_ap"><option>Condicional</option><option>Base</option><option>Opcional</option></select></label>
+</div>
+<label class="f"><span class="lb">Base del número</span><input type="text" id="nc_f" placeholder="Cotización de proveedor, lista de distribuidor, criterio de ingeniería…"><span class="hint">Obligatorio: un precio sin base declarada no sirve para estimar</span></label>
+<div class="row" style="justify-content:flex-end;gap:8px"><button class="btn ghost" id="nc_cancel">Cancelar</button><button class="btn" id="nc_save">Agregar</button></div>
+<div class="tiny" id="nc_msg" style="margin-top:10px"></div>
+</div>
 <div class="filters">
 <input type="text" id="g_q" placeholder="Buscar concepto, código o fuente">
 <select id="g_cat"><option value="">Todas las categorías</option></select>
@@ -333,6 +356,7 @@
 </section>
 <div style="margin-top:24px" class="note">
 <b>Herramienta de estimación, no de contratación.</b> Las cantidades se derivan de las variables de sitio mediante reglas paramétricas, no de ingeniería de detalle. Cada renglón declara la base de su número; los marcados sin base son provisiones que deben cotizarse antes de comprometer precio. Ingeniería bajo NOM-001-SEDE-2012; interruptores principales y derivados se verifican contra 125% de la carga continua (Art. 625-21).
+</div>
 </div>
 </div>
 <script type="module" src="/src/main.js"></script>

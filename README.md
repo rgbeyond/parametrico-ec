@@ -31,11 +31,50 @@ con rol `aprobador` lo aplica al catálogo, y el cambio queda en historial con
 autor, fecha y fuente. Está en la base de datos, no en el cliente: una política
 de RLS no se puede evadir desde el navegador.
 
+## Cuentas y roles
+
+Se entra con Google Workspace de `beyond-ae.com`. No hay contraseñas ni registro:
+el perfil se crea solo la primera vez que alguien inicia sesión, y las cuentas
+de otro dominio se rechazan en la base de datos, no en el navegador.
+
+| Rol | Puede |
+|---|---|
+| Administrador | Todo: aprobar precios, promover conceptos al maestro, asignar roles |
+| Editor | Crear y editar proyectos, proponer precios, agregar conceptos al proyecto |
+| Comentarista | Leer todo y dejar comentarios |
+| Solo lectura | Consultar sin modificar |
+
+**El primero que entra queda como administrador.** Los siguientes entran como
+solo lectura y un administrador los promueve desde la pantalla de Usuarios. Es
+deliberado: quien acaba de entrar no debería poder mover precios que alimentan
+propuestas a cliente. Si prefieres lo contrario, cambia el valor por omisión en
+`fn_alta_perfil` dentro de `01_esquema.sql`.
+
+## Proyectos y catálogos
+
+Todos los usuarios ven todos los proyectos; el rol define qué pueden hacer. La
+base de datos es una sola.
+
+El catálogo maestro es global y compartido. Además, **cada proyecto puede tener
+conceptos propios**: lo que ese sitio necesita y el maestro todavía no tiene.
+Nacen con ámbito de proyecto y solo un administrador los promueve al maestro,
+con `fn_promover_concepto`. Así una estación captura lo que requiere sin
+ensuciar la fuente única de precios.
+
+Las tablas `tipologias` y `tipologia_conceptos` ya existen para discretizar
+tipos de electrolinera por subconjunto de conceptos. La interfaz de esa parte
+está pendiente.
+
 ## Estructura
 
 ```
 index.html                 marcado de la aplicación
-src/main.js                punto de entrada
+src/main.js                punto de entrada y orquestación
+src/ui/portada.js          pantalla de proyectos
+src/ui/usuarios.js         administración de roles
+src/lib/sesion.js          sesión, roles y permisos
+src/lib/datos.js           repositorio: proyectos, conceptos, comentarios
+src/lib/contexto.js        proyecto abierto y su catálogo
 src/lib/app.js             núcleo del estimador (pendiente de dividir por pestaña)
 src/lib/almacenamiento.js  persistencia: Supabase > visor > navegador
 src/lib/auth.js            sesión con Google, restringida por dominio
@@ -71,15 +110,15 @@ navegador. Lo único que pierde es el catálogo compartido entre personas.
    agregar como URI de redirección autorizado el que muestra Supabase.
 4. En **Authentication > URL Configuration**, poner la URL del sitio de Netlify
    en *Site URL* y también en *Redirect URLs*, junto con `http://localhost:5173`.
-5. Marcarte como aprobador:
+5. Entrar al sitio por primera vez. Quedas como administrador automáticamente.
+   Si por alguna razón no ocurre:
 
 ```sql
-update perfiles set rol = 'aprobador' where correo = 'rg@beyond-ae.com';
+update perfiles set rol = 'admin' where correo = 'rg@beyond-ae.com';
 ```
 
-El alta de perfil es automática al primer ingreso y rechaza cualquier correo
-fuera de `@beyond-ae.com`. Ese dominio está escrito en la función
-`fn_alta_perfil` de `01_esquema.sql`: si cambia, hay que editarlo ahí.
+El dominio permitido está en la función `fn_dominio_permitido` de
+`01_esquema.sql`. Si cambia, se edita ahí.
 
 ## Netlify
 
@@ -107,7 +146,11 @@ castiga con cero.
 - Leer el catálogo desde Supabase en lugar del JSON incluido, y dejar el JSON
   solo como semilla y respaldo sin conexión.
 - Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
-  ya lo soporta; el cliente todavía aprueba solo en memoria.
+  ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
+  memoria de la sesión.
+- Interfaz de comentarios. La tabla y las políticas existen; el rol de
+  comentarista aún no tiene dónde escribir.
+- Interfaz de tipologías.
 - Motor de cantidades: varias partidas siguen calculándose por reglas de
   escalamiento lineal declaradas en el propio renglón. Validar contra proyectos
   cerrados antes de usarlas en propuesta firme.

@@ -33,12 +33,15 @@ const POT_EVSE=[
 {kw:240,pu:900000, tax:"supuesto",  r:"Se toma la referencia alta de las dos internas disponibles ($900,000 frente a $575,505) porque incluye instalación, garantía y riesgo de suministro. La diferencia entre ambas es material: es la primera cotización a solicitar."}
 ];
 import CAT_GEN_RAW from '../data/catalogo.json';
-const CAT_GEN=CAT_GEN_RAW.map(x=>({...x}));
+import { ctx, guardarEstado, agregarConcepto, promover, puede } from './contexto.js';
+/* El catálogo del proyecto abierto: maestro más los conceptos propios de esa
+   estación. Sin sesión cae al archivo incluido, para poder trabajar en local. */
+const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_RAW).map(x=>({...x}));
 
-const cfg={nom:"Electrolinera Atlacomulco — Fase 1",loc:"Atlacomulco, Estado de México",modo:"coinv",
-grupos:[{kw:240,con:2,q:5}],
-kva:"1500",kwp:615,fvModo:"llave",fvUsdWp:0.79,bess:2,besskwh:261,besskw:125,
-mbt:120,mmt:72,dem:350,piso:1200,techNueva:0,tech:0,sde:1,sdeBanos:1,
+const cfg={nom:"",loc:"",modo:"propia",
+grupos:[],
+kva:"750",kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
+mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
 fee:10,cont:25,fx:18.5};
 const UAB={servicio:"Serv",lote:"Lote",pza:"Pza",m:"m",m2:"m²",kWp:"kWp",sistema:"Sist",nodo:"Nodo",juego:"Jgo",kg:"kg","%":"%",pieza:"Pza"};
@@ -635,6 +638,16 @@ if(scroll!==false) window.scrollTo({top:0,behavior:"smooth"});
 $$(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.t)));
 function goCat(cat){ bf.cat=cat; const el=$("#b_cat"); if(el)el.value=cat; render(); showTab("boq");
 setTimeout(()=>{const r=document.getElementById("cat-"+cat); if(r&&r.scrollIntoView)r.scrollIntoView({block:"start",behavior:"smooth"});},120); };
+window.addEventListener("proyecto:abierto",()=>{
+const e0=ctx.proyecto?ctx.proyecto.estado:null;
+if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
+else { edits={}; genEdits={}; genApproved={};
+  Object.assign(cfg,{grupos:[],kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
+  cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
+fill(); render(); showTab("conf",false);
+});
+const _bv=document.getElementById("b_volver");
+if(_bv) _bv.addEventListener("click",()=>{ if(window.volverAPortada) window.volverAPortada(); });
 $("#b_addgr").addEventListener("click",()=>{cfg.grupos=cfg.grupos||[];cfg.grupos.push({kw:120,con:2,q:1});render();});
 function docHTML(preview,inl){
 const A=inl||{fuentes:FONT_FACES,logo:LOGO_SRC};
@@ -684,18 +697,37 @@ async function activosIncrustados(){
   return _inl;
 }
 function fileName(){ return (cfg.nom||"propuesta").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase()+"-propuesta.html"; }
+/* El diálogo de impresión del sistema es lo único que produce un PDF real;
+   el archivo .html descargado es el respaldo portable, no el PDF en sí. */
+function abrirDialogoImpresion(html){
+  return new Promise(resolve=>{
+    const iframe=document.createElement("iframe");
+    iframe.style.position="fixed"; iframe.style.width="0"; iframe.style.height="0";
+    iframe.style.border="0"; iframe.style.right="0"; iframe.style.bottom="0";
+    iframe.addEventListener("load",()=>{
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(()=>{ iframe.remove(); resolve(); },1000);
+    },{once:true});
+    document.body.appendChild(iframe);
+    iframe.srcdoc=html;
+  });
+}
 $("#b_dl").addEventListener("click",async e=>{
 const msg=$("#e_msg"), b=e.target, rot=b.textContent;
 b.disabled=true; b.textContent="Preparando…";
 msg.innerHTML='<span class="muted">Incrustando logotipo y tipografías…</span>';
 try{
 const inl=await activosIncrustados();
-const blob=new Blob([docHTML(false,inl)],{type:"text/html;charset=utf-8"});
+const html=docHTML(false,inl);
+const blob=new Blob([html],{type:"text/html;charset=utf-8"});
 const url=URL.createObjectURL(blob);
 const a=document.createElement("a"); a.href=url; a.download=fileName();
 document.body.appendChild(a); a.click(); a.remove();
 setTimeout(()=>URL.revokeObjectURL(url),4000);
-msg.innerHTML='<span style="color:var(--success)">Archivo generado: '+fileName()+'. Ábrelo y usa Imprimir, Guardar como PDF, tamaño Carta. Lleva el logotipo y las tipografías dentro, así que se ve igual en cualquier equipo y sin conexión.</span>';
+msg.innerHTML='<span class="muted">Archivo de respaldo descargado. Abriendo el diálogo de impresión para el PDF…</span>';
+await abrirDialogoImpresion(html);
+msg.innerHTML='<span style="color:var(--success)">Listo. En el diálogo de impresión elige Guardar como PDF, tamaño Carta. También descargamos '+fileName()+' como respaldo con el logotipo y las tipografías incrustados, por si necesitas abrirlo sin conexión.</span>';
 }catch(err){
 msg.innerHTML='<span style="color:var(--danger)">No se pudo generar el archivo: '+(err&&err.message||err)+'</span>';
 }
@@ -708,10 +740,14 @@ function touch(){ dirty=true;
 $$(".dirty").forEach(e=>{e.textContent="Cambios sin guardar…";e.style.color="var(--accent)";});
 clearTimeout(autoT); autoT=setTimeout(()=>save(null,true),700);
 }
-function snapshot(){ return JSON.stringify({v:1,cfg,edits,genEdits,genApproved}); }
+function snapshot(){ const t=totals();
+return JSON.stringify({v:1,cfg,edits,genEdits,genApproved,
+  total:Math.round(t.total),directo:Math.round(t.tec),clase:t.cl.nom,idd:Number(t.idd.toFixed(3))}); }
 async function save(btn,auto){ const o=btn?btn.textContent:"";
 if(DB.modo==="sin almacenamiento"){ $$(".dirty").forEach(e=>{e.textContent="Sin almacenamiento: usa Copiar respaldo";e.style.color="var(--warning)";}); return; }
-try{ await DB.set(KEY,snapshot());
+try{ const snap=snapshot();
+if(ctx.proyecto && puede.editar){ await guardarEstado(JSON.parse(snap)); }
+await DB.set(KEY,snap);
 dirty=false; if(btn)btn.textContent="Guardado";
 const t=new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
 $$(".dirty").forEach(e=>{e.textContent=(auto?"Guardado automático ":"Guardado ")+t;e.style.color="var(--success)";});
@@ -756,9 +792,14 @@ function boot(msg){ const b=document.getElementById("bootfail");
 window.addEventListener("error",ev=>boot((ev.message||"error")+(ev.lineno?" (línea "+ev.lineno+")":"")));
 window.addEventListener("unhandledrejection",ev=>boot("Promesa rechazada: "+(ev.reason&&ev.reason.message||ev.reason)));
 (async()=>{ try{
-try{const r=await DB.get(KEY);
-if(r&&r.value){const d=JSON.parse(r.value);Object.assign(cfg,d.cfg||{});edits=d.edits||{};
-genEdits=d.genEdits||{}; genApproved=d.genApproved||{};}}catch(e){}
+try{
+const e0=ctx.proyecto?ctx.proyecto.estado:null;
+if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
+else if(ctx.proyecto){ cfg.nom=ctx.proyecto.nombre||""; cfg.loc=ctx.proyecto.ubicacion||""; }
+else { const r=await DB.get(KEY);
+  if(r&&r.value){const d=JSON.parse(r.value);Object.assign(cfg,d.cfg||{});edits=d.edits||{};
+  genEdits=d.genEdits||{}; genApproved=d.genApproved||{};} }
+}catch(e){}
 fill(); render(); showTab("conf",false);
   const _b=document.getElementById("bootfail"); if(_b) _b.remove();
   } catch(err){ boot((err&&err.message||err)+". Vuelve a abrir el archivo; si persiste, avísame con este mensaje."); }
