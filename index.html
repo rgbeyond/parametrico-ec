@@ -36,72 +36,88 @@
 </div>
 <!-- CONFIGURACIÓN -->
 <section id="p-conf">
-<div class="grid g3" style="align-items:start">
+<div class="conf">
+<div class="conf-col">
+
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Identificación</div>
-<label class="f"><span class="lb">Nombre del proyecto</span><input type="text" id="v_nom"></label>
-<label class="f"><span class="lb">Ubicación (municipio, estado)</span><input type="text" id="v_loc"></label>
-<label class="f"><span class="lb">Modelo de negocio</span><select id="v_modo"></select><span class="hint" id="h_modo"></span></label>
+<div class="grid g3" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Nombre del proyecto</span><input type="text" id="v_nom"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Ubicación (municipio, estado)</span><input type="text" id="v_loc"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Modelo de negocio</span><select id="v_modo"></select></label>
 </div>
+<span class="hint" id="h_modo" style="display:block;margin-top:12px"></span>
+</div>
+
 <div class="card">
 <div class="row sp" style="margin-bottom:12px"><span class="eyebrow">Equipos de carga</span>
-<button class="btn ghost" id="b_addgr" style="padding:5px 12px;font-size:12px">Agregar grupo</button></div>
+<button class="btn ghost" id="b_addgr" style="padding:5px 12px;font-size:12px">Agregar tipo de cargador</button></div>
 <div id="grBox"></div>
-<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-default)">
-<div class="derived"><span class="muted">Equipos</span><b id="l_eq"></b></div>
-<div class="derived"><span class="muted">Puntos de carga</span><b id="l_con"></b></div>
-<div class="derived"><span class="muted">Potencia instalada</span><b id="l_pot"></b></div>
+<div class="grid g3" style="gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-default)">
+<div class="derived" style="border-bottom:0"><span class="muted">Equipos</span><b id="l_eq"></b></div>
+<div class="derived" style="border-bottom:0"><span class="muted">Puntos de carga</span><b id="l_con"></b></div>
+<div class="derived" style="border-bottom:0"><span class="muted">Potencia instalada</span><b id="l_pot"></b></div>
 </div>
 </div>
+
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Transformación, generación y almacenamiento</div>
-<label class="f"><span class="lb">Transformador (kVA)</span>
+<div class="grid g2" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Transformador (kVA)</span>
 <select id="v_kva"><option>300</option><option>500</option><option>750</option><option>1000</option><option>1500</option><option>2000</option><option>2500</option></select>
 <span class="hint" id="h_kva"></span></label>
-<label class="f"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
-<div id="fvBox">
-<label class="f"><span class="lb">Costeo del fotovoltaico</span>
+<label class="f" style="margin-bottom:0"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
+</div>
+<div id="fvBox" class="grid g2" style="gap:12px;margin-top:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Costeo del fotovoltaico</span>
 <select id="v_fvModo"><option value="llave">Llave en mano por USD/Wp</option><option value="desglose">Desglose por componentes</option></select></label>
-<label class="f" id="fvWpBox"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
+<label class="f" id="fvWpBox" style="margin-bottom:0"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
 </div>
-<div class="grid g2" style="gap:10px">
-<label class="f"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
-<label class="f"><span class="lb">kWh por módulo</span><input type="number" id="v_besskwh" min="0" step="1"></label>
+<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">kWh por módulo</span><input type="number" id="v_besskwh" min="0" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Potencia por módulo (kW)</span><input type="number" id="v_besskw" min="0" step="5"></label>
 </div>
-<label class="f"><span class="lb">Potencia por módulo BESS (kW)</span><input type="number" id="v_besskw" min="0" step="5"></label>
 </div>
-</div>
-<div class="grid g3" style="margin-top:14px;align-items:start">
+
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Variables de sitio</div>
-<div class="grid g2" style="gap:10px">
-<label class="f"><span class="lb">Trazo BT (m)</span><input type="number" id="v_mbt" min="0" step="5"></label>
-<label class="f"><span class="lb">Trazo MT (m)</span><input type="number" id="v_mmt" min="0" step="5"></label>
-<label class="f"><span class="lb">Piso a demoler (m²)</span><input type="number" id="v_dem" min="0" step="10"></label>
-<label class="f"><span class="lb">Piso nuevo (m²)</span><input type="number" id="v_piso" min="0" step="10"></label>
+<div class="grid g4" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Trazo BT (m)</span><input type="number" id="v_mbt" min="0" step="5"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Trazo MT (m)</span><input type="number" id="v_mmt" min="0" step="5"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Piso a demoler (m²)</span><input type="number" id="v_dem" min="0" step="10"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Piso nuevo (m²)</span><input type="number" id="v_piso" min="0" step="10"></label>
 </div>
-<div style="border-top:1px solid var(--border-subtle);padding-top:14px">
+<div class="grid g3" style="gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle)">
+<div>
 <label class="row tiny" style="gap:8px;margin-bottom:10px"><input type="checkbox" id="v_techNueva" style="width:auto"> Techumbre nueva sobre equipos y cajones</label>
 <div id="techBox" class="hide"><label class="f" style="margin-bottom:0"><span class="lb">Superficie de techumbre (m²)</span><input type="number" id="v_tech" min="0" step="5"><span class="hint" id="h_tech"></span></label></div>
 </div>
-<div style="border-top:1px solid var(--border-subtle);padding-top:14px;margin-top:14px">
+<div>
 <label class="row tiny" style="gap:8px"><input type="checkbox" id="v_sde" style="width:auto"> Incluir sala de espera</label>
 <div id="sdeBox" class="hide" style="margin-top:9px;padding-left:22px">
 <label class="row tiny" style="gap:8px"><input type="checkbox" id="v_sdeBanos" style="width:auto"> Con dos baños, hombres y mujeres</label>
 </div>
 <div class="hint" style="margin-top:6px">Incluye adecuación, estructura interior, mobiliario, climatización y equipamiento menor.</div>
 </div>
-<div style="border-top:1px solid var(--border-subtle);padding-top:14px;margin-top:14px">
+<div>
 <div class="derived" style="border-bottom:0"><span class="muted">Videovigilancia estimada</span><b id="l_cam"></b></div>
 <div class="hint">Se deriva de los puntos de carga: dos cámaras para cuatro puntos, hasta diez para treinta. Ajustable en el catálogo.</div>
 </div>
 </div>
+</div>
+
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Parámetros comerciales</div>
-<label class="f"><span class="lb">Indirectos y administración</span><input type="range" id="v_fee" min="0" max="20" step="0.5"><div class="row sp"><span class="hint">No corre sobre legal, pass-through de suministrador ni depósitos</span><b id="l_fee"></b></div></label>
+<div class="grid g2" style="gap:24px">
+<label class="f" style="margin-bottom:0"><span class="lb">Indirectos y administración</span><input type="range" id="v_fee" min="0" max="20" step="0.5"><div class="row sp"><span class="hint">No corre sobre legal, pass-through de suministrador ni depósitos</span><b id="l_fee"></b></div></label>
 <label class="f" style="margin-bottom:0"><span class="lb">Reserva de contingencia</span><input type="range" id="v_cont" min="0" max="40" step="1"><div class="row sp"><span class="hint" id="h_cont"></span><b id="l_cont"></b></div></label>
+</div>
 <div class="note" style="margin-top:18px">El alcance de suministro, las exclusiones y los parámetros financieros se definen en la pestaña Alcance.</div>
 </div>
+
+</div>
+<aside class="conf-side">
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Balance eléctrico</div>
 <div id="balance" class="stack" style="gap:9px"></div>
@@ -109,6 +125,7 @@
 <div class="eyebrow" style="margin-bottom:12px">Categorías activas</div>
 <div class="catlist" id="cats"></div>
 </div>
+</aside>
 </div>
 <div class="card" style="margin-top:14px">
 <div class="row sp" style="align-items:flex-start">

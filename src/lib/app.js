@@ -357,8 +357,8 @@ $("#grBox").innerHTML=(cfg.grupos||[]).map((x,i)=>`<div class="gr">
     <div><div class="lbl">Potencia</div><select data-i="${i}" data-f="kw">${POT_EVSE.map(p=>`<option value="${p.kw}"${+x.kw===p.kw?" selected":""}>${p.kw} kW CD</option>`).join("")}</select></div>
     <div><div class="lbl">Conectores</div><select data-i="${i}" data-f="con"><option value="1"${+x.con===1?" selected":""}>1</option><option value="2"${+x.con===2?" selected":""}>2</option></select></div>
     <div><div class="lbl">Equipos</div><input type="number" min="0" step="1" value="${x.q}" data-i="${i}" data-f="q"></div>
-    <button class="xbtn" data-del="${i}" title="Quitar grupo">&times;</button></div>`).join("")
-||'<div class="tiny muted" style="padding:8px 0">Sin equipos de carga. Agrega un grupo.</div>';
+    <button class="xbtn" data-del="${i}" title="Quitar tipo de cargador">&times;</button></div>`).join("")
+||'<div class="tiny muted" style="padding:8px 0">Sin equipos de carga. Agrega un tipo de cargador.</div>';
 $$("#grBox [data-f]").forEach(el=>el.addEventListener("input",e=>{
 const i=+e.target.dataset.i,f=e.target.dataset.f;
 cfg.grupos[i][f]=Math.max(f==="q"?0:1,parseInt(e.target.value)||0); render();}));

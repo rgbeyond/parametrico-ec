@@ -39,6 +39,13 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
 .tab:hover{background:var(--surface-3);color:var(--text-primary)}
 .tab[aria-selected=true]{background:var(--accent);color:var(--text-on-accent)}
 .grid{display:grid;gap:14px} .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+/* Configuración: una sola columna de entradas y el panel de resultados fijo al
+   costado. Con una columna no hay tarjetas desniveladas, y el balance queda a
+   la vista mientras se editan los parámetros que lo mueven. */
+.conf{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:14px;align-items:start}
+.conf-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.conf-side{position:sticky;top:20px;display:flex;flex-direction:column;gap:14px}
+@media(max-width:1180px){.conf{grid-template-columns:1fr}.conf-side{position:static}}
 @media(max-width:1040px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}}
 @media(max-width:620px){.g4{grid-template-columns:1fr}}
 .stat{display:flex;flex-direction:column;gap:10px}
@@ -117,7 +124,9 @@ select.tax option{background:var(--surface-2);color:var(--text-primary)}
 .note{background:var(--surface-1);border-left:2px solid var(--accent);border-radius:0 var(--r-md) var(--r-md) 0;padding:13px 16px;font-size:13px;color:var(--text-secondary)}
 .note.warn{border-left-color:var(--danger)}
 .note b{color:var(--text-primary);font-weight:600}
-.hide{display:none} hr{border:0;border-top:1px solid var(--border-subtle);margin:24px 0}
+/* !important porque `label.f{display:block}` es más específico que una sola
+   clase y dejaba visible el campo de USD/Wp al cambiar a desglose. */
+.hide{display:none!important} hr{border:0;border-top:1px solid var(--border-subtle);margin:24px 0}
 .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap} .sp{justify-content:space-between}
 .stack{display:flex;flex-direction:column;gap:14px}
 .chip{font-size:12px;color:var(--text-secondary);background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--r-pill);padding:4px 11px}
@@ -125,7 +134,7 @@ select.tax option{background:var(--surface-2);color:var(--text-primary)}
 .catitem{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 10px;border-radius:var(--r-md);border:1px solid var(--border-subtle)}
 .catitem.on{background:var(--surface-1);border-color:rgba(255,135,0,.35)}
 .catitem.off{opacity:.4}
-.gr{display:grid;grid-template-columns:1fr 96px 76px 34px;gap:8px;align-items:end;margin-bottom:9px}
+.gr{display:grid;grid-template-columns:1fr 96px 76px 34px;gap:8px;align-items:end;margin-bottom:9px;max-width:620px}
 .gr .lbl{font-size:10px;letter-spacing:var(--ls-wide);text-transform:uppercase;color:var(--text-tertiary);font-weight:600;margin-bottom:4px}
 .gr select,.gr input{padding:7px 9px;font-size:14px}
 .xbtn{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);border-radius:var(--r-md);height:34px;cursor:pointer;font-family:inherit;font-size:15px;line-height:1}
