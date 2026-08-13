@@ -45,6 +45,12 @@ kva:"750",kvaOtra:0,vmt:23,vbt:480,balanceo:0,balanceoPct:30,
 demCon:0,mem:0,sumin:"CFE Suministro Básico",tarifaCat:"GDMTH",tarifaDiv:"",tarifaMes:"",
 cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
 kwp:0,fvKwhKwp:115,fvPerfil:0,fvMeses:null,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
+/* Reparto del consumo por periodo horario y parámetros de operación del
+   almacenamiento. Los porcentajes por omisión son criterio, no medición: una
+   electrolinera concentra su demanda en la tarde-noche, que cae en punta e
+   intermedia. Hay que ajustarlos con datos reales antes de usarlos. */
+pctPunta:20,pctInterm:60,pctBase:20,bessDoD:80,bessEff:87,diasPunta:22,horasPico:6,
+esc1Ses:0,esc1Kwh:0,esc1Dmax:0,esc2Ses:0,esc2Kwh:0,esc2Dmax:0,esc3Ses:0,esc3Kwh:0,esc3Dmax:0,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
 fee:10,cont:25,fx:18.5};
@@ -109,6 +115,15 @@ const DIVISIONES=["Baja California","Baja California Sur","Bajío","Centro","Cen
    100 kW o más. Las otras dos quedan por si el proyecto es pequeño o cambia. */
 const CATEGORIAS=["GDMTH","GDMTO","GDBT"];
 const MESES=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+/* Factor de carga por categoría tarifaria, Tabla 2 del Anexo Único del Acuerdo
+   A/158/2024. Es la bisagra de todo el análisis de demanda: la demanda que se
+   factura es la menor entre la máxima medida y `Qmensual / (24 × d × F.C.)`,
+   así que el término calculado manda siempre que el factor de carga del sitio
+   quede por debajo de este valor. */
+const FC_TARIFA={GDMTH:0.57,GDMTO:0.55,GDBT:0.49};
+/* 365/12. El promedio anual es lo correcto para modelar; en un recibo real `d`
+   son los días efectivos de ese periodo de facturación. */
+const DIAS_MES=30.4;
 /* El rendimiento fotovoltaico se captura como promedio anual, y quien tenga el
    perfil de irradiancia del sitio —de PVGIS, PVsyst o medición— puede declarar
    los doce meses. El promedio basta para decidir inversión; el perfil importa
@@ -501,6 +516,66 @@ if(cfg.fvPerfil){
       :". Perfil plano: captura los doce meses o desactiva la casilla para usar el promedio.")
     +" El perfil reemplaza al promedio anual en el cálculo de generación.";
 }
+/* ---- Escenarios de consumo -------------------------------------------------
+   La pregunta que contesta este bloque es una sola: en cada escenario, ¿se
+   factura la demanda medida o la calculada? Sólo si manda la medida tiene
+   sentido recortar picos con almacenamiento. El término calculado depende del
+   consumo registrado por el medidor, así que el fotovoltaico lo empuja hacia
+   abajo y aleja el caso del BESS. */
+const fc=FC_TARIFA[cfg.tarifaCat]||0.57, divisorDem=24*DIAS_MES*fc;
+const pPu=+cfg.pctPunta||0, pIn=+cfg.pctInterm||0, pBa=+cfg.pctBase||0, sumaPct=pPu+pIn+pBa;
+$("#h_reparto").textContent=(Math.abs(sumaPct-100)>0.5)
+  ?"Los tres periodos suman "+sumaPct+"%, no 100%. Ajusta el reparto para que el cálculo de arbitraje sea válido."
+  :"Reparto declarado, no medido. Umbral de esta categoría: la demanda medida sólo se factura si el sitio consume más de "
+    +(24*fc).toFixed(2)+" kWh por cada kW de pico al día. Debajo de eso manda el término calculado y recortar picos no mueve la factura.";
+const dodF=(+cfg.bessDoD||80)/100, effF=(+cfg.bessEff||87)/100, diasPu=+cfg.diasPunta||0;
+const cCap=+cfg.cargoCap||0, cDist=+cfg.cargoDist||0, cargoDem=cCap+cDist;
+const bessUtil=(+cfg.bess||0)*(+cfg.besskwh||0)*dodF;
+const vered=[];
+[1,2,3].forEach(i=>{
+  const nom=["Pesimista","Probable","Optimista"][i-1];
+  const ses=+cfg["esc"+i+"Ses"]||0, kwhS=+cfg["esc"+i+"Kwh"]||0, dmax=+cfg["esc"+i+"Dmax"]||0;
+  const kwhDia=ses*kwhS, qBruto=kwhDia*DIAS_MES;
+  /* Se asume que toda la generación fotovoltaica desplaza consumo propio. Sin
+     perfil horario no se puede separar autoconsumo de excedente exportado, y
+     el excedente se acredita a otro valor. Es el supuesto optimista. */
+  const qMed=Math.max(0,qBruto-genMes), dCalc=qMed/divisorDem;
+  const hay=kwhDia>0&&dmax>0;
+  const mandaMedida=hay&&dmax<dCalc;
+  $("#o_esc"+i+"Q").textContent=kwhDia>0?Math.round(qMed).toLocaleString("es-MX"):"—";
+  $("#o_esc"+i+"Calc").textContent=kwhDia>0?Math.round(dCalc).toLocaleString("es-MX")+" kW":"—";
+  $("#o_esc"+i+"Cual").innerHTML=!hay?"—"
+    :mandaMedida?'<span class="badge b-validado"><span class="dot"></span>Medida</span>'
+      :'<span class="badge b-supuesto"><span class="dot"></span>Calculada</span>';
+  if(!hay) return;
+  /* El recorte lo limita lo que sea menor: la potencia del banco o su energía
+     dividida entre las horas que hay que sostenerlo. Ignorar la energía es el
+     error clásico: la demanda facturada es el intervalo de 15 minutos más alto
+     del mes, así que si la batería se agota una sola vez, ese intervalo fija la
+     factura y el ahorro del mes se pierde completo. */
+  const hPico=+cfg.horasPico||6, nMod=+cfg.bess||0;
+  const topePot=120*nMod, topeEner=hPico>0?bessUtil/hPico:0;
+  const recorte=Math.min(topePot,topeEner,dmax);
+  const limitaEnergia=topeEner<topePot;
+  const ahorroPico=mandaMedida?recorte*cargoDem:0;
+  const puntaDia=kwhDia*pPu/100, desplaza=Math.min(bessUtil,puntaDia);
+  const netoKwh=(eP+otros)-(eB+otros)/effF;
+  const ahorroArb=(bessUtil>0&&netoKwh>0)?desplaza*netoKwh*diasPu:0;
+  vered.push(`<div class="gap"><b style="min-width:88px">${nom}</b><span>`
+    +(mandaMedida
+      ?`Se factura la demanda <b>medida</b> de ${Math.round(dmax).toLocaleString("es-MX")} kW, por debajo de los ${Math.round(dCalc).toLocaleString("es-MX")} kW calculados. Recortar picos <b>sí</b> baja la factura`
+        +(nMod<=0?", pero no hay módulos de almacenamiento declarados."
+          :cargoDem<=0?", pero falta capturar los cargos de capacidad y distribución para valuarlo."
+          :`: el banco sostiene ${Math.round(recorte).toLocaleString("es-MX")} kW durante ${hPico} h, que valen ${mx(ahorroPico)} al mes.`
+            +(limitaEnergia?` Lo limita la energía, no la potencia: ${nMod} módulo${nMod===1?"":"s"} dan ${Math.round(topePot).toLocaleString("es-MX")} kW de potencia pero sólo ${Math.round(bessUtil).toLocaleString("es-MX")} kWh útiles, que a ${hPico} h alcanzan para ${Math.round(topeEner).toLocaleString("es-MX")} kW.`:""))
+      :`Se factura la demanda <b>calculada</b> de ${Math.round(dCalc).toLocaleString("es-MX")} kW, por debajo de la máxima de ${Math.round(dmax).toLocaleString("es-MX")} kW. Recortar picos <b>no</b> mueve la factura en este escenario.`)
+    +(ahorroArb>0?` Arbitraje: ${mx(ahorroArb)} al mes desplazando ${Math.round(desplaza).toLocaleString("es-MX")} kWh de punta a base.`:"")
+    +`</span></div>`);
+});
+$("#escVeredicto").innerHTML=vered.join("")||'<div class="note">Captura sesiones, kWh por sesión y demanda máxima esperada para saber, en cada escenario, si se factura la demanda medida o la calculada.</div>';
+$("#h_esc").textContent="El consumo medido descuenta la generación fotovoltaica, suponiendo que toda desplaza consumo propio."
+  +" Sin perfil horario no se puede separar autoconsumo de excedente exportado, así que es el supuesto optimista."
+  +" La demanda máxima esperada la declaras tú: es la del intervalo de 15 minutos más alto del mes, no el promedio.";
 $("#h_dep").textContent=cargoCap>0
   ?"Depósito en garantía: 3 × "+money(cargoCap)+" × "+Math.round(dCon).toLocaleString("es-MX")+" kW = "+mx(3*cargoCap*dCon)+" (tarifa GDMTH, apartado 9). Es reembolsable y se reporta aparte del costo de obra."
     +(tDiv&&tMes?" Cargo de la división "+tDiv+", tarifa de "+tMes+"."
@@ -792,7 +867,11 @@ $("#b_cat").addEventListener("change",e=>{bf.cat=e.target.value;render();});
    y necesita lógica propia. Se conecta más abajo. */
 const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCon:"demCon",v_sumin:"sumin",v_tarifaCat:"tarifaCat",v_tarifaDiv:"tarifaDiv",v_tarifaMes:"tarifaMes",
 v_cargoCap:"cargoCap",v_cargoDist:"cargoDist",v_cargoFijo:"cargoFijo",v_otrosKwh:"otrosKwh",
-v_enPunta:"enPunta",v_enInterm:"enInterm",v_enBase:"enBase",v_fvKwhKwp:"fvKwhKwp",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
+v_enPunta:"enPunta",v_enInterm:"enInterm",v_enBase:"enBase",v_fvKwhKwp:"fvKwhKwp",v_balanceoPct:"balanceoPct",
+v_pctPunta:"pctPunta",v_pctInterm:"pctInterm",v_pctBase:"pctBase",v_bessDoD:"bessDoD",v_bessEff:"bessEff",v_diasPunta:"diasPunta",v_horasPico:"horasPico",
+v_esc1Ses:"esc1Ses",v_esc1Kwh:"esc1Kwh",v_esc1Dmax:"esc1Dmax",
+v_esc2Ses:"esc2Ses",v_esc2Kwh:"esc2Kwh",v_esc2Dmax:"esc2Dmax",
+v_esc3Ses:"esc3Ses",v_esc3Kwh:"esc3Kwh",v_esc3Dmax:"esc3Dmax",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
 const checks={v_mem:"mem",v_fvPerfil:"fvPerfil",v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
@@ -832,7 +911,8 @@ const e0=ctx.proyecto?ctx.proyecto.estado:null;
 if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
 else { edits={}; genEdits={}; genApproved={};
   Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,demCon:0,mem:0,cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
-  fvPerfil:0,fvMeses:null,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
+  fvPerfil:0,fvMeses:null,pctPunta:20,pctInterm:60,pctBase:20,bessDoD:80,bessEff:87,diasPunta:22,horasPico:6,
+  esc1Ses:0,esc1Kwh:0,esc1Dmax:0,esc2Ses:0,esc2Kwh:0,esc2Dmax:0,esc3Ses:0,esc3Kwh:0,esc3Dmax:0,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
   cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
 fill(); render(); showTab("conf",false);
 });

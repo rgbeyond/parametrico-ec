@@ -1,5 +1,21 @@
 [
   {
+    "v": "0.8.0",
+    "fecha": "2026-08-13",
+    "tipo": "menor",
+    "resumen": "Escenarios de consumo pesimista, probable y optimista, con la prueba de si se factura la demanda medida o la calculada.",
+    "agregado": [
+      "Tres escenarios de consumo con sesiones por día, kWh por sesión y demanda máxima esperada. La app calcula el consumo mensual medido, el término calculado de la tarifa y declara cuál de los dos se factura.",
+      "Reparto del consumo por periodo horario y parámetros de operación del almacenamiento: profundidad de descarga, eficiencia de ida y vuelta, días con punta al mes y horas del pico a cubrir.",
+      "Valuación del recorte de picos y del arbitraje por escenario, con los cargos de la tarifa capturada.",
+      "Factor de carga por categoría tarifaria: 0.57 para GDMTH, 0.55 para GDMTO y 0.49 para GDBT, según la Tabla 2 del Anexo Único del Acuerdo A/158/2024."
+    ],
+    "corregido": [
+      "El recorte de picos se valuaba sólo contra la potencia del banco, sin verificar que tuviera energía para sostenerlo. Ahora lo limita lo menor entre potencia y energía dividida entre las horas del pico, y declara cuál de las dos restringe. Con dos módulos y un pico de seis horas, el recorte sostenible baja de 240 kW a 70 kW."
+    ],
+    "nota": "La demanda facturada es el intervalo de 15 minutos más alto del mes, así que si el banco se agota una sola vez, ese intervalo fija la factura y el ahorro del mes se pierde completo. Por eso el recorte se dimensiona por energía y no por potencia. El consumo medido descuenta la generación fotovoltaica suponiendo autoconsumo total, que es el supuesto optimista: sin perfil horario no se puede separar autoconsumo de excedente exportado."
+  },
+  {
     "v": "0.7.0",
     "fecha": "2026-08-13",
     "tipo": "menor",

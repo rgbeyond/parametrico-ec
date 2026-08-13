@@ -143,6 +143,46 @@
 </div>
 
 <div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Escenarios de consumo</div>
+<div class="grid g3" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Consumo en punta (%)</span><input type="number" id="v_pctPunta" min="0" max="100" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Consumo en intermedia (%)</span><input type="number" id="v_pctInterm" min="0" max="100" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Consumo en base (%)</span><input type="number" id="v_pctBase" min="0" max="100" step="1"></label>
+</div>
+<div style="margin-top:8px"><span class="hint" id="h_reparto"></span></div>
+<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Profundidad de descarga (%)</span><input type="number" id="v_bessDoD" min="10" max="100" step="5"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Eficiencia ida y vuelta (%)</span><input type="number" id="v_bessEff" min="50" max="100" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Días con punta al mes</span><input type="number" id="v_diasPunta" min="0" max="31" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Horas del pico a cubrir</span><input type="number" id="v_horasPico" min="0.5" max="24" step="0.5"><span class="hint">Cuánto tiempo al día la estación se mantiene por encima del objetivo de recorte</span></label>
+</div>
+<div class="scroll" style="max-height:none;margin-top:16px">
+<table>
+<thead><tr><th>Escenario</th><th class="num">Sesiones/día</th><th class="num">kWh/sesión</th><th class="num">Demanda máx. (kW)</th><th class="num">kWh/mes medido</th><th class="num">Calculada</th><th>Se factura por</th></tr></thead>
+<tbody>
+<tr><td><b>Pesimista</b></td>
+<td><input type="number" id="v_esc1Ses" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc1Kwh" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc1Dmax" min="0" step="10" class="money"></td>
+<td class="num" id="o_esc1Q">—</td><td class="num" id="o_esc1Calc">—</td><td id="o_esc1Cual">—</td></tr>
+<tr><td><b>Probable</b></td>
+<td><input type="number" id="v_esc2Ses" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc2Kwh" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc2Dmax" min="0" step="10" class="money"></td>
+<td class="num" id="o_esc2Q">—</td><td class="num" id="o_esc2Calc">—</td><td id="o_esc2Cual">—</td></tr>
+<tr><td><b>Optimista</b></td>
+<td><input type="number" id="v_esc3Ses" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc3Kwh" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc3Dmax" min="0" step="10" class="money"></td>
+<td class="num" id="o_esc3Q">—</td><td class="num" id="o_esc3Calc">—</td><td id="o_esc3Cual">—</td></tr>
+</tbody>
+</table>
+</div>
+<div style="margin-top:12px"><span class="hint" id="h_esc"></span></div>
+<div id="escVeredicto" class="stack" style="gap:8px;margin-top:12px"></div>
+</div>
+
+<div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Variables de sitio</div>
 <div class="grid g4" style="gap:12px">
 <label class="f" style="margin-bottom:0"><span class="lb">Trazo BT (m)</span><input type="number" id="v_mbt" min="0" step="5"></label>
