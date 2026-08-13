@@ -74,6 +74,16 @@ export const PLANTILLA_ATLACOMULCO = {
        demanda de diseño baja a 840 kW. Sin esa reserva, el criterio de
        dimensionamiento pediría 2,000 kVA para los 1,200 kW instalados. */
     kva: '1500', kvaOtra: 0, vmt: 23, vbt: 480, balanceo: 1, balanceoPct: 30,
+    /* Tarifa GDMTH de la división Centro Sur, que es la que corresponde a
+       Atlacomulco: Ecatepec sería Valle de México Norte, con cargos distintos
+       pese a estar en el mismo estado. Los cargos los aprueba la CRE cada mes,
+       así que esta captura es de agosto de 2026 y hay que refrescarla.
+       `otrosKwh` es la suma de transmisión 0.1801, CENACE 0.0076 y servicios
+       conexos no MEM 0.0069, que se aplican a todos los kWh. */
+    sumin: 'CFE Suministro Básico', tarifaCat: 'GDMTH',
+    tarifaDiv: 'Centro Sur', tarifaMes: '2026-08',
+    cargoCap: 350.90, cargoDist: 221.09, cargoFijo: 264.38, otrosKwh: 0.1946,
+    enPunta: 1.6703, enInterm: 1.4539, enBase: 0.7422,
     kwp: 615, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
     mbt: 120, mmt: 72, dem: 350, piso: 1200, techNueva: 0, tech: 0, sde: 1, sdeBanos: 1,
     cliEvse: 0, cliTrafo: 0, cliCctv: 0, cliIng: 0, derechos: 0, via: 0,

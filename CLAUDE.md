@@ -263,21 +263,26 @@ reservado —lo que baja la demanda de diseño a 840 kW y es lo que sostiene el
 transformador de 1,500 kVA; sin esa reserva el criterio pediría 2,000 kVA—,
 transformador de 1,500 kVA,
 615 kWp fotovoltaico llave en mano a 0.79 USD/Wp, 2 módulos de almacenamiento
-de 261 kWh. Costo directo $36,370,522; inversión total $48,670,755; depósito de
-garantía $4,650,000 aparte. Clase 4, índice 0.42.
+de 261 kWh. Tarifa GDMTH de la división **Centro Sur**, captura de agosto 2026
+—Atlacomulco es Centro Sur; Ecatepec sería Valle de México Norte, con cargos
+distintos pese a estar en el mismo estado—. Costo directo $36,370,522;
+inversión total $48,670,755; depósito de garantía $757,944 aparte, calculado
+sobre 720 kW de demanda contratada. Clase 4, índice 0.42.
 
 **Dos problemas abiertos en ese caso, y son de negocio, no de código:**
 
 1. La obra civil está costeada para los 29 equipos del desarrollo completo, no
    para los 5 de la fase 1. Sobreestima cerca de $700,000.
-2. El depósito de $4,650,000 no solo es una extrapolación de $3,100/kVA sin
-   respaldo: está calculado sobre la capacidad del transformador cuando la
-   tarifa lo calcula sobre la demanda contratada, que con 1,440 kW conectados
-   tiene un piso de 864 kW. Con un cargo por capacidad del orden de $400/kW-mes
-   —cifra ilustrativa, no dato de tarifa— el depósito saldría cerca de
-   $1,036,800. La diferencia es de más de cuatro veces, así que conseguir el
-   cargo vigente es urgente. Sin oficio del suministrador no se debe presentar
-   como firme.
+2. **Resuelto (2026-08).** El depósito de $4,650,000 estaba calculado sobre la
+   capacidad del transformador a $3,100/kVA, cuando la tarifa lo calcula sobre
+   la demanda contratada. Con la tarifa GDMTH de Centro Sur —la división que
+   corresponde a Atlacomulco— de agosto de 2026, el cargo por capacidad es
+   $350.90/kW y el piso de demanda contratada es 720 kW, el 60% de los 1,200 kW
+   conectados: **3 × 350.90 × 720 = $757,944**. La provisión anterior
+   sobreestimaba **seis veces**. No mueve el costo directo ni la inversión
+   total, porque el depósito se reporta aparte. Lo que sigue pendiente es
+   confirmarlo con oficio del suministrador y refrescar la tarifa, que la CRE
+   aprueba cada mes.
 
 ---
 
