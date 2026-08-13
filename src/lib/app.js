@@ -44,7 +44,7 @@ grupos:[],
 kva:"750",kvaOtra:0,vmt:23,vbt:480,balanceo:0,balanceoPct:30,
 demCon:0,mem:0,sumin:"CFE Suministro Básico",tarifaCat:"GDMTH",tarifaDiv:"",tarifaMes:"",
 cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
-kwp:0,fvKwhKwp:115,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
+kwp:0,fvKwhKwp:115,fvPerfil:0,fvMeses:null,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
 fee:10,cont:25,fx:18.5};
@@ -108,6 +108,14 @@ const DIVISIONES=["Baja California","Baja California Sur","Bajío","Centro","Cen
 /* GDMTH es la que aplica a una electrolinera en media tensión con demanda de
    100 kW o más. Las otras dos quedan por si el proyecto es pequeño o cambia. */
 const CATEGORIAS=["GDMTH","GDMTO","GDBT"];
+const MESES=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+/* El rendimiento fotovoltaico se captura como promedio anual, y quien tenga el
+   perfil de irradiancia del sitio —de PVGIS, PVsyst o medición— puede declarar
+   los doce meses. El promedio basta para decidir inversión; el perfil importa
+   cuando haya que ver en qué meses se cruza un umbral, porque la generación
+   real varía del orden de 20 a 25% alrededor de la media. */
+const rendMeses=g=>(g.fvPerfil&&Array.isArray(g.fvMeses)&&g.fvMeses.length===12)?g.fvMeses.map(x=>+x||0):null;
+const rendAnual=g=>{const m=rendMeses(g); return m?m.reduce((a,b)=>a+b,0):(+g.fvKwhKwp||0)*12;};
 function sum(rs,codes){return rs.filter(r=>codes.includes(r.c)).reduce((a,b)=>a+b.imp,0);}
 const M=()=>MODOS[cfg.modo];
 let rows=[],edits={};
@@ -461,13 +469,38 @@ $("#h_tarifa").textContent=(eP>0||eB>0)
    intermedio los días hábiles y en base los domingos, cuando el periodo base se
    extiende toda la tarde; se pondera seis a uno. Los días festivos también caen
    en base y no se descuentan, así que el valor real queda algo por debajo. */
-const genMes=(+cfg.kwp||0)*(+cfg.fvKwhKwp||0), tI=eI+otros, tB=eB+otros;
-$("#h_fvrend").textContent=genMes<=0?""
-  :"Genera "+Math.round(genMes).toLocaleString("es-MX")+" kWh al mes y "
-    +Math.round(genMes*12).toLocaleString("es-MX")+" kWh al año."
+const kwp=+cfg.kwp||0, genAnio=kwp*rendAnual(cfg), genMes=genAnio/12, tI=eI+otros, tB=eB+otros;
+$("#h_fvrend").textContent=genAnio<=0?""
+  :"Genera "+Math.round(genAnio).toLocaleString("es-MX")+" kWh al año, "
+    +Math.round(genMes).toLocaleString("es-MX")+" kWh al mes en promedio."
     +((eI>0||eB>0)
-      ?" A la tarifa capturada compensa "+mx(genMes*(6*tI+tB)/7)+" al mes y "+mx(genMes*12*(6*tI+tB)/7)+" al año, ponderando seis días en periodo intermedio por uno en base."
+      ?" A la tarifa capturada compensa "+mx(genMes*(6*tI+tB)/7)+" al mes y "+mx(genAnio*(6*tI+tB)/7)+" al año, ponderando seis días en periodo intermedio por uno en base."
       :" Captura los cargos de energía en la tarjeta de tarifa para ver cuánto compensa.");
+/* Perfil mensual. Los campos se construyen una sola vez y después solo se
+   sincroniza su valor, y nunca el que tiene el foco: reconstruirlos en cada
+   tecleo haría perder el cursor a media captura. */
+$("#fvPerfilBox").classList.toggle("hide",!cfg.fvPerfil);
+if(cfg.fvPerfil){
+  if(!Array.isArray(cfg.fvMeses)||cfg.fvMeses.length!==12)
+    cfg.fvMeses=Array(12).fill(+cfg.fvKwhKwp||0);
+  const caja=$("#fvMesesBox");
+  if(caja.children.length!==12){
+    caja.innerHTML=MESES.map((m,i)=>`<label class="f" style="margin-bottom:0"><span class="lb">${m}</span>
+      <input type="number" min="0" step="1" data-mes="${i}" value="${cfg.fvMeses[i]}"></label>`).join("");
+    $$("#fvMesesBox [data-mes]").forEach(el=>el.addEventListener("input",e=>{
+      cfg.fvMeses[+e.target.dataset.mes]=parseFloat(e.target.value)||0; touch(); render(); }));
+  } else {
+    $$("#fvMesesBox [data-mes]").forEach(el=>{
+      if(document.activeElement!==el) el.value=cfg.fvMeses[+el.dataset.mes]; });
+  }
+  const ms=cfg.fvMeses.map(x=>+x||0), prom=ms.reduce((a,b)=>a+b,0)/12;
+  const lo=Math.min(...ms), hi=Math.max(...ms);
+  $("#h_fvperfil").textContent="Promedio del perfil: "+prom.toFixed(1)+" kWh/kWp al mes"
+    +(hi>lo?". Mes más bajo "+MESES[ms.indexOf(lo)]+" con "+lo+", mes más alto "+MESES[ms.indexOf(hi)]+" con "+hi
+      +", una variación de "+Math.round((hi/prom-1)*100)+"% arriba y "+Math.round((1-lo/prom)*100)+"% abajo de la media."
+      :". Perfil plano: captura los doce meses o desactiva la casilla para usar el promedio.")
+    +" El perfil reemplaza al promedio anual en el cálculo de generación.";
+}
 $("#h_dep").textContent=cargoCap>0
   ?"Depósito en garantía: 3 × "+money(cargoCap)+" × "+Math.round(dCon).toLocaleString("es-MX")+" kW = "+mx(3*cargoCap*dCon)+" (tarifa GDMTH, apartado 9). Es reembolsable y se reporta aparte del costo de obra."
     +(tDiv&&tMes?" Cargo de la división "+tDiv+", tarifa de "+tMes+"."
@@ -761,7 +794,7 @@ const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCo
 v_cargoCap:"cargoCap",v_cargoDist:"cargoDist",v_cargoFijo:"cargoFijo",v_otrosKwh:"otrosKwh",
 v_enPunta:"enPunta",v_enInterm:"enInterm",v_enBase:"enBase",v_fvKwhKwp:"fvKwhKwp",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
-const checks={v_mem:"mem",v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
+const checks={v_mem:"mem",v_fvPerfil:"fvPerfil",v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
 $("#v_tarifaCat").innerHTML=CATEGORIAS.map(c=>`<option value="${c}">${c}</option>`).join("");
 $("#v_tarifaDiv").innerHTML='<option value="">Sin declarar</option>'+DIVISIONES.map(d=>`<option value="${d}">${d}</option>`).join("");
@@ -798,7 +831,8 @@ window.addEventListener("proyecto:abierto",()=>{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
 if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
 else { edits={}; genEdits={}; genApproved={};
-  Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,demCon:0,mem:0,cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
+  Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,demCon:0,mem:0,cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
+  fvPerfil:0,fvMeses:null,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
   cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
 fill(); render(); showTab("conf",false);
 });

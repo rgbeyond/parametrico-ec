@@ -1,5 +1,16 @@
 [
   {
+    "v": "0.7.0",
+    "fecha": "2026-08-13",
+    "tipo": "menor",
+    "resumen": "Perfil mensual de irradiancia opcional, para cuando el proyecto ya tiene el estudio del sitio.",
+    "agregado": [
+      "Casilla para declarar el perfil mensual de irradiancia. Al activarla aparecen los doce meses en kWh por kWp, que reemplazan al promedio anual en el cálculo de generación.",
+      "El perfil reporta su promedio, el mes más bajo y el más alto, y la variación porcentual contra la media."
+    ],
+    "nota": "El promedio anual sigue siendo suficiente para decidir inversión. El perfil importa para ver en qué meses se cruza un umbral de facturación, porque la generación real varía del orden de 20 a 25% alrededor de la media y los cargos de la tarifa cambian cada mes. Los campos del perfil se construyen una sola vez y no se reconstruyen al teclear, para no perder el cursor a media captura."
+  },
+  {
     "v": "0.6.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
