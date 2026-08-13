@@ -40,7 +40,7 @@ const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_R
 
 const cfg={nom:"",loc:"",modo:"propia",
 grupos:[],
-kva:"750",balanceo:0,balanceoPct:30,
+kva:"750",kvaOtra:0,vmt:23,vbt:480,balanceo:0,balanceoPct:30,
 kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
@@ -88,6 +88,12 @@ let rows=[],edits={};
 function catalog(){
 const g=cfg, n=nEvse(g), pot=potEvse(g), mo=M(), kva=+g.kva;
 const con=nCon(g), cam=nCam(g), tm2=techM2(g);
+/* Tensiones declaradas en Configuración. Antes el cálculo de corriente traía
+   440 V escrito en el código, que no corresponde al secundario que se usa. */
+const vbt=+g.vbt||480, iNom=vbt>0?kva*1000/(Math.sqrt(3)*vbt):0;
+const avisoMT=+g.vmt!==23
+  ?" La tensión primaria declarada es "+g.vmt+" kV: los materiales de media tensión de este catálogo son clase 25 kV, que corresponde a 23 kV, y hay que revisarlos contra la clase de aislamiento que exige "+g.vmt+" kV."
+  :"";
 const L=[];
 const add=(c,cat,d,u,q,pu,tax,r,o={})=>{
 const src=o.src||c; let src2=src, from="";
@@ -124,14 +130,14 @@ add("CFE-006","CFE","Estudios de factibilidad, libranzas y acompañamiento de en
 if(g.derechos) add("DPL-011","DPL","Pago de derechos oficiales municipales y del suministrador","lote",1,0,"allowance","Incluido en el alcance por decisión comercial, pero sin monto: los derechos los fija cada municipio y el suministrador, y no hay base para estimarlos. Hay que capturar el monto real antes de emitir propuesta.");
 if(g.via) add("DPL-012","DPL","Derechos de vía y permisos de trayectoria","lote",1,0,"allowance","Incluido en el alcance por decisión comercial, pero sin monto: depende de los predios que cruce la canalización. Hay que capturar el monto real antes de emitir propuesta.");
 if(!g.cliTrafo){
-add("MT-015","MT","Transformador tipo pedestal "+kva.toLocaleString("es-MX")+" kVA, media a baja tensión","pza",1,847*kva,"allowance","Provisión de $847/kVA: punto medio entre dos referencias internas que difieren 85% por kVA ($594 y $1,100). Promediar dos supuestos incompatibles no produce un dato. Es la partida más urgente de cotizar.", {rule:1});
+add("MT-015","MT","Transformador tipo pedestal "+kva.toLocaleString("es-MX")+" kVA, "+g.vmt+" kV a "+vbt+" V","pza",1,847*kva,"allowance","Provisión de $847/kVA: punto medio entre dos referencias internas que difieren 85% por kVA ($594 y $1,100). Promediar dos supuestos incompatibles no produce un dato. Es la partida más urgente de cotizar."+avisoMT, {rule:1});
 add("OC-006","MT","Base prefabricada, registro y excavación para transformador pedestal","pza",1,45000,"fuente","Cotización de mercado, febrero 2026, para 750 kVA, más excavación. Escala con la capacidad del equipo.");
 add("INS-004","MT","Maniobra e instalación de transformador","pza",1,20000,"supuesto","Referencia interna. Incluye componentes y renta de equipo de maniobra.");
 } else {
 add("MT-015x","MT","Transformador — suministro del cliente","pza",1,0,"validado","Excluido del alcance por suministro del cliente. Debe quedar por escrito en la lista de exclusiones.");
 }
 add("MT-003","MT","Celda de media tensión: seccionamiento, protección y maniobra","lote",1,1300000,"supuesto","Partida frecuentemente omitida en estimados preliminares. Con acometida en media tensión no es opcional.");
-add("MT-017","MT","Tablero general de baja tensión con interruptor principal, barra y medición","pza",1,1200000,"supuesto","Referencia interna. Verificar el interruptor principal contra 125% de la carga continua (Art. 625-21): a "+kva.toLocaleString("es-MX")+" kVA y 440 V la corriente de plena carga es del orden de "+Math.round(kva*1000/(1.732*440)).toLocaleString("es-MX")+" A.");
+add("MT-017","MT","Tablero general de baja tensión con interruptor principal, barra y medición","pza",1,1200000,"supuesto","Referencia interna. Verificar el interruptor principal contra 125% de la carga continua (Art. 625-21): a "+kva.toLocaleString("es-MX")+" kVA y los "+vbt+" V declarados como tensión secundaria, la corriente de plena carga es del orden de "+Math.round(iNom).toLocaleString("es-MX")+" A, así que el interruptor principal no baja de "+Math.round(iNom*1.25).toLocaleString("es-MX")+" A.");
 add("MT-005","MT","Tableros derivados para equipos de carga y servicios auxiliares","lote",1,Math.round(750000*(circEq(g)+3)/20),"allowance","Escalamiento lineal por número de circuitos sobre una referencia interna de $750,000 para veinte circuitos. Escalar tableros por conteo de circuitos es burdo: el precio real depende de la capacidad de barra.", {rule:1});
 add("MT-006","MT","Juego de interruptores derivados","lote",1,Math.round(850000*circEq(g)/17),"allowance","Escalamiento lineal desde una referencia interna de $850,000 para diecisiete equipos, normalizado a circuitos de 120 kW. Cada interruptor debe verificarse contra 125% de la carga continua del circuito que alimenta.", {rule:1});
 add("MT-007","MT","Alimentador principal de transformador a tablero general","servicio",1,650000,"supuesto","Referencia interna. Otra referencia lo ubica en $1,200,000 para 3,200 A.");
@@ -146,7 +152,7 @@ if(n>0) add("BT-001","BT","Alimentadores de baja tensión del tablero general a 
 if(g.mbt>0) add("BT-canal","BT","Canalización, soportería, charolas y rutas principales de fuerza","lote",1,Math.round(4200*g.mbt),"allowance","Provisión de $4,200 por metro de trazo de baja tensión, derivada de una referencia interna de $1,250,000. Depende fuertemente del tipo de ruta (enterrada, aérea o en charola) y debe cerrarse con el trazo medido.", {rule:1});
 add("BT-021","BT","Supresor de transitorios categoría C para tablero general","pza",1,120000,"supuesto","Referencia interna. Escala con la capacidad de la estación.");
 add("BT-022","BT","Supresores categoría B para tableros auxiliares","lote",1,110000,"supuesto","Referencia interna.");
-add("BT-023","BT","Transformador seco auxiliar 45 kVA para servicios generales","pza",1,130000,"supuesto","Referencia interna. Definir la tensión secundaria de la estación antes de cerrar esta partida.");
+add("BT-023","BT","Transformador seco auxiliar 45 kVA para servicios generales","pza",1,130000,"supuesto","Referencia interna. Deriva de la tensión secundaria declarada, "+vbt+" V, hacia el tablero auxiliar de 220/127 V.");
 add("BT-024","BT","Tablero de distribución auxiliar con interruptores derivados","pza",1,80000,"supuesto","Referencia interna.");
 add("BT-025","BT","Canalización y alimentadores auxiliares para alumbrado, contactos, nodos y cámaras","lote",1,600000,"supuesto","Referencia interna.");
 add("BT-026","BT","Paros de emergencia, botoneras, señalización eléctrica y gabinetes","lote",1,160000,"supuesto","Referencia interna. Partida frecuentemente omitida en estimados preliminares.");
@@ -380,6 +386,22 @@ $("#h_kva").textContent=(cfg.balanceo
   ?"Demanda de diseño "+Math.round(potD).toLocaleString("es-MX")+" kW ("+pot.toLocaleString("es-MX")+" kW instalados menos "+pctBal+"% reservado al balanceo). "
   :"Demanda de diseño "+pot.toLocaleString("es-MX")+" kW, sin balanceo. ")
   +"Requiere "+Math.round(req).toLocaleString("es-MX")+" kVA con el criterio de conversión 0.80 y 10% de margen · siguiente capacidad comercial: "+sug.toLocaleString("es-MX")+" kVA";
+/* Desplegable de capacidad: valores comerciales o captura libre. El valor
+   efectivo siempre vive en cfg.kva; kvaOtra solo recuerda que se capturó a mano,
+   para que el desplegable no salte de vuelta a un valor comercial. */
+if(!cfg.kvaOtra && !KVA_COM.includes(kva)) cfg.kvaOtra=1;
+$("#v_kva").value=cfg.kvaOtra?"libre":String(kva);
+$("#kvaLibreBox").classList.toggle("hide",!cfg.kvaOtra);
+const elKl=$("#v_kvaLibre");
+if(document.activeElement!==elKl) elKl.value=kva;
+$("#h_kvaLibre").textContent=(kva<300||kva>2500)
+  ?"Fuera de 300 a 2,500 kVA las reglas por kVA (aportación, depósito, transformador, tierras) extrapolan más allá de la capacidad de la que se derivaron."
+  :"Las partidas que escalan por kVA se derivaron entre 750 y 2,000 kVA.";
+const vbt=+cfg.vbt||480, iPlena=vbt>0?kva*1000/(Math.sqrt(3)*vbt):0;
+$("#h_volt").textContent="A "+kva.toLocaleString("es-MX")+" kVA y "+vbt+" V la corriente de plena carga es del orden de "
+  +Math.round(iPlena).toLocaleString("es-MX")+" A; el interruptor principal se verifica contra 125%, "
+  +Math.round(iPlena*1.25).toLocaleString("es-MX")+" A (Art. 625-21)."
+  +(+cfg.vmt!==23?" El catálogo de media tensión es clase 25 kV, que corresponde a 23 kV: revisar los materiales contra la clase de aislamiento que exige "+cfg.vmt+" kV.":"");
 $("#grBox").innerHTML=(cfg.grupos||[]).map((x,i)=>`<div class="gr">
     <div><div class="lbl">Potencia</div><select data-i="${i}" data-f="kw">${POT_EVSE.map(p=>`<option value="${p.kw}"${+x.kw===p.kw?" selected":""}>${p.kw} kW CD</option>`).join("")}</select></div>
     <div><div class="lbl">Conectores</div><select data-i="${i}" data-f="con"><option value="1"${+x.con===1?" selected":""}>1</option><option value="2"${+x.con===2?" selected":""}>2</option></select></div>
@@ -391,28 +413,34 @@ const i=+e.target.dataset.i,f=e.target.dataset.f;
 cfg.grupos[i][f]=Math.max(f==="q"?0:1,parseInt(e.target.value)||0); render();}));
 $$("#grBox [data-del]").forEach(el=>el.addEventListener("click",e=>{
 cfg.grupos.splice(+e.target.dataset.del,1); render();}));
-/* El balance usa el mismo 0.80 que la sugerencia de kVA: si convirtiera en un
-   sentido con un valor y en el otro con otro, los dos paneles se contradirían. */
-const kw=kva*FP_DIM, potB=cfg.bess*cfg.besskw, def=potD-kw;
-const holgura=potD>0?(kw/potD-1)*100:0;
+/* La comparación va en kVA, que es como se especifican los transformadores.
+   Antes convertía el kVA del equipo a kW con el 0.80, lo que mezclaba unidades
+   y además subestimaba lo que el transformador entrega: el 0.80 es criterio de
+   dimensionamiento, no el factor de potencia real de la carga. */
+const kvaDis=potD/FP_DIM, potB=cfg.bess*cfg.besskw;
+const defKva=kvaDis-kva, defKw=Math.max(0,defKva)*FP_DIM;
+const holgura=kvaDis>0?(kva/kvaDis-1)*100:0;
 const items=[["Potencia instalada de equipos",pot.toLocaleString("es-MX")+" kW"]];
 if(cfg.balanceo) items.push(
   ["Reservado al balanceo ("+pctBal+"%)","−"+Math.round(pot-potD).toLocaleString("es-MX")+" kW"],
   ["Demanda de diseño",Math.round(potD).toLocaleString("es-MX")+" kW"]);
 items.push(
-  ["Capacidad del transformador (conversión 0.80)",Math.round(kw).toLocaleString("es-MX")+" kW"],
+  ["Demanda de diseño en kVA (conversión 0.80)",Math.round(kvaDis).toLocaleString("es-MX")+" kVA"],
+  ["Transformador seleccionado",kva.toLocaleString("es-MX")+" kVA"],
   ["Aporte de almacenamiento en descarga",potB.toLocaleString("es-MX")+" kW"],
   ["Generación fotovoltaica en corriente alterna",Math.round(cfg.kwp/1.23).toLocaleString("es-MX")+" kW"]);
 let msg,col;
+const trafoTxt="El transformador de "+kva.toLocaleString("es-MX")+" kVA ";
+const disTxt="los "+Math.round(kvaDis).toLocaleString("es-MX")+" kVA de diseño";
 const reservaTxt=cfg.balanceo
   ?" El "+pctBal+"% reservado lo absorbe el sistema de gestión recortando potencia en el pico"
     +(potB>0?", o el almacenamiento si hay energía disponible":"")+": los vehículos cargan más lento cuando la estación está llena."
   :"";
-if(def<=0&&holgura>=10){msg="El transformador cubre la demanda de diseño con "+Math.round(holgura)+"% de holgura."+reservaTxt;col="var(--text-tertiary)";}
-else if(def<=0){msg="El transformador cubre la demanda de diseño, pero solo con "+Math.round(Math.max(holgura,0))+"% de holgura; el criterio de dimensionamiento pide 10%."+reservaTxt;col="var(--warning)";}
-else if(potB>=def){msg="Déficit de "+Math.round(def).toLocaleString("es-MX")+" kW frente a la red, cubierto por almacenamiento. Requiere despacho coordinado, no solo balanceo en el equipo."+reservaTxt;col="var(--warning)";}
-else {msg="Déficit de "+Math.round(def).toLocaleString("es-MX")+" kW no cubierto por almacenamiento. Hay que subir capacidad de transformación o reservar más potencia al balanceo."+reservaTxt;col="var(--danger)";}
-$("#balance").innerHTML=items.map(([a,b])=>`<div class="row sp"><span class="tiny muted">${a}</span><b style="font-variant-numeric:tabular-nums">${b}</b></div>`).join("")+
+if(defKva<=0&&holgura>=10){msg=trafoTxt+"cubre "+disTxt+" con "+Math.round(holgura)+"% de holgura."+reservaTxt;col="var(--text-tertiary)";}
+else if(defKva<=0){msg=trafoTxt+"cubre "+disTxt+", pero solo con "+Math.round(Math.max(holgura,0))+"% de holgura; el criterio de dimensionamiento pide 10%."+reservaTxt;col="var(--warning)";}
+else if(potB>=defKw){msg="Faltan "+Math.round(defKva).toLocaleString("es-MX")+" kVA frente a "+disTxt+", equivalentes a "+Math.round(defKw).toLocaleString("es-MX")+" kW, cubiertos por almacenamiento. Requiere despacho coordinado, no solo balanceo en el equipo."+reservaTxt;col="var(--warning)";}
+else {msg="Faltan "+Math.round(defKva).toLocaleString("es-MX")+" kVA frente a "+disTxt+" y el almacenamiento no los cubre. Hay que subir capacidad de transformación o reservar más potencia al balanceo."+reservaTxt;col="var(--danger)";}
+$("#balance").innerHTML=items.map(([a,b])=>`<div class="bal"><span class="tiny muted">${a}</span><b>${b}</b></div>`).join("")+
 `<div class="xs" style="color:${col};margin-top:4px">${msg}</div>`;
 const byCat={}; t.capex.forEach(r=>byCat[r.cat]=(byCat[r.cat]||0)+r.imp);
 $("#cats").innerHTML=Object.entries(CATN).map(([k,v])=>`<div class="catitem ${byCat[k]?"on":"off"}">
@@ -555,7 +583,7 @@ $("#e_doc").innerHTML=`
      <div style="color:#5A5A57;font-size:12px">${[cfg.loc,n+" equipos de carga",pot.toLocaleString("es-MX")+" kW",kva.toLocaleString("es-MX")+" kVA",cfg.kwp?cfg.kwp+" kWp":"",cfg.bess?(cfg.bess*cfg.besskwh).toLocaleString("es-MX")+" kWh":"",con+" puntos"].filter(Boolean).join(" · ")}</div></div>
    </div>
    <h3>Propuesta económica</h3>
-   <p style="max-width:660px">Estación de carga en corriente directa de ${pot.toLocaleString("es-MX")} kW distribuidos en ${n} equipos y ${con} puntos de carga, alimentada en media tensión con transformador de ${kva.toLocaleString("es-MX")} kVA${cfg.kwp?`, con generación fotovoltaica de ${cfg.kwp} kWp`:""}${cfg.bess?` y almacenamiento de ${(cfg.bess*cfg.besskwh).toLocaleString("es-MX")} kWh`:""}. Ingeniería y construcción bajo NOM-001-SEDE-2012.</p>
+   <p style="max-width:660px">Estación de carga en corriente directa de ${pot.toLocaleString("es-MX")} kW distribuidos en ${n} equipos y ${con} puntos de carga, alimentada en media tensión a ${cfg.vmt} kV con transformador de ${kva.toLocaleString("es-MX")} kVA y secundario en ${cfg.vbt} V${cfg.kwp?`, con generación fotovoltaica de ${cfg.kwp} kWp`:""}${cfg.bess?` y almacenamiento de ${(cfg.bess*cfg.besskwh).toLocaleString("es-MX")} kWh`:""}. Ingeniería y construcción bajo NOM-001-SEDE-2012.${cfg.balanceo?` La estación opera con gestión de energía que reserva ${Math.round(+cfg.balanceoPct||0)}% de la potencia instalada: en los momentos de mayor ocupación la potencia se reparte entre los vehículos conectados, de modo que la demanda de diseño frente a la red es de ${Math.round(potDis(cfg)).toLocaleString("es-MX")} kW.`:""}</p>
    <div style="background:#F0EFEC;border-radius:10px;padding:16px 18px;margin:22px 0">
      <div class="eyebrow" style="margin-bottom:6px">Nivel de definición de la propuesta</div>
      <div style="font-weight:600;font-size:16px">${t.cl.nom} — precisión esperada ${t.cl.lo}% / +${t.cl.hi}%</div>
@@ -654,7 +682,9 @@ const bf={q:"",cat:""};
 $("#b_cat").innerHTML='<option value="">Todas las categorías</option>'+Object.entries(CATN).map(([k,v])=>`<option value="${k}">${k} · ${v}</option>`).join("");
 $("#b_q").addEventListener("input",e=>{bf.q=e.target.value;render();});
 $("#b_cat").addEventListener("change",e=>{bf.cat=e.target.value;render();});
-const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_kva:"kva",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
+/* v_kva no entra en este mapa: el desplegable tiene una opción de captura libre
+   y necesita lógica propia. Se conecta más abajo. */
+const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
 const checks={v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
@@ -667,6 +697,16 @@ if(i==="v_modo"){const m=M();cfg.fee=m.fee;cfg.cont=m.cont;$("#v_fee").value=m.f
 touch(); render();
 });
 for(const[i,k]of Object.entries(checks)) $("#"+i).addEventListener("change",e=>{cfg[k]=e.target.checked?1:0;touch();render();});
+/* La opción "Otra capacidad" no escribe cfg.kva: solo abre el campo libre y
+   deja el valor anterior hasta que se capture uno nuevo. */
+$("#v_kva").addEventListener("change",e=>{
+if(e.target.value==="libre") cfg.kvaOtra=1;
+else { cfg.kvaOtra=0; cfg.kva=e.target.value; }
+touch(); render();
+});
+$("#v_kvaLibre").addEventListener("input",e=>{
+cfg.kva=String(parseFloat(e.target.value)||0); touch(); render();
+});
 const TABS=["conf","alc","res","dist","prec","boq","gen","exp"];
 function showTab(t,scroll){
 $$(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.t===t));
@@ -681,7 +721,7 @@ window.addEventListener("proyecto:abierto",()=>{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
 if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
 else { edits={}; genEdits={}; genApproved={};
-  Object.assign(cfg,{grupos:[],balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
+  Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
   cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
 fill(); render(); showTab("conf",false);
 });

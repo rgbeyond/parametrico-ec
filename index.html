@@ -63,9 +63,14 @@
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Demanda y transformación</div>
 <div class="grid g2" style="gap:18px">
+<div>
 <label class="f" style="margin-bottom:0"><span class="lb">Transformador (kVA)</span>
-<select id="v_kva"><option>300</option><option>500</option><option>750</option><option>1000</option><option>1500</option><option>2000</option><option>2500</option></select>
-<span class="hint" id="h_kva"></span></label>
+<select id="v_kva"><option>300</option><option>500</option><option>750</option><option>1000</option><option>1500</option><option>2000</option><option>2500</option><option value="libre">Otra capacidad</option></select></label>
+<div id="kvaLibreBox" class="hide" style="margin-top:10px">
+<label class="f" style="margin-bottom:0"><span class="lb">Capacidad (kVA)</span><input type="number" id="v_kvaLibre" min="50" step="50"><span class="hint" id="h_kvaLibre"></span></label>
+</div>
+<span class="hint" id="h_kva" style="display:block;margin-top:8px"></span>
+</div>
 <div>
 <label class="row tiny" style="gap:8px"><input type="checkbox" id="v_balanceo" style="width:auto"> Balanceo dinámico de cargas</label>
 <div id="balBox" class="hide" style="margin-top:12px">
@@ -74,6 +79,11 @@
 <div class="row sp"><span class="hint" id="h_bal"></span><b id="l_bal"></b></div></label>
 </div>
 </div>
+</div>
+<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Tensión primaria, media tensión (kV)</span><input type="number" id="v_vmt" min="1" step="0.1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Tensión secundaria, baja tensión (V)</span><input type="number" id="v_vbt" min="100" step="10"></label>
+<div><span class="hint" id="h_volt"></span></div>
 </div>
 </div>
 

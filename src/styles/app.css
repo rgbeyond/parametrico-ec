@@ -139,6 +139,12 @@ select.tax option{background:var(--surface-2);color:var(--text-primary)}
 .gr select,.gr input{padding:7px 9px;font-size:14px}
 .xbtn{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);border-radius:var(--r-md);height:34px;cursor:pointer;font-family:inherit;font-size:15px;line-height:1}
 .xbtn:hover{background:var(--surface-3);color:var(--danger)}
+/* Renglón del balance: la etiqueta puede ocupar varias líneas sin empujar la
+   cifra hacia abajo, y la cifra queda siempre alineada a la derecha. El
+   baseline mantiene el número a la altura del primer renglón de la etiqueta. */
+.bal{display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.bal>span{min-width:0;flex:1 1 auto}
+.bal>b{flex:0 0 auto;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
 .derived{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border-subtle)}
 .derived:last-child{border-bottom:0}
 .derived b{font-variant-numeric:tabular-nums}

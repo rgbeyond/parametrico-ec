@@ -52,6 +52,20 @@ declarada en la propuesta, no escondida en el cálculo. Depende de `GE-001`: sin
 sistema de gestión no se sostiene la reserva, y por lo tanto tampoco se puede
 dimensionar el transformador por debajo de la suma de placas.
 
+**El balance eléctrico compara kVA contra kVA**, no kW contra kW. Convertir la
+capacidad del transformador a kW con el mismo 0.80 mezclaba unidades y además la
+subestimaba, porque el 0.80 es criterio de dimensionamiento y no el factor de
+potencia real de la carga.
+
+**Las tensiones se declaran, no se asumen.** Configuración tiene tensión primaria
+y secundaria, 23 kV y 480 V por omisión. Antes el cálculo de corriente para el
+criterio de 125% traía 440 V escrito en el código, y la diferencia no es
+cosmética: a 1,500 kVA son 1,968 A contra 1,804 A, marcos de interruptor
+distintos. Los materiales de media tensión del catálogo son clase 25 kV,
+consistentes con 23 kV; si se declara otra tensión primaria la app avisa en el
+renglón del transformador pero **no** cambia los materiales. Seleccionarlos por
+clase de aislamiento es motor de cantidades, no un campo.
+
 **Especificación de cable en corriente directa: RHW-2/XHHW-2 XLPE 1000 V.**
 "THHW-LS 1000 V" no existe comercialmente: el THHW-LS llega a 600 V. Corregirlo
 donde aparezca.

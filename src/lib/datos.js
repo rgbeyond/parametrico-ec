@@ -73,7 +73,7 @@ export const PLANTILLA_ATLACOMULCO = {
     /* El balanceo al 30% es lo que sostiene el transformador de 1,500 kVA: la
        demanda de diseño baja a 840 kW. Sin esa reserva, el criterio de
        dimensionamiento pediría 2,000 kVA para los 1,200 kW instalados. */
-    kva: '1500', balanceo: 1, balanceoPct: 30,
+    kva: '1500', kvaOtra: 0, vmt: 23, vbt: 480, balanceo: 1, balanceoPct: 30,
     kwp: 615, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
     mbt: 120, mmt: 72, dem: 350, piso: 1200, techNueva: 0, tech: 0, sde: 1, sdeBanos: 1,
     cliEvse: 0, cliTrafo: 0, cliCctv: 0, cliIng: 0, derechos: 0, via: 0,
