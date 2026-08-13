@@ -85,11 +85,14 @@
 <label class="f" style="margin-bottom:0"><span class="lb">Tensión secundaria, baja tensión (V)</span><input type="number" id="v_vbt" min="100" step="10"></label>
 <div><span class="hint" id="h_volt"></span></div>
 </div>
-<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
-<label class="f" style="margin-bottom:0"><span class="lb">Demanda contratada (kW)</span><input type="number" id="v_demCon" min="0" step="10"><span class="hint" id="h_demcon"></span></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Cargo por capacidad (MXN/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="1"><span class="hint" id="h_cargocap"></span></label>
-<div><span class="hint" id="h_dep"></span></div>
+<div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Demanda contratada (kW)</span><input type="number" id="v_demCon" min="0" step="10"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Cargo por capacidad (MXN/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">División tarifaria</span><input type="text" id="v_tarifaDiv" placeholder="Centro Sur"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Mes de la tarifa</span><input type="text" id="v_tarifaMes" placeholder="2026-08"></label>
 </div>
+<div style="margin-top:10px"><span class="hint" id="h_demcon"></span></div>
+<div style="margin-top:8px"><span class="hint" id="h_dep"></span></div>
 </div>
 
 <div class="card">

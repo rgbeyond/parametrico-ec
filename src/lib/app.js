@@ -42,7 +42,7 @@ const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_R
 const cfg={nom:"",loc:"",modo:"propia",
 grupos:[],
 kva:"750",kvaOtra:0,vmt:23,vbt:480,balanceo:0,balanceoPct:30,
-demCon:0,cargoCap:0,
+demCon:0,cargoCap:0,tarifaDiv:"",tarifaMes:"",
 kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
@@ -104,6 +104,10 @@ const con=nCon(g), cam=nCam(g), tm2=techM2(g);
    440 V escrito en el código, que no corresponde al secundario que se usa. */
 const vbt=+g.vbt||480, iNom=vbt>0?kva*1000/(Math.sqrt(3)*vbt):0;
 const dCon=demCon(g), cargoCap=+g.cargoCap||0;
+/* Las tarifas cambian cada mes y hay 17 divisiones tarifarias, así que un cargo
+   sin división ni mes no se puede auditar: en ese caso el renglón baja a
+   supuesto aunque el cálculo de la fórmula sea correcto. */
+const tDiv=(g.tarifaDiv||"").trim(), tMes=(g.tarifaMes||"").trim(), tarifaCitada=!!(tDiv&&tMes);
 const avisoMT=+g.vmt!==23
   ?" La tensión primaria declarada es "+g.vmt+" kV: los materiales de media tensión de este catálogo son clase 25 kV, que corresponde a 23 kV, y hay que revisarlos contra la clase de aislamiento que exige "+g.vmt+" kV."
   :"";
@@ -144,7 +148,7 @@ add("CFE-004","CFE","Aportación y presupuesto de obra del suministrador","servi
    calculada sobre la capacidad del transformador en vez de la demanda
    contratada, y por eso probablemente sobreestima. */
 if(cargoCap>0)
-add("CFE-005","CFE","Depósito en garantía ante el suministrador","servicio",1,3*cargoCap*dCon,"fuente","Tarifa GDMTH, apartado 9: tres veces el cargo por capacidad aplicado a cada kilowatt de demanda contratada. Son 3 × "+money(cargoCap)+" por kW × "+Math.round(dCon).toLocaleString("es-MX")+" kW contratados. Es garantía reembolsable, no costo de obra: se reporta aparte y no lleva indirectos ni contingencia. Confirmar el cargo vigente para la región del proyecto.",{rule:1,fee:0,cont:0,tr:"dep"});
+add("CFE-005","CFE","Depósito en garantía ante el suministrador","servicio",1,3*cargoCap*dCon,tarifaCitada?"fuente":"supuesto","Tarifa GDMTH, apartado 9: tres veces el cargo por capacidad aplicado a cada kilowatt de demanda contratada. Son 3 × "+money(cargoCap)+" por kW × "+Math.round(dCon).toLocaleString("es-MX")+" kW contratados. "+(tarifaCitada?"Cargo de la división "+tDiv+", tarifa de "+tMes+".":"El cargo no declara división ni mes. Las tarifas se aprueban cada mes y difieren entre las 17 divisiones tarifarias, así que sin esa procedencia la cifra no se puede auditar y este renglón no puede contar como estimación con fuente.")+" Es garantía reembolsable, no costo de obra: se reporta aparte y no lleva indirectos ni contingencia.",{rule:1,fee:0,cont:0,tr:"dep"});
 else
 add("CFE-005","CFE","Depósito en garantía ante el suministrador","servicio",1,3100*kva,"allowance","Provisión de $3,100/kVA sobre la capacidad del transformador, derivada de dos datos internos de distinta capacidad. La tarifa GDMTH calcula el depósito en su apartado 9 como tres veces el cargo por capacidad aplicado a la demanda contratada, que aquí son "+Math.round(dCon).toLocaleString("es-MX")+" kW: esta provisión está calculada sobre la variable equivocada y es probable que sobreestime. Captura el cargo por capacidad en Configuración para sustituirla por el cálculo de tarifa. Es garantía reembolsable y se reporta aparte.",{rule:1,fee:0,cont:0,tr:"dep"});
 }
@@ -429,11 +433,11 @@ const piso=pisoDemCon(cfg), dCon=demCon(cfg), cargoCap=+cfg.cargoCap||0;
 $("#h_demcon").textContent="Piso de tarifa "+Math.round(piso).toLocaleString("es-MX")+" kW: el 60% de la carga conectada, mínimo 100 kW. Deja 0 para usar el piso."
   +(+cfg.demCon>0&&+cfg.demCon<piso?" La cifra capturada queda por debajo del piso y el suministrador no la aceptaría.":"")
   +(piso>kva*FP_DIM?" El 60% de la carga conectada excede la capacidad del transformador: la tarifa tomaría la capacidad de la subestación al 90% como demanda contratada, y la conversión de kVA a kW de esa regla está pendiente de confirmar.":"");
-$("#h_cargocap").textContent=cargoCap>0
-  ?"Cargo capturado. El depósito se calcula por tarifa."
-  :"Pendiente. Sin este dato el depósito usa la provisión por kVA.";
+const tDiv=(cfg.tarifaDiv||"").trim(), tMes=(cfg.tarifaMes||"").trim();
 $("#h_dep").textContent=cargoCap>0
   ?"Depósito en garantía: 3 × "+money(cargoCap)+" × "+Math.round(dCon).toLocaleString("es-MX")+" kW = "+mx(3*cargoCap*dCon)+" (tarifa GDMTH, apartado 9). Es reembolsable y se reporta aparte del costo de obra."
+    +(tDiv&&tMes?" Cargo de la división "+tDiv+", tarifa de "+tMes+"."
+      :" Falta declarar división y mes: las tarifas cambian cada mes y por división, así que sin eso la cifra no se puede auditar y el renglón queda como supuesto.")
   :"Depósito en garantía por provisión: "+mx(3100*kva)+", calculado sobre los "+kva.toLocaleString("es-MX")+" kVA del transformador. La tarifa lo calcula sobre la demanda contratada, así que esta cifra está sobre la variable equivocada.";
 $("#grBox").innerHTML=(cfg.grupos||[]).map((x,i)=>`<div class="gr">
     <div><div class="lbl">Potencia</div><select data-i="${i}" data-f="kw">${POT_EVSE.map(p=>`<option value="${p.kw}"${+x.kw===p.kw?" selected":""}>${p.kw} kW CD</option>`).join("")}</select></div>
@@ -719,7 +723,7 @@ $("#b_q").addEventListener("input",e=>{bf.q=e.target.value;render();});
 $("#b_cat").addEventListener("change",e=>{bf.cat=e.target.value;render();});
 /* v_kva no entra en este mapa: el desplegable tiene una opción de captura libre
    y necesita lógica propia. Se conecta más abajo. */
-const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCon:"demCon",v_cargoCap:"cargoCap",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
+const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCon:"demCon",v_cargoCap:"cargoCap",v_tarifaDiv:"tarifaDiv",v_tarifaMes:"tarifaMes",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
 const checks={v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
