@@ -56,6 +56,9 @@ input[type=checkbox]{width:auto}
 .btn:hover{background:var(--beyond-orange-300)} .btn:active{transform:scale(.98)}
 .btn.ghost{background:transparent;color:var(--text-primary);border:1px solid var(--border-default)}
 .btn.ghost:hover{background:var(--surface-3)}
+.g-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:var(--r-md);font-family:inherit;font-size:14px;font-weight:600;padding:11px 16px;cursor:pointer;transition:120ms}
+.g-btn:hover{background:#f7f7f7;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.g-btn:active{transform:scale(.99)}
 .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap}
 .badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .b-validado{background:var(--success-soft);color:var(--success)}

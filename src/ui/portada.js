@@ -41,16 +41,21 @@ export function montarPortada(el, { alAbrir }) {
   };
 
   const puerta = () => `
-    <div class="card" style="max-width:520px;margin:60px auto;text-align:center">
-      <div class="wordmark" style="margin:0 auto 22px"></div>
-      <h3>Estimador paramétrico de electrolineras</h3>
-      <p class="muted tiny" style="margin:10px 0 24px">
-        Entra con tu cuenta de Google de <b style="color:var(--text-primary)">${dominio}</b>.
-        No hay contraseña que recordar ni registro que llenar: la primera vez que entras,
-        tu perfil se crea solo.
+    <div class="card" style="max-width:420px;margin:88px auto;text-align:center;padding:44px 36px">
+      <div class="wordmark" style="width:150px;height:50px;margin:0 auto 28px"></div>
+      <p class="muted tiny" style="margin:0 0 30px">
+        Estimador de CAPEX para estaciones de carga, a partir de los datos del sitio.
       </p>
-      <button class="btn" data-acc="entrar" style="width:100%;padding:12px">Entrar con Google</button>
-      <div class="tiny muted" style="margin-top:18px">Las cuentas fuera de ${dominio} se rechazan.</div>
+      <button class="g-btn" data-acc="entrar">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+        </svg>
+        <span>Continuar con Google</span>
+      </button>
+      <div class="xs muted" style="margin-top:20px">Solo cuentas @${dominio}</div>
     </div>`;
 
   const sinPerfil = () => `
