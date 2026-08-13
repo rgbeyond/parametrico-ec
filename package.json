@@ -1,7 +1,7 @@
 {
   "name": "parametrico-ec",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Estimador parametrico de electrolineras — Beyond AE",
   "scripts": {

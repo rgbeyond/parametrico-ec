@@ -142,6 +142,39 @@ Netlify tampoco.
 
 ---
 
+## Versión y bitácora
+
+La versión vive **únicamente en `package.json`**. `vite.config.js` la lee al
+compilar y la inyecta junto con la fecha del build; `src/lib/version.js` la
+expone ya formateada. No escribirla a mano en ningún otro archivo: dos fuentes
+se desincronizan.
+
+Numeración por **versionado semántico** (SemVer), `mayor.menor.parche`:
+
+- **parche**: correcciones que no agregan capacidad.
+- **menor**: capacidad nueva, compatible con lo anterior.
+- **mayor**: rompe compatibilidad. Aquí eso significa algo concreto: que el
+  formato del estado guardado de los proyectos deje de abrir. Por eso las
+  cuatro rutas de carga mezclan con `Object.assign` en lugar de reemplazar, y
+  por eso al renombrar la etiqueta "grupo" a "tipo de cargador" **no** se
+  renombró la llave de datos `grupos`.
+
+`1.0.0` cuando cierren los pendientes de interfaz de producto, no cuando se vea
+bien. No confundir dos ejes: la versión mide el software y la clase del estimado
+mide la calidad del dato. Se puede estar en 1.0 con un estimado Clase 4.
+
+La bitácora es `src/data/versiones.json`, y se abre desde el pie de la
+interfaz. Está en el repositorio y no en la base de datos a propósito: describe
+el código, así que se despliega junto con el cambio que documenta y no puede
+anunciar una versión que no existe. **Al subir de versión, su entrada va en el
+mismo commit.** Cada entrada declara sus commits para que sea verificable; las
+versiones 0.2.0 y 0.3.0 son una reconstrucción retroactiva de etapas reales que
+nunca se publicaron por separado, y así está anotado.
+
+La versión y la fecha de compilación también van en el pie del documento de
+propuesta. Sin eso, una propuesta impresa no se puede reconciliar con el código
+que produjo sus cifras.
+
 ## Roles
 
 | Rol | Puede |

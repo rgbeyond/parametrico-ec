@@ -2,6 +2,7 @@ import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/app.css';
 import logoUrl from './assets/logos/beyond-orange.png';
+import { VERSION_TXT } from './lib/version.js';
 import { iniciarSesion, alCambiarSesion } from './lib/sesion.js';
 import { montarPortada } from './ui/portada.js';
 import { abrirProyecto } from './lib/contexto.js';
@@ -9,6 +10,19 @@ import { abrirProyecto } from './lib/contexto.js';
 /* app.js fija esta misma variable cuando se carga, pero eso pasa hasta que
    se abre un proyecto. La portada la necesita desde el primer render. */
 document.documentElement.style.setProperty('--logo', `url("${logoUrl}")`);
+
+/* La bitácora se importa sólo al abrirla: no tiene por qué pesar en el arranque. */
+const pieVersion = document.getElementById('appver');
+if (pieVersion) {
+  pieVersion.innerHTML = '<button class="verlink" id="b_bitacora"></button>';
+  const boton = document.getElementById('b_bitacora');
+  boton.textContent = VERSION_TXT;
+  boton.title = 'Ver la bitácora de versiones';
+  boton.addEventListener('click', async () => {
+    const { abrirBitacora } = await import('./ui/bitacora.js');
+    abrirBitacora();
+  });
+}
 
 const zonaPortada = document.getElementById('portada');
 const zonaApp = document.getElementById('estimador');

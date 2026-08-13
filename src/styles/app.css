@@ -126,6 +126,16 @@ select.tax option{background:var(--surface-2);color:var(--text-primary)}
 .note b{color:var(--text-primary);font-weight:600}
 /* !important porque `label.f{display:block}` es más específico que una sola
    clase y dejaba visible el campo de USD/Wp al cambiar a desglose. */
+/* Pie con la versión. Vive fuera de la portada y del estimador para aparecer
+   en las tres pantallas, incluida la de acceso. */
+.verfoot{max-width:1280px;margin:0 auto;padding:0 20px 26px;font-size:11px;color:var(--text-tertiary);text-align:right;letter-spacing:.02em}
+.verlink{background:none;border:0;padding:0;font-family:inherit;font-size:11px;letter-spacing:.02em;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;text-decoration-color:var(--border-default);text-underline-offset:3px}
+.verlink:hover{color:var(--accent);text-decoration-color:var(--accent)}
+/* Ventana emergente. La tarjeta se desplaza dentro del fondo, no la página,
+   para que la bitácora se pueda abrir desde cualquier pantalla. */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:44px 20px;overflow-y:auto}
+.modal-card{background:var(--surface-2);border:1px solid var(--border-default);border-radius:var(--r-lg);padding:26px 28px;width:100%;max-width:760px;outline:0}
+@media(max-width:700px){.modal{padding:16px 12px}.modal-card{padding:20px 18px}}
 .hide{display:none!important} hr{border:0;border-top:1px solid var(--border-subtle);margin:24px 0}
 .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap} .sp{justify-content:space-between}
 .stack{display:flex;flex-direction:column;gap:14px}

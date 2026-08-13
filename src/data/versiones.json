@@ -1,0 +1,75 @@
+[
+  {
+    "v": "0.4.0",
+    "fecha": "2026-08-13",
+    "tipo": "menor",
+    "commits": ["49b78ca", "3c58c1e", "27d77f5", "8cfd4b5", "8424368"],
+    "resumen": "Ingeniería: balanceo dinámico de cargas, dimensionamiento contra la demanda de diseño y tensiones declaradas.",
+    "agregado": [
+      "Balanceo dinámico de cargas, con el porcentaje de potencia reservada declarado y su efecto sobre el dimensionamiento del transformador.",
+      "Tensión primaria y secundaria como parámetros del proyecto, 23 kV y 480 V por omisión. De ellas se derivan la corriente de plena carga y la verificación del interruptor principal contra 125%.",
+      "Captura libre de capacidad de transformador, además de los valores comerciales, con aviso cuando queda fuera del rango del que se derivaron las reglas por kVA.",
+      "Versión visible en la interfaz y en el pie del documento de propuesta, y esta bitácora."
+    ],
+    "cambiado": [
+      "El transformador se sugiere contra la demanda de diseño y no contra la suma de placas de los equipos.",
+      "El balance eléctrico compara kVA contra kVA. Antes convertía la capacidad del transformador a kW con el criterio de dimensionamiento, lo que mezclaba unidades y subestimaba al equipo.",
+      "Configuración reorganizada en una columna de entradas y un panel de balance fijo al costado, para que el efecto de cada cambio quede a la vista.",
+      "Pantalla de acceso rediseñada, con el logotipo de marca y sin la explicación del método de ingreso.",
+      "En Equipos de carga, los grupos se llaman ahora tipos de cargador.",
+      "El documento de propuesta declara las tensiones y, cuando hay balanceo, la reserva y su consecuencia operativa: en el pico los vehículos cargan más lento."
+    ],
+    "corregido": [
+      "El logotipo no aparecía en la portada ni en la pantalla de acceso: la variable que lo carga se definía dentro del módulo del estimador, que se importa después.",
+      "El ícono de la pestaña del navegador usaba el logotipo completo y se veía deformado. Ahora es el isotipo.",
+      "El cálculo de corriente para el interruptor principal traía 440 V escrito en el código. A 1,500 kVA la diferencia contra 480 V es de 1,968 A a 1,804 A, que son marcos de interruptor distintos.",
+      "El campo de costo por Wp no se ocultaba al cambiar el costeo fotovoltaico a desglose por componentes.",
+      "En el balance eléctrico, las etiquetas largas empujaban la cifra al renglón siguiente."
+    ]
+  },
+  {
+    "v": "0.3.0",
+    "fecha": "2026-08-12",
+    "tipo": "menor",
+    "commits": ["bf07b9b", "55d0c47"],
+    "resumen": "Base de datos operando: Supabase configurado, acceso con Google, perfiles con rol, políticas RLS y gobierno de precios.",
+    "agregado": [
+      "Cuatro roles: administrador, editor, comentarista y solo lectura.",
+      "Políticas de seguridad a nivel de renglón en las nueve tablas. La verificación de quién puede escribir qué vive en la base de datos, no en el navegador.",
+      "Alta automática de perfil al primer ingreso con Google Workspace, restringida al dominio corporativo. El primero que entra queda como administrador y los siguientes como solo lectura.",
+      "Funciones de aprobación y de rechazo de propuestas de precio, ambas con rastro de quién y cuándo.",
+      "Registro automático en el historial de cualquier cambio de precio del catálogo, sin importar quién lo escriba.",
+      "Conceptos con ámbito de proyecto, que un administrador puede promover al catálogo maestro."
+    ],
+    "cambiado": [
+      "Actualizar precio, taxonomía y fuente del catálogo maestro pasa a ser de administrador y editor, para no dejar toda aprobación en una sola persona. Crear o eliminar un concepto del maestro sigue siendo exclusivo de administrador."
+    ]
+  },
+  {
+    "v": "0.2.0",
+    "fecha": "2026-08-12",
+    "tipo": "menor",
+    "commits": ["bf07b9b"],
+    "resumen": "Modularización: portada de proyectos, sesión, repositorio de datos y contexto, con varios proyectos por organización.",
+    "agregado": [
+      "Portada de proyectos con alta, duplicado, archivado y búsqueda.",
+      "Pantalla de administración de usuarios y roles.",
+      "Separación en módulos: sesión y permisos, repositorio de datos, contexto del proyecto abierto y portada.",
+      "Carga diferida del estimador: la portada aparece de inmediato y el núcleo de cálculo se importa al abrir un proyecto."
+    ],
+    "cambiado": [
+      "El estimador deja de ser una sola pantalla suelta y trabaja sobre el proyecto abierto, con su propio catálogo combinado."
+    ],
+    "corregido": [
+      "La descarga de la propuesta no abría el diálogo de impresión, así que había que abrir el archivo a mano para generar el PDF."
+    ]
+  },
+  {
+    "v": "0.1.0",
+    "fecha": "2026-08-12",
+    "tipo": "inicial",
+    "commits": ["749adbb", "dc91c97", "6bc9cfd", "b47dc69"],
+    "resumen": "Prototipo del estimador: cálculo paramétrico, catálogo de 188 conceptos y salida a propuesta, sin cuentas ni catálogo compartido.",
+    "nota": "El prototipo llegó al repositorio por carga de archivos y no por commits incrementales, así que la fecha corresponde a su incorporación y no a su desarrollo."
+  }
+]

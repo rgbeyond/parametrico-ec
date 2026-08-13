@@ -2,6 +2,7 @@
    Pendiente de refactor: separar en módulos de interfaz por pestaña. */
 import logoUrl from '../assets/logos/beyond-orange.png';
 import { FONT_CSS } from './fuentes.js';
+import { VERSION_TXT } from './version.js';
 import { DB } from './almacenamiento.js';
 const LOGO_URL=logoUrl;
 document.documentElement.style.setProperty('--logo',`url("${logoUrl}")`);
@@ -612,6 +613,7 @@ $("#e_doc").innerHTML=`
    <p style="margin-top:8px">Las variables con mayor efecto sobre el monto son la cotización formal de los equipos de carga, la respuesta del suministrador de energía sobre aportación de obra y depósito, y el trazo de canalización medido en sitio. Al cerrarlas, el rango se estrecha y la propuesta sube de nivel de definición.</p>
    <div style="border-top:1px solid rgba(0,0,0,.16);margin-top:26px;padding-top:12px;font-size:11px;color:#8C8C88">
      Beyond AE, S.A.P.I. de C.V. · ${cfg.nom||""}${cfg.loc?" · "+cfg.loc:""} · Documento de referencia, no apto para envío sin revisión.
+     <br>Generado con el estimador paramétrico ${VERSION_TXT}.
    </div>`;
   try{ const fr=$("#e_frame");
     if(fr){ const d=fr.contentDocument||fr.contentWindow.document;
