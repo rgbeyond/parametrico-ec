@@ -85,14 +85,37 @@
 <label class="f" style="margin-bottom:0"><span class="lb">Tensión secundaria, baja tensión (V)</span><input type="number" id="v_vbt" min="100" step="10"></label>
 <div><span class="hint" id="h_volt"></span></div>
 </div>
-<div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
 <label class="f" style="margin-bottom:0"><span class="lb">Demanda contratada (kW)</span><input type="number" id="v_demCon" min="0" step="10"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Cargo por capacidad (MXN/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="0.01"></label>
+</div>
+<div style="margin-top:10px"><span class="hint" id="h_demcon"></span></div>
+</div>
+
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<span class="eyebrow">Tarifa del suministrador</span>
+<label class="row tiny" style="gap:8px"><input type="checkbox" id="v_mem" style="width:auto"> Suministro calificado en el MEM</label>
+</div>
+<div class="grid g4" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Suministrador</span><input type="text" id="v_sumin" placeholder="CFE Suministro Básico"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Categoría tarifaria</span><input type="text" id="v_tarifaCat" placeholder="GDMTH"></label>
 <label class="f" style="margin-bottom:0"><span class="lb">División tarifaria</span><input type="text" id="v_tarifaDiv" placeholder="Centro Sur"></label>
 <label class="f" style="margin-bottom:0"><span class="lb">Mes de la tarifa</span><input type="text" id="v_tarifaMes" placeholder="2026-08"></label>
 </div>
-<div style="margin-top:10px"><span class="hint" id="h_demcon"></span></div>
+<div class="grid g4" style="gap:12px;margin-top:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Capacidad (MXN/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Distribución (MXN/kW-mes)</span><input type="number" id="v_cargoDist" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Cargo fijo (MXN/mes)</span><input type="number" id="v_cargoFijo" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Otros cargos (MXN/kWh)</span><input type="number" id="v_otrosKwh" min="0" step="0.0001"><span class="hint">Transmisión, CENACE y servicios conexos</span></label>
+</div>
+<div class="grid g3" style="gap:12px;margin-top:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Energía punta (MXN/kWh)</span><input type="number" id="v_enPunta" min="0" step="0.0001"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Energía intermedia (MXN/kWh)</span><input type="number" id="v_enInterm" min="0" step="0.0001"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Energía base (MXN/kWh)</span><input type="number" id="v_enBase" min="0" step="0.0001"></label>
+</div>
+<div style="margin-top:12px"><span class="hint" id="h_tarifa"></span></div>
 <div style="margin-top:8px"><span class="hint" id="h_dep"></span></div>
+<div class="note" style="margin-top:14px">Los cargos se capturan como referencia documentada del proyecto: alimentan el depósito en garantía y el diferencial de arbitraje, no una factura estimada. La Comisión Reguladora de Energía los aprueba cada mes y difieren entre las 17 divisiones tarifarias, así que hay que declarar división y mes.</div>
 </div>
 
 <div class="card">

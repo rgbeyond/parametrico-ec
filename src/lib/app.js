@@ -42,7 +42,8 @@ const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_R
 const cfg={nom:"",loc:"",modo:"propia",
 grupos:[],
 kva:"750",kvaOtra:0,vmt:23,vbt:480,balanceo:0,balanceoPct:30,
-demCon:0,cargoCap:0,tarifaDiv:"",tarifaMes:"",
+demCon:0,mem:0,sumin:"CFE Suministro Básico",tarifaCat:"GDMTH",tarifaDiv:"",tarifaMes:"",
+cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
 kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
@@ -61,6 +62,9 @@ const mx=n=>"$"+Math.round(n).toLocaleString("es-MX");
 const money=n=>"$"+(Math.round((+n||0)*100)/100).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
 const unmoney=v=>parseFloat(String(v).replace(/[^0-9.\-]/g,""))||0;
 const mxs=n=>{const a=Math.abs(n);if(a>=1e6)return (n/1e6).toFixed(2).replace(/\.00$/,"")+" M";if(a>=1e3)return Math.round(n/1e3)+" k";return Math.round(n)+"";};
+/* Los cargos por kWh se publican con cuatro decimales y redondearlos a dos
+   pierde precisión que importa al comparar periodos horarios. */
+const mkwh=n=>"$"+(+n||0).toLocaleString("es-MX",{minimumFractionDigits:4,maximumFractionDigits:4});
 POT_EVSE.forEach(p=>PU_EVSE[p.kw]=p);
 const grp=g=>(g.grupos||[]).filter(x=>x.q>0);
 const nEvse=g=>grp(g).reduce((a,b)=>a+ +b.q,0);
@@ -148,7 +152,7 @@ add("CFE-004","CFE","Aportación y presupuesto de obra del suministrador","servi
    calculada sobre la capacidad del transformador en vez de la demanda
    contratada, y por eso probablemente sobreestima. */
 if(cargoCap>0)
-add("CFE-005","CFE","Depósito en garantía ante el suministrador","servicio",1,3*cargoCap*dCon,tarifaCitada?"fuente":"supuesto","Tarifa GDMTH, apartado 9: tres veces el cargo por capacidad aplicado a cada kilowatt de demanda contratada. Son 3 × "+money(cargoCap)+" por kW × "+Math.round(dCon).toLocaleString("es-MX")+" kW contratados. "+(tarifaCitada?"Cargo de la división "+tDiv+", tarifa de "+tMes+".":"El cargo no declara división ni mes. Las tarifas se aprueban cada mes y difieren entre las 17 divisiones tarifarias, así que sin esa procedencia la cifra no se puede auditar y este renglón no puede contar como estimación con fuente.")+" Es garantía reembolsable, no costo de obra: se reporta aparte y no lleva indirectos ni contingencia.",{rule:1,fee:0,cont:0,tr:"dep"});
+add("CFE-005","CFE","Depósito en garantía ante el suministrador","servicio",1,3*cargoCap*dCon,tarifaCitada?"fuente":"supuesto","Tarifa GDMTH, apartado 9: tres veces el cargo por capacidad aplicado a cada kilowatt de demanda contratada. Son 3 × "+money(cargoCap)+" por kW × "+Math.round(dCon).toLocaleString("es-MX")+" kW contratados. "+(tarifaCitada?"Cargo de la división "+tDiv+", tarifa de "+tMes+".":"El cargo no declara división ni mes. Las tarifas se aprueban cada mes y difieren entre las 17 divisiones tarifarias, así que sin esa procedencia la cifra no se puede auditar y este renglón no puede contar como estimación con fuente.")+" Es garantía reembolsable, no costo de obra: se reporta aparte y no lleva indirectos ni contingencia."+(g.mem?" ATENCIÓN: el proyecto declara suministro calificado en el mercado mayorista, y el apartado 9 pertenece a la tarifa de suministro básico. Con un suministrador calificado la garantía es contractual y esta fórmula no aplica; hay que pedirla al suministrador.":""),{rule:1,fee:0,cont:0,tr:"dep"});
 else
 add("CFE-005","CFE","Depósito en garantía ante el suministrador","servicio",1,3100*kva,"allowance","Provisión de $3,100/kVA sobre la capacidad del transformador, derivada de dos datos internos de distinta capacidad. La tarifa GDMTH calcula el depósito en su apartado 9 como tres veces el cargo por capacidad aplicado a la demanda contratada, que aquí son "+Math.round(dCon).toLocaleString("es-MX")+" kW: esta provisión está calculada sobre la variable equivocada y es probable que sobreestime. Captura el cargo por capacidad en Configuración para sustituirla por el cálculo de tarifa. Es garantía reembolsable y se reporta aparte.",{rule:1,fee:0,cont:0,tr:"dep"});
 }
@@ -229,7 +233,9 @@ if(g.balanceo || pot>kva*FP_DIM || g.kwp>0 || g.bess>0)
 add("GE-001","GE","Sistema de gestión de energía con límite total de potencia de estación","sistema",1,750000,"supuesto","Se activa con balanceo dinámico declarado, cuando la potencia de los equipos excede la capacidad del transformador, o cuando hay generación o almacenamiento en sitio: en esos casos hay despacho a nivel estación. Sin este sistema no se puede sostener una reserva de balanceo, y por lo tanto tampoco se puede dimensionar el transformador por debajo de la suma de placas. El balanceo nativo de un equipo de carga solo reparte entre sus propios conectores y no lo sustituye. Si la cotización demuestra que el controlador de estación viene incluido, esta partida se pone en cero.");
 add("GE-003","GE","Sistema de monitoreo de calidad de la energía","sistema",1,280000,"supuesto","Referencia interna. Otra referencia la ubica en $45,000: la diferencia es de alcance, un punto de medición contra medición por alimentador.");
 add("GE-004","GE","Medidores por alimentador e integración al sistema de gestión","lote",1,350000,"supuesto","Referencia interna.");
-add("GE-002","GE","Medición comercial para mercado eléctrico mayorista","sistema",0,650000,"supuesto","En cero por omisión: migrar al mercado mayorista es una decisión de negocio, no de ingeniería.");
+add("GE-002","GE","Medición comercial para mercado eléctrico mayorista","sistema",g.mem?1:0,650000,"supuesto",g.mem
+  ?"Activada porque el proyecto declara suministro calificado en el mercado mayorista. Migrar al MEM cambia el esquema de cobro completo: la energía se contrata con un suministrador calificado y los cargos regulados de transmisión, distribución, CENACE y servicios conexos se facturan aparte. Hay que rehacer el análisis de tarifa y la garantía sobre el contrato, no sobre la tarifa de suministro básico."
+  :"En cero por omisión: migrar al mercado mayorista es una decisión de negocio, no de ingeniería. Al declararlo en Configuración esta partida se activa.");
 add("TEL-008","TEL","Nodo de red para equipo de carga, cámara, punto de acceso o pantalla","nodo",n+Math.ceil(cam/3)+2,18000,"supuesto","Un nodo por equipo de carga, uno por cada tres cámaras y dos para servicios auxiliares.");
 if(cam>0){
 if(!g.cliCctv) add("TEL-010","TEL","Sistema de videovigilancia con "+cam+(cam>1?" cámaras":" cámara")+", grabador y almacenamiento","sistema",1,Math.round(60000+13333*cam),"supuesto","Cantidad de cámaras derivada de los puntos de carga: dos para cuatro puntos, hasta diez para treinta. Base de grabador y almacenamiento más costo por cámara, sobre una referencia interna de doce cámaras.", {rule:1});
@@ -434,6 +440,13 @@ $("#h_demcon").textContent="Piso de tarifa "+Math.round(piso).toLocaleString("es
   +(+cfg.demCon>0&&+cfg.demCon<piso?" La cifra capturada queda por debajo del piso y el suministrador no la aceptaría.":"")
   +(piso>kva*FP_DIM?" El 60% de la carga conectada excede la capacidad del transformador: la tarifa tomaría la capacidad de la subestación al 90% como demanda contratada, y la conversión de kVA a kW de esa regla está pendiente de confirmar.":"");
 const tDiv=(cfg.tarifaDiv||"").trim(), tMes=(cfg.tarifaMes||"").trim();
+/* Costo por kWh todo incluido y diferencial de arbitraje. Es aritmética sobre
+   los cargos capturados, no un modelo de factura: no hay perfil de consumo. */
+const otros=+cfg.otrosKwh||0, eP=+cfg.enPunta||0, eI=+cfg.enInterm||0, eB=+cfg.enBase||0;
+$("#h_tarifa").textContent=(eP>0||eB>0)
+  ?"Costo por kWh todo incluido: punta "+mkwh(eP+otros)+", intermedia "+mkwh(eI+otros)+", base "+mkwh(eB+otros)
+    +". Diferencial punta menos base "+mkwh((eP+otros)-(eB+otros))+" por kWh, que es la señal del arbitraje antes de descontar pérdidas de ida y vuelta del almacenamiento."
+  :"Captura los cargos de energía para ver el costo por kWh todo incluido y el diferencial entre punta y base.";
 $("#h_dep").textContent=cargoCap>0
   ?"Depósito en garantía: 3 × "+money(cargoCap)+" × "+Math.round(dCon).toLocaleString("es-MX")+" kW = "+mx(3*cargoCap*dCon)+" (tarifa GDMTH, apartado 9). Es reembolsable y se reporta aparte del costo de obra."
     +(tDiv&&tMes?" Cargo de la división "+tDiv+", tarifa de "+tMes+"."
@@ -723,9 +736,11 @@ $("#b_q").addEventListener("input",e=>{bf.q=e.target.value;render();});
 $("#b_cat").addEventListener("change",e=>{bf.cat=e.target.value;render();});
 /* v_kva no entra en este mapa: el desplegable tiene una opción de captura libre
    y necesita lógica propia. Se conecta más abajo. */
-const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCon:"demCon",v_cargoCap:"cargoCap",v_tarifaDiv:"tarifaDiv",v_tarifaMes:"tarifaMes",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
+const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCon:"demCon",v_sumin:"sumin",v_tarifaCat:"tarifaCat",v_tarifaDiv:"tarifaDiv",v_tarifaMes:"tarifaMes",
+v_cargoCap:"cargoCap",v_cargoDist:"cargoDist",v_cargoFijo:"cargoFijo",v_otrosKwh:"otrosKwh",
+v_enPunta:"enPunta",v_enInterm:"enInterm",v_enBase:"enBase",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
-const checks={v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
+const checks={v_mem:"mem",v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
 function fill(){ for(const[i,k]of Object.entries(map))$("#"+i).value=cfg[k];
 for(const[i,k]of Object.entries(checks))$("#"+i).checked=!!cfg[k]; }
@@ -760,7 +775,7 @@ window.addEventListener("proyecto:abierto",()=>{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
 if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
 else { edits={}; genEdits={}; genApproved={};
-  Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,demCon:0,cargoCap:0,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
+  Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,demCon:0,mem:0,cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
   cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
 fill(); render(); showTab("conf",false);
 });
