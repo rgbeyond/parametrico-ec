@@ -66,6 +66,41 @@ consistentes con 23 kV; si se declara otra tensión primaria la app avisa en el
 renglón del transformador pero **no** cambia los materiales. Seleccionarlos por
 clase de aislamiento es motor de cantidades, no un campo.
 
+**El depósito en garantía se calcula sobre la demanda contratada, no sobre el
+transformador.** La tarifa GDMTH, apartado 9: *tres veces el importe que resulte
+de aplicar el cargo por capacidad a cada kilowatt de demanda contratada*. La
+provisión histórica de `$3,100/kVA` sobre la capacidad del transformador está
+calculada sobre la variable equivocada y es probable que sobreestime. Con el
+cargo por capacidad capturado en Configuración, `CFE-005` deja de ser
+`allowance` y pasa a `fuente`. Mientras no se capture, se mantiene la provisión
+con la advertencia escrita en el propio renglón.
+
+**La demanda contratada tiene un piso de tarifa.** Apartado 4: no menor al 60%
+de la carga total conectada, ni menor a 100 kW. Si el 60% de la carga conectada
+excede la capacidad de la subestación, la demanda contratada se toma como esa
+capacidad al 90% —regla cuya conversión de kVA a kW está **pendiente de
+confirmar**. Consecuencia práctica: un proyecto por fases puede contratar menos
+y reducir el depósito, pero no por debajo del 60% de lo que tenga conectado.
+`pisoDemCon` en `app.js` usa la potencia de los equipos como carga conectada,
+que es la que domina; si el sitio tiene otras cargas, el piso real es mayor.
+
+**Cobro medido contra calculado.** El cargo por capacidad se aplica a la **menor**
+entre la demanda máxima medida en punta y `Qmensual / (24 × d × F.C.)`; el cargo
+por distribución, entre la máxima **mensual** —no la de punta— y la misma
+fórmula. Dos consecuencias para cualquier modelo de recorte de picos con
+almacenamiento: recortar solo en punta no baja el cargo por distribución, y si
+el término calculado es el que manda, recortar el pico no ahorra nada en
+capacidad. El valor del `F.C.` está en el apartado 3.1.2 del Anexo Único del
+Acuerdo A/T58/2024 y **no lo tenemos**: sin él no se puede afirmar que el peak
+shaving se pague.
+
+**Las citas regulatorias de la presentación interna de almacenamiento no están
+verificadas.** Ese mazo se generó con NotebookLM y los números de acuerdo
+(RES/550/2021 para el Código de Red, A/108/2024 de electromovilidad) son
+exactamente el tipo de dato que una herramienta generativa produce plausible
+pero equivocado. El Código de Red podría venir de RES/151/2016. No citar
+ninguno en documento a cliente sin verificarlo en el DOF.
+
 **Especificación de cable en corriente directa: RHW-2/XHHW-2 XLPE 1000 V.**
 "THHW-LS 1000 V" no existe comercialmente: el THHW-LS llega a 600 V. Corregirlo
 donde aparezca.
@@ -235,9 +270,14 @@ garantía $4,650,000 aparte. Clase 4, índice 0.42.
 
 1. La obra civil está costeada para los 29 equipos del desarrollo completo, no
    para los 5 de la fase 1. Sobreestima cerca de $700,000.
-2. El depósito de $4,650,000 es una extrapolación de $3,100/kVA derivada de dos
-   proyectos de distinta capacidad. Sin oficio del suministrador no se debe
-   presentar como firme.
+2. El depósito de $4,650,000 no solo es una extrapolación de $3,100/kVA sin
+   respaldo: está calculado sobre la capacidad del transformador cuando la
+   tarifa lo calcula sobre la demanda contratada, que con 1,440 kW conectados
+   tiene un piso de 864 kW. Con un cargo por capacidad del orden de $400/kW-mes
+   —cifra ilustrativa, no dato de tarifa— el depósito saldría cerca de
+   $1,036,800. La diferencia es de más de cuatro veces, así que conseguir el
+   cargo vigente es urgente. Sin oficio del suministrador no se debe presentar
+   como firme.
 
 ---
 
