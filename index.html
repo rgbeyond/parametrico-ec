@@ -98,9 +98,9 @@
 </div>
 <div class="grid g4" style="gap:12px">
 <label class="f" style="margin-bottom:0"><span class="lb">Suministrador</span><input type="text" id="v_sumin" placeholder="CFE Suministro Básico"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Categoría tarifaria</span><input type="text" id="v_tarifaCat" placeholder="GDMTH"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">División tarifaria</span><input type="text" id="v_tarifaDiv" placeholder="Centro Sur"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Mes de la tarifa</span><input type="text" id="v_tarifaMes" placeholder="2026-08"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Categoría tarifaria</span><select id="v_tarifaCat"></select></label>
+<label class="f" style="margin-bottom:0"><span class="lb">División tarifaria</span><select id="v_tarifaDiv"></select></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Mes de la tarifa</span><input type="month" id="v_tarifaMes"></label>
 </div>
 <div class="grid g4" style="gap:12px;margin-top:12px">
 <label class="f" style="margin-bottom:0"><span class="lb">Capacidad ($/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="0.01"></label>
@@ -120,14 +120,16 @@
 
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Generación y almacenamiento</div>
-<div class="grid g3" style="gap:12px">
+<div class="grid g4" style="gap:12px">
 <label class="f" style="margin-bottom:0"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Rendimiento (kWh/kWp-mes)</span><input type="number" id="v_fvKwhKwp" min="0" step="1"></label>
 <div id="fvBox" class="grid g2" style="gap:12px;grid-column:span 2">
 <label class="f" style="margin-bottom:0"><span class="lb">Costeo del fotovoltaico</span>
 <select id="v_fvModo"><option value="llave">Llave en mano por USD/Wp</option><option value="desglose">Desglose por componentes</option></select></label>
 <label class="f" id="fvWpBox" style="margin-bottom:0"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
 </div>
 </div>
+<div style="margin-top:10px"><span class="hint" id="h_fvrend"></span></div>
 <div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
 <label class="f" style="margin-bottom:0"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
 <label class="f" style="margin-bottom:0"><span class="lb">kWh por módulo</span><input type="number" id="v_besskwh" min="0" step="1"></label>

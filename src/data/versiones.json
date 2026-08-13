@@ -1,5 +1,18 @@
 [
   {
+    "v": "0.6.0",
+    "fecha": "2026-08-13",
+    "tipo": "menor",
+    "resumen": "Tarifa por listas cerradas y rendimiento fotovoltaico con su compensación a la tarifa capturada.",
+    "agregado": [
+      "Rendimiento del sistema fotovoltaico en kWh por kWp al mes, con la generación mensual y anual que produce y cuánto compensa a la tarifa capturada.",
+      "Las 17 divisiones tarifarias del Acuerdo A/158/2024 como lista cerrada, en lugar de texto libre.",
+      "Categoría tarifaria como lista: GDMTH, GDMTO y GDBT.",
+      "El mes de la tarifa se elige de un calendario en vez de escribirse."
+    ],
+    "nota": "El rendimiento por omisión es 115 kWh por kWp al mes, media medida en proyectos de la zona centro. Es deliberadamente conservador: los rendimientos de catálogo de fabricante suelen quedar por encima de lo que rinde una instalación real. La compensación pondera seis días en periodo intermedio por uno en base, porque el sol produce en horario intermedio los días hábiles y en base los domingos; los días festivos también caen en base y no se descuentan, así que el valor real queda algo por debajo del calculado."
+  },
+  {
     "v": "0.5.0",
     "fecha": "2026-08-13",
     "tipo": "menor",

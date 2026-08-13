@@ -44,7 +44,7 @@ grupos:[],
 kva:"750",kvaOtra:0,vmt:23,vbt:480,balanceo:0,balanceoPct:30,
 demCon:0,mem:0,sumin:"CFE Suministro Básico",tarifaCat:"GDMTH",tarifaDiv:"",tarifaMes:"",
 cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
-kwp:0,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
+kwp:0,fvKwhKwp:115,fvModo:"llave",fvUsdWp:0.79,bess:0,besskwh:261,besskw:125,
 mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0,sdeBanos:1,
 cliEvse:0,cliTrafo:0,cliCctv:0,cliIng:0,derechos:0,via:0,
 fee:10,cont:25,fx:18.5};
@@ -98,6 +98,16 @@ const demCon=g=>(+g.demCon>0?+g.demCon:pisoDemCon(g));
    Sujeto a validación contra proyectos cerrados. */
 const FP_DIM=0.80, MARGEN_TRAFO=1.10;
 const KVA_COM=[300,500,750,1000,1500,2000,2500];
+/* Las 17 divisiones tarifarias del Acuerdo A/158/2024. Los cargos difieren
+   entre ellas de forma importante: la distribución de Centro Sur es 2.6 veces
+   la de Valle de México Norte. Dos sitios del mismo estado pueden caer en
+   divisiones distintas, como Atlacomulco y Ecatepec. */
+const DIVISIONES=["Baja California","Baja California Sur","Bajío","Centro","Centro Occidente",
+"Centro Oriente","Centro Sur","Golfo Norte","Jalisco","Noroeste","Norte","Oriente","Peninsular",
+"Sureste","Valle de México Centro","Valle de México Norte","Valle de México Sur"];
+/* GDMTH es la que aplica a una electrolinera en media tensión con demanda de
+   100 kW o más. Las otras dos quedan por si el proyecto es pequeño o cambia. */
+const CATEGORIAS=["GDMTH","GDMTO","GDBT"];
 function sum(rs,codes){return rs.filter(r=>codes.includes(r.c)).reduce((a,b)=>a+b.imp,0);}
 const M=()=>MODOS[cfg.modo];
 let rows=[],edits={};
@@ -447,6 +457,17 @@ $("#h_tarifa").textContent=(eP>0||eB>0)
   ?"Costo por kWh todo incluido: punta "+mkwh(eP+otros)+", intermedia "+mkwh(eI+otros)+", base "+mkwh(eB+otros)
     +". Diferencial punta menos base "+mkwh((eP+otros)-(eB+otros))+" por kWh, que es la señal del arbitraje antes de descontar pérdidas de ida y vuelta del almacenamiento."
   :"Captura los cargos de energía para ver el costo por kWh todo incluido y el diferencial entre punta y base.";
+/* Generación fotovoltaica y lo que compensa. El sol produce en horario
+   intermedio los días hábiles y en base los domingos, cuando el periodo base se
+   extiende toda la tarde; se pondera seis a uno. Los días festivos también caen
+   en base y no se descuentan, así que el valor real queda algo por debajo. */
+const genMes=(+cfg.kwp||0)*(+cfg.fvKwhKwp||0), tI=eI+otros, tB=eB+otros;
+$("#h_fvrend").textContent=genMes<=0?""
+  :"Genera "+Math.round(genMes).toLocaleString("es-MX")+" kWh al mes y "
+    +Math.round(genMes*12).toLocaleString("es-MX")+" kWh al año."
+    +((eI>0||eB>0)
+      ?" A la tarifa capturada compensa "+mx(genMes*(6*tI+tB)/7)+" al mes y "+mx(genMes*12*(6*tI+tB)/7)+" al año, ponderando seis días en periodo intermedio por uno en base."
+      :" Captura los cargos de energía en la tarjeta de tarifa para ver cuánto compensa.");
 $("#h_dep").textContent=cargoCap>0
   ?"Depósito en garantía: 3 × "+money(cargoCap)+" × "+Math.round(dCon).toLocaleString("es-MX")+" kW = "+mx(3*cargoCap*dCon)+" (tarifa GDMTH, apartado 9). Es reembolsable y se reporta aparte del costo de obra."
     +(tDiv&&tMes?" Cargo de la división "+tDiv+", tarifa de "+tMes+"."
@@ -738,10 +759,12 @@ $("#b_cat").addEventListener("change",e=>{bf.cat=e.target.value;render();});
    y necesita lógica propia. Se conecta más abajo. */
 const map={v_nom:"nom",v_loc:"loc",v_modo:"modo",v_vmt:"vmt",v_vbt:"vbt",v_demCon:"demCon",v_sumin:"sumin",v_tarifaCat:"tarifaCat",v_tarifaDiv:"tarifaDiv",v_tarifaMes:"tarifaMes",
 v_cargoCap:"cargoCap",v_cargoDist:"cargoDist",v_cargoFijo:"cargoFijo",v_otrosKwh:"otrosKwh",
-v_enPunta:"enPunta",v_enInterm:"enInterm",v_enBase:"enBase",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
+v_enPunta:"enPunta",v_enInterm:"enInterm",v_enBase:"enBase",v_fvKwhKwp:"fvKwhKwp",v_balanceoPct:"balanceoPct",v_kwp:"kwp",v_fvModo:"fvModo",v_fvUsdWp:"fvUsdWp",v_bess:"bess",v_besskwh:"besskwh",v_besskw:"besskw",
 v_mbt:"mbt",v_mmt:"mmt",v_dem:"dem",v_piso:"piso",v_tech:"tech",v_fee:"fee",v_cont:"cont",v_fx:"fx"};
 const checks={v_mem:"mem",v_balanceo:"balanceo",v_sde:"sde",v_sdeBanos:"sdeBanos",v_techNueva:"techNueva",v_cliEvse:"cliEvse",v_cliTrafo:"cliTrafo",v_cliCctv:"cliCctv",v_cliIng:"cliIng",v_derechos:"derechos",v_via:"via"};
 $("#v_modo").innerHTML=Object.entries(MODOS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
+$("#v_tarifaCat").innerHTML=CATEGORIAS.map(c=>`<option value="${c}">${c}</option>`).join("");
+$("#v_tarifaDiv").innerHTML='<option value="">Sin declarar</option>'+DIVISIONES.map(d=>`<option value="${d}">${d}</option>`).join("");
 function fill(){ for(const[i,k]of Object.entries(map))$("#"+i).value=cfg[k];
 for(const[i,k]of Object.entries(checks))$("#"+i).checked=!!cfg[k]; }
 for(const[i,k]of Object.entries(map)) $("#"+i).addEventListener("input",e=>{

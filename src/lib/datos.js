@@ -84,7 +84,10 @@ export const PLANTILLA_ATLACOMULCO = {
     tarifaDiv: 'Centro Sur', tarifaMes: '2026-08',
     cargoCap: 350.90, cargoDist: 221.09, cargoFijo: 264.38, otrosKwh: 0.1946,
     enPunta: 1.6703, enInterm: 1.4539, enBase: 0.7422,
-    kwp: 615, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
+    /* 115 kWh por kWp al mes es la media medida en proyectos de la zona centro.
+       Es criterio conservador y deliberado: los rendimientos de catálogo de
+       fabricante suelen quedar por encima de lo que rinde una instalación real. */
+    kwp: 615, fvKwhKwp: 115, fvModo: 'llave', fvUsdWp: 0.79, bess: 2, besskwh: 261, besskw: 125,
     mbt: 120, mmt: 72, dem: 350, piso: 1200, techNueva: 0, tech: 0, sde: 1, sdeBanos: 1,
     cliEvse: 0, cliTrafo: 0, cliCctv: 0, cliIng: 0, derechos: 0, via: 0,
     fee: 10, cont: 25, fx: 18.5
