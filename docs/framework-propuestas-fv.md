@@ -1,6 +1,6 @@
 # Framework de propuestas fotovoltaicas Beyond
 
-**Versión del framework: 0.1.0** — 2026-08-17
+**Versión del framework: 0.2.0** — 2026-08-17
 **Estado del documento: borrador interno para revisión.** Nada de lo aquí
 descrito está construido; este documento define qué se va a construir y cómo,
 antes de la primera línea de código. Se revisa y aprueba antes de arrancar.
@@ -90,6 +90,11 @@ Se toma casi íntegro; es el método. En particular:
 
 No se toma: las cifras de obra de Amores 219 y Mayan Lakes como valores por
 defecto. Son historial. El propio marco lo advierte.
+
+**Nota de lectura.** Cuando este framework menciona Amores 219 o Mayan Lakes,
+lo hace como *procedencia* de una regla —el error o hallazgo real del que
+salió—, nunca como dato a reutilizar. Ningún número de esas obras viaja a
+proyectos nuevos.
 
 ### 2.5 SKILLPROPUESTASFV (desarrollo "Analisis PPA")
 
@@ -234,9 +239,10 @@ ingesta es por PDF y la actualización tarifaria es manual con validación.
 
 ### M3 — Dimensionamiento y generación
 
-- Entrada primaria: **importación de HelioScope** (reporte/CSV), manual en
-  fase 1. La API de HelioScope existe pero es de plan Enterprise con
-  documentación bajo solicitud; queda como decisión comercial (sección 10).
+- Entrada primaria: **importación del reporte de HelioScope** (PDF/CSV
+  exportado). Decisión cerrada 2026-08: no se contrata el plan Enterprise que
+  exige la API de HelioScope; el sistema se alimenta con los reportes
+  exportados. No hay API de por medio en ningún módulo.
 - Respaldo sin simulación (nivel conceptual): HSP por ciudad + rendimiento
   declarado como `supuesto`.
 - Se replica la lógica buena del cotizador: fracción del requerimiento por
@@ -402,7 +408,7 @@ interno.
 | # | Tema | Fuentes en conflicto | Resolución propuesta |
 |---|---|---|---|
 | 1 | Naranja de marca | `#FB8722` (doc Analisis PPA) vs `#FF8700` (logo, tokens del paramétrico) | **Resuelto: `#FF8700`.** Corregir el doc de Analisis PPA |
-| 2 | Inflación energética | 3.9% (motor GDMTH y defaults PPA) vs 3.70% (nota al pie del propio GDMTH, CAGR 2020–2025) vs 8% (modelo v1 histórico) | Una sola cifra con fuente y fecha de cálculo, recalculada con serie oficial; configurable por proyecto. **Pendiente: rehacer el CAGR con datos vigentes** |
+| 2 | Inflación energética | 3.9% (motor GDMTH y defaults PPA) vs 3.70% (nota al pie del propio GDMTH, CAGR 2020–2025) vs 8% (modelo v1 histórico) | **Resuelto (2026-08): 3.7% como supuesto vigente**, el único de los tres con base declarada (CAGR 2020–2025). Trabajo futuro acordado: discretizarla **por división de CFE**, porque cada división se comporta distinto; el contrato de datos ya guarda la división, así que el cambio es de datos, no de estructura |
 | 3 | Rendimiento FV de referencia | 1,650 kWh/kWp·año (doc PPA) vs ~1,440 (120/mes, caso GDMTH) vs 1,380 (115/mes, paramétrico, "media zona centro, conservador") | El rendimiento es **por sitio** (simulación o HSP local); cualquier número único nacional es `supuesto` y se etiqueta. Sin resolución única a propósito |
 | 4 | `ahorroPct` 39.5% | Default del motor PPA | Deja de ser default: lo calcula M2+M3. Solo sobrevive en clase 5 como `supuesto` |
 | 5 | F.C. de la fórmula tarifaria | `CLAUDE.md` del paramétrico dice "no lo tenemos" y cita "A/T58/2024"; `app.js` trae 0.57/0.55/0.49 citando "A/158/2024"; el marco FV valida 0.49 (GDBT) contra CT/11.SE/8-2025 con 11/12 meses | Verificar el acuerdo vigente en el DOF y corregir `CLAUDE.md` o `app.js` según resulte. La validación empírica de GDBT (0.49) da confianza, pero la cita hay que cerrarla |
@@ -434,21 +440,20 @@ Igual que el paramétrico:
    repo nuevo (`propuestas-fv` o nombre por definir), llevándose de aquí los
    patrones y, cuando exista backend compartido, leyendo el catálogo común.
    Este framework se muda con él.
-2. **API de HelioScope**: existe, plan Enterprise, documentación bajo
-   solicitud a Aurora/HelioScope. Decidir si el volumen de propuestas justifica
-   el plan; mientras, importación manual del reporte.
-3. **Forma de la interfaz** (cuando llegue): ¿app web tipo paramétrico o
+2. **Forma de la interfaz** (cuando llegue): ¿app web tipo paramétrico o
    dashboard único como el centro de análisis PPA? No bloquea fases 0–2.
-4. **Dónde vive el catálogo de precios FV**: ¿Supabase compartida con el
+3. **Dónde vive el catálogo de precios FV**: ¿Supabase compartida con el
    paramétrico o propia? Depende de la decisión 1.
-5. **Los 5 documentos base de Mayan Lakes** (tabla de límites de equipo,
+4. **Los 5 documentos base de Mayan Lakes** (tabla de límites de equipo,
    checklist de diseño, glosario, marco normativo, carta a fabricante):
    confirmar cuáles existen y traerlos como `references/` del skill.
 
 ## 11. Pendientes por validar (no bloquean el framework, sí el contenido)
 
 1. Acuerdo tarifario vigente y valores de F.C. (inconsistencia 5) — en el DOF.
-2. CAGR de tarifas para la inflación energética (inconsistencia 2).
+2. Discretización de la inflación energética por división de CFE
+   (inconsistencia 2): recalcular el CAGR con la serie de cada división a
+   partir de las tablas 2019–2026 ya extraídas en fase 0.
 3. Recotización de tabuladores de MDO y estructura (base 2022–2023).
 4. Fórmula vigente de penalización/bonificación de FP para el módulo de
    detección (el marco ya validó 3/5×(90/FP−1) contra un recibo real de 2026).
@@ -478,4 +483,5 @@ beneficio fiscal condicionado) queda documentada con su razón.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.0 | 2026-08-17 | Decisiones de RG: inflación energética 3.7% como supuesto vigente, con discretización por división de CFE como trabajo futuro (las tablas 2019–2026 extraídas en fase 0 son la materia prima). Sin APIs: CFE no tiene y HelioScope Enterprise queda descartado; el sistema se alimenta con reportes exportados de HelioScope. Nota de lectura sobre Amores 219 y Mayan Lakes: son procedencia de reglas, no datos reutilizables. |
 | 0.1.0 | 2026-08-17 | Primera versión. Consolida: análisis de GDMTH BEYOND V.260604, BOQ BEYOND y MASTER COSTOS BEYOND; Marco de Referencia Propuestas FV v1; SKILLPROPUESTASFV (Analisis PPA); patrones del paramétrico de electrolineras. Decisiones de RG incorporadas: hasta 12 recibos, criterio tarifario del paramétrico, catálogo por niveles sin bloqueo, márgenes bidireccionales costo↔venta, framework antes que código, uso interno. |
