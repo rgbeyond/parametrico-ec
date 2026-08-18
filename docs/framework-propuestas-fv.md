@@ -1,6 +1,6 @@
 # Framework de propuestas fotovoltaicas Beyond
 
-**Versión del framework: 0.2.0** — 2026-08-17
+**Versión del framework: 0.2.1** — 2026-08-18
 **Estado del documento: borrador interno para revisión.** Nada de lo aquí
 descrito está construido; este documento define qué se va a construir y cómo,
 antes de la primera línea de código. Se revisa y aprueba antes de arrancar.
@@ -274,6 +274,12 @@ Tres niveles de catálogo, alineados al nivel de propuesta:
   por tensión de red real, calibre por caída y ampacidad contra terminal del
   inversor, conectores mismo tipo y origen, colas de 6 mm²) corren como
   validaciones del BoM: no bloquean, marcan.
+- **Las claves de artículo conservan el sistema de códigos del cotizador
+  actual** (COD_ART: jerarquía numérica de categoría/tipo/subtipo + marca +
+  especificación, p. ej. `1113TRI635`). Decisión de RG 2026-08. En fase 0 se
+  extrae el diccionario completo, se valida unicidad y se documenta la regla
+  de alta. Mejora acordada: los atributos nuevos se agregan como campos del
+  catálogo, no como más dígitos en la clave.
 - Tabulador de MDO: anclas + interpolación + parámetros, recotizado.
 - Moneda por renglón con tipo de cambio fechado; nada de TC congelado
   implícito.
@@ -483,5 +489,6 @@ beneficio fiscal condicionado) queda documentada con su razón.
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.2.1 | 2026-08-18 | Decisión de RG: se conserva el sistema de códigos COD_ART del catálogo de artículos del cotizador; el diccionario se extrae y valida en fase 0, y los atributos nuevos se agregan como campos, no como dígitos. |
 | 0.2.0 | 2026-08-17 | Decisiones de RG: inflación energética 3.7% como supuesto vigente, con discretización por división de CFE como trabajo futuro (las tablas 2019–2026 extraídas en fase 0 son la materia prima). Sin APIs: CFE no tiene y HelioScope Enterprise queda descartado; el sistema se alimenta con reportes exportados de HelioScope. Nota de lectura sobre Amores 219 y Mayan Lakes: son procedencia de reglas, no datos reutilizables. |
 | 0.1.0 | 2026-08-17 | Primera versión. Consolida: análisis de GDMTH BEYOND V.260604, BOQ BEYOND y MASTER COSTOS BEYOND; Marco de Referencia Propuestas FV v1; SKILLPROPUESTASFV (Analisis PPA); patrones del paramétrico de electrolineras. Decisiones de RG incorporadas: hasta 12 recibos, criterio tarifario del paramétrico, catálogo por niveles sin bloqueo, márgenes bidireccionales costo↔venta, framework antes que código, uso interno. |
