@@ -242,6 +242,21 @@ que produjo sus cifras.
 | `editor` | Crear y editar proyectos, actualizar precio/taxonomía/fuente en el catálogo maestro, agregar conceptos |
 | `comentarista` | Leer todo y dejar comentarios |
 | `lector` | Consultar sin modificar |
+| `vendedor` | Levantar expedientes y emitir propuestas preliminares, **sin ver costos** |
+
+`vendedor` no es un grado más de la escala `admin > editor > comentarista >
+lector`: es una rama aparte. `lector` consulta todo sin modificar —es el perfil
+de quien audita—; `vendedor` es lo contrario, escribe expedientes pero ve
+menos. No ve el precio del catálogo, el BoQ, el margen ni las comisiones.
+
+La restricción **no se implementa escondiendo campos en la interfaz**. RLS
+filtra renglones y no columnas, así que mientras el precio viva en la misma
+fila que el nombre, dar lectura de `conceptos` es dar lectura del costo: al
+vendedor se le niega la tabla completa y se le da en su lugar una función que
+devuelve la ficha sin ninguna cifra. Y `fn_conceptos_de` **no lleva
+`security definer`** —ponérselo saltaría la RLS de `conceptos` y abriría justo
+el agujero que la migración cierra—; su `raise` solo hace honesto el mensaje.
+Migración en `supabase/05_vendedor.sql`.
 
 El primero que entra queda administrador; los siguientes entran como `lector` y
 un administrador los promueve. Es deliberado: quien acaba de entrar no debería
