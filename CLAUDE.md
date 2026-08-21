@@ -145,8 +145,16 @@ no un `update` masivo. Cambiar el ámbito es reclasificar el maestro y por eso
 queda en administrador, no en editor. Migración en `supabase/04_ambitos.sql`.
 
 **El SQL se valida antes de pegarlo en Supabase.** `scripts/validar-sql.sh`
-levanta un PostgreSQL desechable, aplica los archivos de `supabase/` en orden y
-corre `supabase/pruebas/`. No cubre RLS con usuarios reales —`auth.uid()` y los
+levanta un PostgreSQL desechable, aplica los archivos de `supabase/` en orden
+—cada uno **en una sola transacción**, como hace el editor SQL de Supabase— y
+corre `supabase/pruebas/`. Ese `--single-transaction` no es cosmético: hay
+errores que solo aparecen así. El que lo puso ahí fue `05_vendedor.sql`, que
+aplicaba limpio archivo por archivo y reventaba pegado en Supabase, porque
+PostgreSQL no deja **usar** un valor de enum recién agregado hasta que la
+transacción que lo agregó se confirma (55P04). Por eso las funciones de ese
+archivo comparan `fn_rol()::text` y no el literal del enum: partir el archivo
+en dos y pedir que se corran por separado sería una trampa esperando a que
+alguien la pise. No cubre RLS con usuarios reales —`auth.uid()` y los
 roles de Supabase no existen fuera de Supabase y ahí solo se sustituyen— pero
 sí atrapa que el SQL aplique, que las restricciones rechacen lo que deben y que
 las consultas usen sus índices.

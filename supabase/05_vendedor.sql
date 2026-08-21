@@ -28,9 +28,18 @@
 -- ---------------------------------------------------------------
 -- El valor nuevo del enum
 -- ---------------------------------------------------------------
--- `add value if not exists` no corre dentro de un bloque de
--- transaccion en versiones viejas de PostgreSQL; en el editor SQL de
--- Supabase (PG 15+) si. Se deja idempotente.
+-- `add value if not exists` corre dentro de un bloque de transaccion en
+-- PostgreSQL 12+, que es lo que usa Supabase. Se deja idempotente.
+--
+-- OJO, y por esto las funciones de abajo comparan contra TEXTO:
+-- PostgreSQL no deja USAR un valor de enum recien agregado hasta que la
+-- transaccion que lo agrego se confirma (error 55P04, "unsafe use of
+-- new value"). El editor SQL de Supabase envuelve el script entero en
+-- una transaccion, asi que escribir `fn_rol() = 'vendedor'` en la misma
+-- corrida revienta. La alternativa seria partir este archivo en dos y
+-- pedir que se corran por separado, que es una trampa esperando a que
+-- alguien la pise. Comparar `fn_rol()::text` no referencia el valor
+-- nuevo y deja el archivo aplicable de una sola vez.
 do $$ begin
   alter type rol_usuario add value if not exists 'vendedor';
 exception when duplicate_object then null; end $$;
@@ -56,14 +65,14 @@ comment on type rol_usuario is
 -- no es un rol nuevo, es nadie.
 create or replace function fn_puede_ver_costos() returns boolean
 language sql stable security definer set search_path = public as $$
-  select coalesce(fn_rol() <> 'vendedor', false)
+  select coalesce(fn_rol()::text <> 'vendedor', false)
 $$;
 
 -- Quien puede levantar un expediente: alta de proyecto, carga de
 -- recibos, propuesta preliminar.
 create or replace function fn_puede_vender() returns boolean
 language sql stable security definer set search_path = public as $$
-  select coalesce(fn_rol() in ('admin','editor','vendedor'), false)
+  select coalesce(fn_rol()::text in ('admin','editor','vendedor'), false)
 $$;
 
 -- ---------------------------------------------------------------
@@ -110,7 +119,7 @@ create or replace function fn_conceptos_de(area text)
 returns setof conceptos
 language plpgsql stable set search_path = public as $$
 begin
-  if fn_rol() = 'vendedor' then
+  if fn_rol()::text = 'vendedor' then
     raise exception 'Este perfil no tiene acceso a los costos del catalogo';
   end if;
   return query

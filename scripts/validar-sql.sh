@@ -31,9 +31,15 @@ create or replace function auth.uid() returns uuid language sql stable
   as $$ select current_setting('request.jwt.claim.sub', true)::uuid $$;
 SQL
 
+# --single-transaction NO es cosmetico: el editor SQL de Supabase envuelve
+# cada script en una transaccion, y hay errores que solo aparecen asi. El
+# que costo esta linea: PostgreSQL no deja usar un valor de enum recien
+# agregado hasta que la transaccion que lo agrego se confirma (55P04), y
+# 05_vendedor.sql aplicaba limpio archivo por archivo pero reventaba
+# pegado en Supabase. Validar en las mismas condiciones o no validar.
 for f in "$RAIZ"/supabase/[0-9]*.sql; do
   echo "aplicando $(basename "$f")"
-  $P -d valida -f "$f" >/dev/null
+  $P --single-transaction -d valida -f "$f" >/dev/null
 done
 for f in "$RAIZ"/supabase/pruebas/*.sql; do
   echo "probando $(basename "$f")"
