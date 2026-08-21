@@ -9,12 +9,20 @@
 -- no crea, no modifica y no borra nada. Ninguna linea del resultado
 -- expone llaves ni datos de clientes, asi que se puede compartir tal
 -- cual. Verificado contra una copia local del esquema.
+-- Conteo REAL por tabla, no estimado. La primera version usaba
+-- pg_stat_user_tables.n_live_tup, que es una estimacion del recolector
+-- de estadisticas: en la base real dio 0 para las nueve tablas mientras
+-- conceptos tenia 188 filas y proyectos 2. Un diagnostico que se
+-- contradice consigo mismo no sirve para decidir nada, asi que se
+-- cuenta de verdad. query_to_xml permite hacerlo sobre tablas
+-- descubiertas al vuelo sin declarar una funcion.
 with t as (
   select c.relname tabla, c.relrowsecurity rls,
-         coalesce(s.n_live_tup, 0) filas
+         (xpath('/row/c/text()', query_to_xml(
+            format('select count(*) as c from public.%I', c.relname),
+            false, true, '')))[1]::text::bigint filas
     from pg_class c
     join pg_namespace n on n.oid = c.relnamespace
-    left join pg_stat_user_tables s on s.relid = c.oid
    where n.nspname = 'public' and c.relkind = 'r'
 )
 select 'postgres' clave, split_part(version(), ' on ', 1) valor
