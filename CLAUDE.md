@@ -132,6 +132,25 @@ en esa estación hasta que un administrador lo promueve con
 `fn_promover_concepto`. Así una estación captura lo que necesita sin ensuciar
 la fuente única de precios.
 
+**El catálogo es uno para todo el portafolio, separado por área** (decisión de
+RG, 2026-08-21): esta app y el Portafolio Energético comparten un solo proyecto
+de Supabase. `conceptos.ambitos` es un `text[]` —no una bandera— porque hay
+conceptos **comunes**: conductores, canalizaciones, interruptores y obra civil
+sirven a electrolineras y a fotovoltaico por igual, y capturarlos dos veces
+produce dos precios para el mismo material. Cada área consulta con
+`fn_conceptos_de('<área>')`, que devuelve lo suyo **más** lo común. Los
+conceptos que ya existen arrancan en `{ec}` y no en `comun`: el catálogo nació
+de este estimador y reclasificarlos es revisión manual, concepto por concepto,
+no un `update` masivo. Cambiar el ámbito es reclasificar el maestro y por eso
+queda en administrador, no en editor. Migración en `supabase/04_ambitos.sql`.
+
+**El SQL se valida antes de pegarlo en Supabase.** `scripts/validar-sql.sh`
+levanta un PostgreSQL desechable, aplica los archivos de `supabase/` en orden y
+corre `supabase/pruebas/`. No cubre RLS con usuarios reales —`auth.uid()` y los
+roles de Supabase no existen fuera de Supabase y ahí solo se sustituyen— pero
+sí atrapa que el SQL aplique, que las restricciones rechacen lo que deben y que
+las consultas usen sus índices.
+
 ---
 
 ## Arquitectura
