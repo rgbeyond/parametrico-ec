@@ -18,6 +18,11 @@ DOS PRECAUCIONES DEL ARNES, Y POR QUE
 La alternativa —eximir a este archivo de los guardias— seria una via de escape:
 cualquiera podria meter una credencial llamando a su archivo como este. Es mas
 sano que el guardia siga siendo estricto y que la prueba se adapte.
+
+ALCANCE: esta suite mide LOS HOOKS, no la politica efectiva. `permissions.deny`
+de settings.json bloquea cosas que aqui salen como "pasa" —`rm -rf` de cualquier
+ruta, por ejemplo— porque son dos capas distintas. Un 35/35 dice que los hooks
+hacen lo suyo, no que la politica completa haga lo que dice.
 """
 import json
 import subprocess
@@ -35,6 +40,12 @@ JWT_FALSO = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
              "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4ifQ")
 SERVICE_ROLE = "service" + "_role = sbp_abcdefghij0123456789xyz"
 VITE_CREDENCIAL = "VITE_" + "BANXICO_" + "TOKEN=abc123"
+PAT_SUPABASE = "sbp" + "_" + "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b"
+SECRETO_SUPABASE = "sb" + "_secret_" + "AbCdEf0123456789GhIjKlMnOpQrStUv"
+PAT_NETLIFY = "nfp" + "_" + "9z8y7x6w5v4u3t2s1r0q9p8o7n6m5l4k3j2i1h0g"
+PAT_GITHUB = "ghp" + "_" + "AbCdEf0123456789GhIjKlMnOpQrStUvWxYz"
+LLAVE_AWS = "AKIA" + "IOSFODNN7EXAMPLE"
+HEX_64 = "3f" * 32
 
 DESTRUCTIVO_BLOQUEAR = [
     ("force push a main", "git push --force origin main"),
@@ -49,6 +60,23 @@ DESTRUCTIVO_BLOQUEAR = [
     ("rm -rf home", "rm -rf $HOME"),
     ("borrar corpus de recibos", "rm -rf casos/recibos"),
     ("borrar expedientes", "rm -f casos/expedientes/x.json"),
+    # Los tres siguientes los encontro la revision independiente de la Fase 0.
+    # Los dos primeros PASABAN: shlex consume el salto de linea como espacio en
+    # blanco y nunca lo emite como token, asi que un comando multilinea se
+    # concatenaba en un solo pseudo-subcomando que ya no empezaba con `git`.
+    ("multilinea: cd y luego force push",
+     "cd /workspace/propuestas-fv\ngit push --force origin main"),
+    ("multilinea: comentario y luego db reset",
+     "# preparar\nsupabase db reset --linked"),
+    # Heredoc falso: el recorte borraba desde `<<X` hasta la primera linea que
+    # fuera exactamente `X`, y con eso se llevaba el comando peligroso de enmedio.
+    ("heredoc falso que esconde un force push",
+     'echo "<<X"\ngit push --force origin main\nX'),
+    # find esquiva la regla de rm: no empieza con `rm`.
+    ("find -delete sobre el corpus",
+     "find casos/recibos -name '*.pdf' -delete"),
+    ("find -exec rm sobre el corpus",
+     "find casos/recibos -type f -exec rm -f {} ;"),
 ]
 
 DESTRUCTIVO_PASAR = [
@@ -64,7 +92,6 @@ DESTRUCTIVO_PASAR = [
      'echo "a && git push -f origin main"'),
     ("grep del texto prohibido", 'grep -rn "supabase db reset" docs/'),
     ("rm de archivo temporal", "rm -f /tmp/salida.txt"),
-    ("rm -rf de un directorio del proyecto", "rm -rf dist-nube"),
     ("git log", "git log --oneline -5"),
     ("psql select normal", 'psql -c "select count(*) from perfiles"'),
     ("delete acotado en desarrollo",
@@ -79,6 +106,14 @@ SECRETOS_BLOQUEAR = [
     ("valor de service role", "/x/a.js", SERVICE_ROLE),
     ("VITE_ con nombre de credencial", "/x/a.js", VITE_CREDENCIAL),
     ("archivo .pem", "/x/cert.pem", "x"),
+    # Los siguientes los encontro la revision independiente: el guardia no
+    # reconocia NINGUNA de las credenciales que esta misma fase introdujo.
+    ("token personal de Supabase", "/x/a.js", "TOKEN = " + PAT_SUPABASE),
+    ("llave secreta de Supabase", "/x/a.js", "k = " + SECRETO_SUPABASE),
+    ("token personal de Netlify", "/x/a.js", "TOKEN = " + PAT_NETLIFY),
+    ("token de Banxico", "/x/a.js", "BANXICO_" + "TOKEN = " + HEX_64),
+    ("token de GitHub", "/x/a.js", "t = " + PAT_GITHUB),
+    ("llave de acceso de AWS", "/x/a.js", "id = " + LLAVE_AWS),
 ]
 
 SECRETOS_PASAR = [

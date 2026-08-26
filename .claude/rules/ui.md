@@ -2,6 +2,9 @@
 paths:
   - "src/ui/**/*.js"
   - "src/styles/**/*.css"
+  - "src/main.js"
+  - "src/data/versiones.json"
+  - "package.json"
   - "index.html"
 ---
 

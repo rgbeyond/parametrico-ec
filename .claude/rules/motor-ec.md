@@ -69,6 +69,25 @@ para cualquier modelo de recorte de picos: recortar solo en punta no baja el
 cargo por distribución, y si manda el término calculado, recortar el pico no
 ahorra nada en capacidad.
 
+## Citas regulatorias: las de almacenamiento NO están verificadas
+
+La presentación interna de almacenamiento se generó con NotebookLM, y sus
+números de acuerdo —**RES/550/2021** para el Código de Red, **A/108/2024** de
+electromovilidad— son exactamente el tipo de dato que una herramienta generativa
+produce plausible y equivocado. El Código de Red podría venir de RES/151/2016.
+
+**No cites ninguno en documento a cliente sin verificarlo en el DOF.** Para
+verificar, usa el subagente `normative-researcher`, que separa lo validado de lo
+inferido y dice qué no pudo comprobar.
+
+## Especificación de cable en corriente directa
+
+**RHW-2/XHHW-2 XLPE 1000 V.** «THHW-LS 1000 V» **no existe comercialmente**: el
+THHW-LS llega a 600 V. Corregirlo donde aparezca.
+
+El catálogo hoy está bien —`catalogo.json` dice «Cable CC RHW-2/XHHW-2 4/0 AWG
+1000 V»—, y esta regla existe para que no se reintroduzca.
+
 ## Motor de cantidades: pendiente de validar
 
 Alimentadores de baja tensión, tableros e interruptores derivados, sistema de
