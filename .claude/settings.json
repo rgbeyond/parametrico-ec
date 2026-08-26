@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(cat *)",
+      "Bash(diff *)",
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git ls-files *)",
+      "Bash(git rev-parse *)",
+      "Bash(git show *)",
+      "Bash(git stash list *)",
+      "Bash(git status *)",
+      "Bash(head *)",
+      "Bash(ls *)",
+      "Bash(npm run build)",
+      "Bash(npm run dev)",
+      "Bash(npm run seed)",
+      "Bash(tail *)",
+      "Bash(wc *)"
+    ],
+    "ask": [
+      "Bash(curl *)",
+      "Bash(find *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(grep *)",
+      "Bash(jq *)",
+      "Bash(netlify *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npx *)",
+      "Bash(psql *)",
+      "Bash(python3 -c *)",
+      "Bash(rg *)",
+      "Bash(supabase *)",
+      "Bash(wget *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.production)",
+      "Read(./.env.development)",
+      "Read(//**/.env)",
+      "Read(//**/.env.local)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.pfx)",
+      "Read(./**/id_rsa)",
+      "Read(./**/id_ed25519)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.aws/**)",
+      "Read(~/.ssh/**)",
+      "Edit(./.env)",
+      "Edit(./.env.local)",
+      "Edit(./.env.*.local)",
+      "Edit(./.env.production)",
+      "Edit(./.env.development)",
+      "Edit(./**/*.pem)",
+      "Edit(./**/id_rsa)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push origin main *)",
+      "Bash(git push origin main)",
+      "Bash(git push origin master *)",
+      "Bash(git filter-branch *)",
+      "Bash(git filter-repo *)",
+      "Bash(git reset --hard origin/main *)",
+      "Bash(supabase db reset *)",
+      "Bash(supabase link *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(env)",
+      "Bash(printenv *)",
+      "Edit(./**/*.p12)",
+      "Edit(./**/*.pfx)",
+      "Edit(./**/id_ed25519)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-secretos.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-destructivo.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-commit.py",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/verifica-por-ruta.sh",
+            "timeout": 90
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/comprobar-guardias.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
