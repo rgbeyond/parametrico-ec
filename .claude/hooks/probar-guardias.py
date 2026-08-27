@@ -25,8 +25,12 @@ sano que el guardia siga siendo estricto y que la prueba se adapte.
 
 ALCANCE: esta suite mide LOS HOOKS, no la politica efectiva. `permissions.deny`
 de settings.json bloquea cosas que aqui salen como "pasa" —`rm -rf` de cualquier
-ruta, por ejemplo— porque son dos capas distintas. Un 35/35 dice que los hooks
-hacen lo suyo, no que la politica completa haga lo que dice.
+ruta, por ejemplo— porque son dos capas distintas. Que la suite salga en verde
+dice que los hooks hacen lo suyo, no que la politica completa haga lo que dice.
+
+El total NO se escribe aqui. La version anterior decia 35 cuando ya iban 144:
+un numero fijado en prosa se queda viejo en la ronda siguiente, y un documento
+que se contradice a dos pantallas ensena a no leerlo.
 """
 import json
 import pathlib
@@ -436,6 +440,21 @@ def probar_envoltorio():
                 pass
 
     entorno_sin_python = dict(os.environ, PATH=str(bin_falso))
+
+    # Guardias que EXISTEN y no pueden decidir. Se construyen aqui para que la
+    # suite no dependa de dejar basura en el arbol.
+    d = pathlib.Path(tmp)
+    rotos = {}
+    rotos["sintaxis"] = d / "sintaxis.py"
+    rotos["sintaxis"].write_text("def f(:\n    pass\n")
+    rotos["no_python"] = d / "no-python.py"
+    rotos["no_python"].write_text("#!/bin/sh\necho hola\n")
+    rotos["import"] = d / "import-roto.py"
+    rotos["import"].write_text("import modulo_que_no_existe\n")
+    rotos["codigo3"] = d / "codigo3.py"
+    rotos["codigo3"].write_text("import sys\nsys.exit(3)\n")
+    rotos["extrana"] = d / "guardia.perl"
+    rotos["extrana"].write_text("print 1\n")
     peligroso = json.dumps(con_comando("git push --force origin main"))
     inocuo = json.dumps(con_comando("ls -la"))
 
@@ -457,6 +476,31 @@ def probar_envoltorio():
          [ENVOLTORIO, DESTRUCTIVO, COMMIT], inocuo, None, 2),
         ("ruta de guardia vacia",
          [ENVOLTORIO, "   "], inocuo, None, 2),
+
+        # --- Cuarta ronda. Los encontro la revision de la etapa A y los
+        # cuatro PASABAN: comprobar que el guardia EXISTA no basta, porque uno
+        # que existe pero no puede decidir sale 1, y 1 tampoco bloquea. El
+        # hueco solo se habia movido de «guardia ausente aprueba» a «guardia
+        # inservible aprueba».
+        ("guardia con error de sintaxis",
+         [ENVOLTORIO, str(rotos["sintaxis"])], peligroso, None, 2),
+        ("guardia que no es Python",
+         [ENVOLTORIO, str(rotos["no_python"])], peligroso, None, 2),
+        ("guardia con import roto",
+         [ENVOLTORIO, str(rotos["import"])], peligroso, None, 2),
+        ("guardia que sale con codigo 3",
+         [ENVOLTORIO, str(rotos["codigo3"])], peligroso, None, 2),
+        ("extension desconocida",
+         [ENVOLTORIO, str(rotos["extrana"])], peligroso, None, 2),
+
+        # El guardia de secretos tambien va envuelto ahora: falla cerrado sin
+        # python3, pero NO cubria «el archivo no esta».
+        ("guardia de secretos envuelto, escritura inocua",
+         [ENVOLTORIO, SECRETOS],
+         json.dumps(con_escritura("src/x.js", "const a = 1;\n")), None, 0),
+        ("guardia de secretos envuelto, escritura peligrosa",
+         [ENVOLTORIO, SECRETOS],
+         json.dumps(con_escritura("id_rsa", "x\n")), None, 2),
     ]
 
     try:

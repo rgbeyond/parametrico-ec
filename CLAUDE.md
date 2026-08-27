@@ -95,6 +95,12 @@ tampoco.
 3. Si el cambio agrega capacidad o corrige algo visible: versión en
    `package.json` **y** entrada en `src/data/versiones.json`, mismo commit.
 4. El razonamiento de cada supuesto queda en el propio renglón del código.
+5. Si tocaste `.claude/`: `python3 .claude/hooks/probar-guardias.py` en verde.
+   Los guardias han fallado abierto tres veces y las tres parecían estar bien.
+6. Si tocaste `CLAUDE.md` o `.claude/rules/`:
+   `python3 scripts/verificar-referencias.py .` sin rutas rotas ni globs
+   huérfanos. Una regla cuyo `paths:` no casa con nada **no se carga nunca** y
+   no avisa. Una ausencia declarada a propósito no cuenta como error.
 
 ---
 

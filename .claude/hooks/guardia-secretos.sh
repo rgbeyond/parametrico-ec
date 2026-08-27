@@ -26,6 +26,20 @@ entrada=$(cat)
 # decidir y salir 0 es correcto.
 if [ -z "${entrada//[[:space:]]/}" ]; then exit 0; fi
 
+# stdout y stderr POR SEPARADO.
+#
+# La version anterior capturaba las dos con `2>&1`. Si python3 sale 0 pero
+# escribe algo en stderr -un aviso de deprecacion, un sitecustomize, una
+# variable PYTHONWARNINGS-, ese texto se convertia en la RUTA y el resto se
+# corria un renglon. El `case` de la regla 1, el que bloquea por nombre de
+# archivo, pasaba a evaluar el aviso en vez de la ruta: una escritura a un
+# archivo de credenciales dejaba de bloquearse por su nombre.
+diagnostico=$(mktemp) || {
+  echo "BLOQUEADO: el guardia de secretos no pudo crear un archivo temporal." >&2
+  exit 2
+}
+trap 'rm -f "$diagnostico"' EXIT
+
 campos=$(printf '%s' "$entrada" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -48,10 +62,12 @@ for e in (ti.get('edits') or []):
         if isinstance(v, str): partes.append(v)
 print(ruta)
 print('\\x00'.join(partes).replace('\\x00', chr(0)))
-" 2>&1) || {
-  echo "BLOQUEADO: el guardia de secretos no pudo leer su entrada. Un control que no entiende lo que se le pide no puede aprobarlo. Detalle: $(printf '%s' "$campos" | tail -1). Corre .claude/hooks/probar-guardias.py." >&2
+" 2>"$diagnostico") || {
+  echo "BLOQUEADO: el guardia de secretos no pudo leer su entrada. Un control que no entiende lo que se le pide no puede aprobarlo. Detalle: $(tail -1 "$diagnostico" 2>/dev/null). Corre .claude/hooks/probar-guardias.py." >&2
+  rm -f "$diagnostico"
   exit 2
 }
+rm -f "$diagnostico"
 
 if [ "$campos" = "__SIN_TOOL_INPUT__" ]; then exit 0; fi
 

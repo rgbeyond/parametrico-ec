@@ -27,11 +27,22 @@ están en `origin/main`:
 |---|---|
 | `conceptos.ambitos` (catálogo por área) | **No** |
 | Rol `vendedor` en el enum y sus funciones | **No** |
-| `fn_conceptos_de`, `fn_articulos_de` | **No** |
+| `fn_conceptos_de` | **No** |
+| `fn_articulos_de` | **No aplica: es del portafolio**, y allí sí está versionada |
 | Bucket `recibos` y sus políticas | **No** (son del otro repositorio) |
 
 Cómo se sabe: el Portafolio Energético está desplegado y depende de
 `conceptos.ambitos`; los buckets existen con la huella exacta que deja el SQL.
+
+**Corrección de la Fase 1A.** Una versión anterior de esta tabla listaba
+`fn_articulos_de` como divergencia de este repositorio. **Es falso.** Esa
+función se define en `propuestas-fv/supabase/21_articulos.sql`, que sí está en
+`main` de aquel repositorio; nunca faltó de Git. Lo que sí es real, y es peor:
+esa migración `21` **depende de `conceptos.ambitos`**, la columna que crea
+`04_ambitos.sql` de este repositorio y que no está en esta rama. Una base nueva
+construida desde las dos ramas principales **no arranca**: la `21` falla porque
+la columna no existe. Detalle en
+`propuestas-fv/docs/arquitectura/reconciliacion-supabase-phase1a.md`.
 
 **Consecuencia práctica:** las migraciones dejaron de ser la fuente de verdad
 para este repositorio. Si alguien clona `main` y aplica `supabase/` a una base
