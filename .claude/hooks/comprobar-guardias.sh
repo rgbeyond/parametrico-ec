@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
-# SessionStart — comprueba que los guardias pueden correr.
+# SessionStart — aviso temprano de que los guardias pueden correr.
 #
-# POR QUE HACE FALTA. Claude Code trata un hook que sale con un codigo distinto
-# de 2 como un error no bloqueante: lo registra y sigue. Si `python3` no esta en
-# la maquina, guardia-destructivo.py y guardia-commit.py salen 127 y TODO pasa,
-# en silencio. Es el mismo modo de fallo del heredoc de la Fase 0: el guardia
-# parecia instalado y no revisaba nada.
+# ESTO NO ES LA FRONTERA DE SEGURIDAD, y conviene tenerlo claro.
 #
-# Este hook no puede impedirlo -SessionStart no bloquea nada- pero si puede
-# hacerlo VISIBLE en el primer turno, que es cuando todavia se puede corregir.
-# Lo que imprime en stdout entra al contexto de la sesion.
+# SessionStart no bloquea nada: lo unico que puede hacer es escribir en el
+# contexto de la sesion. Quien no lea el aviso trabaja igual. La frontera real
+# es `ejecutar-guardia.sh`, el envoltorio de PreToolUse, que sale 2 y NO invoca
+# la operacion protegida cuando falta python3 o falta el guardia.
+#
+# Este hook sigue existiendo porque el aviso llega en el primer turno, que es
+# cuando todavia se corrige, en vez de al primer comando bloqueado. Aviso
+# temprano y control son dos cosas distintas y hacen falta las dos.
 set -uo pipefail
 raiz="${CLAUDE_PROJECT_DIR:-.}/.claude/hooks"
 faltas=()
 
 command -v python3 >/dev/null 2>&1 || faltas+=(
-  "python3 NO esta disponible: guardia-destructivo.py y guardia-commit.py
-   saldrian 127 y Claude Code lo trataria como error no bloqueante. Sin
-   python3, esta sesion NO tiene guardias.")
+  "python3 NO esta disponible. Los guardias de Python no pueden correr. El
+   envoltorio ejecutar-guardia.sh BLOQUEARA toda operacion de Bash hasta que
+   se instale: es lo correcto, pero vas a chocar con ello en el primer
+   comando.")
 
-for g in guardia-destructivo.py guardia-commit.py guardia-secretos.sh \
-         verifica-por-ruta.sh; do
+for g in ejecutar-guardia.sh guardia-destructivo.py guardia-commit.py \
+         guardia-secretos.sh verifica-por-ruta.sh; do
   if [ ! -f "$raiz/$g" ]; then
     faltas+=("$g no existe en .claude/hooks/")
   elif [ ! -x "$raiz/$g" ]; then
@@ -29,9 +31,9 @@ for g in guardia-destructivo.py guardia-commit.py guardia-secretos.sh \
 done
 
 if [ ${#faltas[@]} -gt 0 ]; then
-  echo "AVISO DE SEGURIDAD: los guardias de este repositorio no estan operativos."
+  echo "AVISO DE SEGURIDAD: la capa de guardias de este repositorio esta incompleta."
   for f in "${faltas[@]}"; do echo "  - $f"; done
   echo "  Comprueba con: python3 .claude/hooks/probar-guardias.py"
-  echo "  Mientras tanto, NO des por hecho que un commit peligroso sera detenido."
+  echo "  El envoltorio de PreToolUse falla cerrado, asi que lo mas probable es que las operaciones de Bash empiecen a bloquearse. Arregla esto antes de seguir."
 fi
 exit 0

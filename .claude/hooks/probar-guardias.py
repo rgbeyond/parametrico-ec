@@ -29,6 +29,7 @@ ruta, por ejemplo— porque son dos capas distintas. Un 35/35 dice que los hooks
 hacen lo suyo, no que la politica completa haga lo que dice.
 """
 import json
+import pathlib
 import re
 import subprocess
 import sys
@@ -399,6 +400,107 @@ COMMIT_CASOS = [
 ]
 
 
+ENVOLTORIO = str(AQUI / "ejecutar-guardia.sh")
+
+
+def probar_envoltorio():
+    """El envoltorio de arranque: que un guardia ausente no parezca aprobar.
+
+    Es la unica parte de la capa que NO es Python, y existe por un hueco muy
+    concreto: si `python3` no esta, el hook sale 127, Claude Code lo trata como
+    error no bloqueante y la operacion pasa sin revision. Aqui se comprueba que
+    ese caso ahora bloquea, y que el envoltorio no se interpone cuando todo
+    esta en su sitio.
+
+    El `python3` ausente se simula con un PATH que no lo contiene. No se toca
+    la maquina.
+    """
+    import os
+    import shutil
+    import tempfile
+
+    fallos = 0
+    print("\n=== envoltorio de arranque: python3 ausente NO puede aprobar ===")
+
+    # Un PATH minimo, con las utilidades que el envoltorio necesita pero SIN
+    # python3. Se construye enlazando lo indispensable en un directorio nuevo.
+    tmp = tempfile.mkdtemp(prefix="sin-python-")
+    bin_falso = pathlib.Path(tmp) / "bin"
+    bin_falso.mkdir()
+    for util in ("bash", "env", "command", "cat"):
+        real = shutil.which(util)
+        if real:
+            try:
+                os.symlink(real, bin_falso / util)
+            except OSError:
+                pass
+
+    entorno_sin_python = dict(os.environ, PATH=str(bin_falso))
+    peligroso = json.dumps(con_comando("git push --force origin main"))
+    inocuo = json.dumps(con_comando("ls -la"))
+
+    casos = [
+        # (nombre, argv, entrada, entorno, exit esperado)
+        ("python disponible + comando inocuo",
+         [ENVOLTORIO, DESTRUCTIVO], inocuo, None, 0),
+        ("python disponible + comando prohibido",
+         [ENVOLTORIO, DESTRUCTIVO], peligroso, None, 2),
+        ("python AUSENTE + comando inocuo",
+         [ENVOLTORIO, DESTRUCTIVO], inocuo, entorno_sin_python, 2),
+        ("python AUSENTE + comando prohibido",
+         [ENVOLTORIO, DESTRUCTIVO], peligroso, entorno_sin_python, 2),
+        ("guardia inexistente",
+         [ENVOLTORIO, str(AQUI / "no-existe.py")], inocuo, None, 2),
+        ("invocacion sin argumentos",
+         [ENVOLTORIO], inocuo, None, 2),
+        ("invocacion con dos argumentos",
+         [ENVOLTORIO, DESTRUCTIVO, COMMIT], inocuo, None, 2),
+        ("ruta de guardia vacia",
+         [ENVOLTORIO, "   "], inocuo, None, 2),
+    ]
+
+    try:
+        for nombre, argv, entrada, entorno, esperado in casos:
+            r = subprocess.run(argv, input=entrada, capture_output=True,
+                               text=True, env=entorno)
+            ok = r.returncode == esperado
+            fallos += not ok
+            marca = "ok   " if ok else "FALLA"
+            det = r.stderr.strip().replace("\n", " ")[:44]
+            print(f"  {marca} {nombre:<40} exit={r.returncode} {det}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # El guardia de secretos es Bash pero usa python3 para leer el JSON. Su
+    # sustitucion de comando ya falla cerrado; se comprueba en vez de suponerlo.
+    print("\n=== guardia de secretos sin python3 ===")
+    tmp2 = tempfile.mkdtemp(prefix="sin-python2-")
+    bin2 = pathlib.Path(tmp2) / "bin"
+    bin2.mkdir()
+    for util in ("bash", "grep", "cat", "printf", "head", "tail", "sed"):
+        real = shutil.which(util)
+        if real:
+            try:
+                os.symlink(real, bin2 / util)
+            except OSError:
+                pass
+    try:
+        r = subprocess.run(
+            [SECRETOS],
+            input=json.dumps(con_escritura("src/x.js", "const a = 1;\n")),
+            capture_output=True, text=True,
+            env=dict(os.environ, PATH=str(bin2)))
+        ok = r.returncode == 2
+        fallos += not ok
+        marca = "ok   " if ok else "FALLA"
+        print(f"  {marca} {'sin python3 debe bloquear':<40} "
+              f"exit={r.returncode} {r.stderr.strip()[:44]}")
+    finally:
+        shutil.rmtree(tmp2, ignore_errors=True)
+
+    return fallos, len(casos) + 1
+
+
 def probar_commit():
     """Monta un repositorio desechable por caso y corre el guardia contra el."""
     import shutil
@@ -481,6 +583,7 @@ def main():
                      CRUDO_SECRETOS_BLOQUEAR, SECRETOS, 2),
         bloque_crudo("FALLA CERRADO secretos: sin evento DEBE PASAR",
                      CRUDO_SECRETOS_PASAR, SECRETOS, 0),
+        probar_envoltorio(),
         probar_commit(),
     ]
     fallos = sum(f for f, _ in resultados)
