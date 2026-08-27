@@ -86,6 +86,36 @@ tampoco.
 
 ---
 
+---
+
+## ⚠ Las migraciones del esquema compartido ya no viven aquí
+
+**Desde la Fase 1A, la fuente de verdad del esquema de Supabase es
+`rgbeyond/beyond-platform`.**
+
+Las dos aplicaciones comparten un solo proyecto de Supabase, y evolucionar el
+mismo esquema desde dos repositorios es lo que produjo la divergencia que la
+Fase 1A tuvo que reconciliar: la base desplegada acabó por delante de las dos
+ramas principales, y una base nueva construida desde Git **no arrancaba**.
+
+| | Dónde |
+|---|---|
+| Migración nueva del esquema compartido | `beyond-platform/supabase/migrations/` |
+| Migraciones de aquí | **se quedan**, como registro |
+
+**Las migraciones de este repositorio no se borran.** Son la arqueología de
+cómo se llegó al esquema actual, y `beyond-platform/origen/` guarda una copia
+exacta para poder diffear la línea base contra su fuente. Borrarlas no
+arreglaría nada y quitaría la única forma de comprobar la reconstrucción.
+
+**Lo que sí cambia:** no escribas aquí una migración nueva del esquema
+compartido. Si un cambio de esquema hace falta, va en `beyond-platform`, se
+prueba con `beyond-platform/scripts/reconstruir.sh` contra una
+base vacía, se aplica a
+Beyond DEV y solo entonces se propone para producción.
+
+Detalle en `beyond-platform/docs/reconciliacion/compatibilidad-apps.md`.
+
 ## Definición de terminado
 
 1. `npm run build` pasa.

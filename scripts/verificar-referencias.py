@@ -61,7 +61,8 @@ def revisar(raiz):
                     continue
                 # Referencia al repositorio hermano: no se puede comprobar
                 # desde aqui y no es un error.
-                if ref.startswith(("propuestas-fv/", "parametrico-ec/")):
+                if ref.startswith(("propuestas-fv/", "parametrico-ec/",
+                                   "beyond-platform/")):
                     continue
                 if (raiz / ref).exists():
                     continue

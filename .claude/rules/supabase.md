@@ -97,3 +97,14 @@ sin él es cómo se descubre el 55P04 en producción.
 
 Lo que el validador **no** cubre, ni aquí ni allá: RLS con usuarios reales.
 `auth.uid()` y los roles de Supabase no existen fuera de Supabase.
+
+## ⚠ Una migración nueva del esquema compartido NO va aquí
+
+Desde la Fase 1A la fuente de verdad es `rgbeyond/beyond-platform`. Las
+migraciones de este repositorio **se conservan** como registro histórico, pero
+no se agregan más: dos repositorios evolucionando el mismo esquema es lo que
+produjo la divergencia que hubo que reconciliar.
+
+El camino es: `beyond-platform/supabase/migrations/` →
+`beyond-platform/scripts/reconstruir.sh` sobre una base vacía → Beyond DEV → revisión
+humana → producción.
