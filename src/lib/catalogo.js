@@ -48,11 +48,14 @@ export class ErrorCatalogo extends Error {
            + 'un catálogo sin material.',
       ambito: 'El catálogo compartido devolvió conceptos que no son de este '
            + 'ámbito. `fn_conceptos_de(\'ec\')` debería filtrarlos en la base; '
-           + 'si llegan aquí, la función no es la que se espera.'
+           + 'si llegan aquí, la función no es la que se espera.',
+      proyecto: 'No se pudieron leer los conceptos propios de este proyecto. '
+              + 'Son los que sustituyen al precio del catálogo maestro: abrir '
+              + 'sin ellos cotizaría con otras cifras.'
     };
     super(textos[causa] || 'Fallo al leer el catálogo compartido.');
     this.name = 'ErrorCatalogo';
-    this.causa = causa;            // 'consulta' | 'vacio' | 'ambito'
+    this.causa = causa;            // 'consulta' | 'vacio' | 'ambito' | 'proyecto'
     this.detalle = detalle ?? null;
   }
 }
@@ -66,6 +69,7 @@ export const origenCatalogo = {
   fuente: null,      // 'local' | 'nube' | 'error'
   motivo: null,      // 'sin-nube' | 'sin-sesion' | 'consulta-ok' | 'consulta' | 'vacio' | 'ambito'
   filas: 0,
+  sinAmbitos: 0,   // filas sobre las que NO se pudo comprobar el ámbito
   en: null
 };
 
@@ -81,6 +85,7 @@ function anotarOrigen(fuente, motivo, filas){
   origenCatalogo.fuente = fuente;
   origenCatalogo.motivo = motivo;
   origenCatalogo.filas = filas;
+  origenCatalogo.sinAmbitos = 0;
   origenCatalogo.en = new Date().toISOString();
   /* Copia: quien guarde el origen de una resolución no debe ver cómo cambia
      solo en la siguiente. El objeto exportado queda como «el último origen». */
@@ -97,8 +102,13 @@ export const COLUMNAS = ['codigo', 'categoria', 'nombre', 'unidad', 'precio',
   'taxonomia', 'aplicabilidad', 'fuente', 'fecha_ref'];
 
 /* `ambitos` se pide además de las columnas que la pantalla usa. No se muestra
-   ni se guarda: sirve para comprobar el contrato de la función, más abajo. */
-const COLUMNAS_CONSULTA = [...COLUMNAS, 'ambitos'];
+   ni se guarda: sirve para comprobar el contrato de la función, más abajo.
+
+   Se exporta porque de ella depende que ese control siga encendido: si alguien
+   quitara `ambitos` de aquí, la comprobación pasaría a ser un `filter` que
+   nunca encuentra nada y dejaría de comprobar sin avisar. Hay una prueba que
+   ata las dos cosas. */
+export const COLUMNAS_CONSULTA = [...COLUMNAS, 'ambitos'];
 
 // ---------------------------------------------------------------- el ámbito
 /* EL PARAMETRICO NO LEE TODO EL CATALOGO, LEE EL SUYO.
@@ -131,10 +141,15 @@ export const consultaCatalogo = (cliente) =>
     .select(COLUMNAS_CONSULTA.join(', '))
     .order('codigo');
 
-const deFila = (r) => ({
+/* El traductor de columnas a las llaves cortas que usa el estimador.
+   Se exporta y lleva el ámbito por parámetro para que los conceptos propios
+   del proyecto usen ESTE y no una copia: el argumento de tener la lista de
+   columnas junto a su traductor no vale si al lado hay un segundo traductor
+   escrito a mano. */
+export const deFila = (r, ambito = 'maestro') => ({
   c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
   t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref,
-  ambito: 'maestro'
+  ambito
 });
 
 /* La decisión, aislada de Supabase y de la sesión para poder probarla.
@@ -175,13 +190,23 @@ export async function resolverCatalogo({ conNube, conSesion, consultar, local })
   const ajenos = data.filter((r) => Array.isArray(r.ambitos)
     && !r.ambitos.some((a) => AMBITOS_VISIBLES.includes(a)));
   if(ajenos.length){
-    anotarOrigen('error', 'ambito', 0);
+    /* Se anota `data.length` y no cero: llegaron filas, y cuántas es el dato
+       útil para quien depure. La causa ya distingue el caso. */
+    anotarOrigen('error', 'ambito', data.length);
     throw new ErrorCatalogo('ambito', {
       cuantos: ajenos.length,
       ejemplos: ajenos.slice(0, 5).map((r) => `${r.codigo} [${r.ambitos}]`)
     });
   }
 
-  return { conceptos: data.map(deFila), origen: anotarOrigen('nube', 'consulta-ok', data.length) };
+  /* Cuántas filas no traían `ambitos`, o sea sobre cuántas no se comprobó
+     nada. No es un fallo —una respuesta sin la columna es legítima— pero un
+     control desactivado tiene que verse, no suponerse. Por la vía real esto es
+     siempre cero, porque la columna se pide en el `select`. */
+  const origen = anotarOrigen('nube', 'consulta-ok', data.length);
+  origen.sinAmbitos = origenCatalogo.sinAmbitos =
+    data.filter((r) => !Array.isArray(r.ambitos)).length;
+
+  return { conceptos: data.map((r) => deFila(r)), origen };
 }
 

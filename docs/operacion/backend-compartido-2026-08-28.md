@@ -30,7 +30,7 @@ Antes de modificar integración con Supabase, leer el handoff canónico en:
 
 ---
 
-## Qué se implementó (2026-08-28, v0.9.0 y v0.10.0)
+## Qué se implementó (2026-08-28, v0.9.0 a v0.10.1)
 
 ### 0. El catálogo se pide por ámbito (v0.10.0)
 
@@ -88,6 +88,7 @@ Ahora las tres se separan:
 | Supabase devuelve cero filas | catálogo local, sin avisar | `ErrorCatalogo('vacio')` |
 | Supabase devuelve filas | conceptos de la nube | igual, y lo declara |
 | Llega un concepto de otro ámbito | entraba al estimador | `ErrorCatalogo('ambito')` |
+| Fallan los conceptos propios del proyecto | **lista vacía, sin avisar** | `ErrorCatalogo('proyecto')` |
 
 El respaldo local **se conserva** para los dos primeros casos. Es la decisión
 de producto de que la herramienta siga siendo usable sin cuenta, y no cambia.
@@ -98,6 +99,12 @@ con usuario sin perfil pinta «tu cuenta todavía no tiene perfil». En ninguna 
 las dos hay tarjetas que abrir. La rama defensiva se queda y la prueba también,
 pero contarla como modo de uso inflaría la cobertura: los estados que la
 aplicación produce de verdad son tres.
+
+El respaldo silencioso tenía un gemelo tres líneas más abajo, en la misma
+ruta de carga: `conceptosDelProyecto()` devolvía `[]` al fallar. Pesa más de lo
+que parece, porque los conceptos propios **pisan** al maestro en `contexto.js`:
+perderlos no dejaba al estimador sin partidas, lo dejaba cotizando las mismas
+partidas al precio del catálogo general. Retirado en v0.10.1.
 
 Queda además un **segundo respaldo al JSON**, en `src/lib/app.js`: si
 `ctx.conceptos` llegara vacío, el estimador cotiza con el archivo incluido. Hoy
@@ -141,7 +148,7 @@ backend caído, que es el mismo defecto que esta rama vino a quitar.
 
 ### 5. Pruebas
 
-Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 16 casos que
+Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 17 casos que
 cubren los cuatro estados, el registro del origen —incluido el de después de un
 fallo—, la correspondencia entre las columnas que se piden y las que se
 traducen, y el ámbito: contra qué se pregunta, qué recibe el Paramétrico cuando
@@ -152,7 +159,7 @@ Siguen siendo el único módulo cubierto. El estimador, que es donde están las
 cifras, no tiene ninguna prueba.
 
 ```
-npm test    # 16/16
+npm test    # 17/17
 npm run build
 ```
 

@@ -51,13 +51,27 @@ async function abrir(proyecto){
     const pistas = {
       vacio: '\n\nRevisa que el catálogo esté cargado en la base, y que la '
            + 'RLS deje verlo con este rol.',
-      consulta: '\n\nRevisa la conexión, la sesión y los permisos de la base. '
-              + 'Si la base no tiene `fn_conceptos_de`, es eso.',
+      /* Un 404 aquí no significa necesariamente que la función no exista: la
+         caché de esquema de PostgREST puede estar vieja. Por eso la pista
+         nombra las dos posibilidades en vez de mandar a buscar una función que
+         a lo mejor está puesta. */
+      consulta: '\n\nRevisa la conexión, la sesión y los permisos. Si el '
+              + 'mensaje habla de que no se encuentra `fn_conceptos_de`, puede '
+              + 'faltar la función o estar vieja la caché de esquema.',
       ambito: '\n\nLa base devolvió conceptos de otro ámbito. Revisa la '
-            + 'definición de `fn_conceptos_de`.'
+            + 'definición de `fn_conceptos_de`.',
+      proyecto: '\n\nSon los conceptos propios de esta estación. Abrir sin '
+              + 'ellos cotizaría con los precios del catálogo general.'
     };
+    /* EL MENSAJE DE LA BASE LLEGA A LA PANTALLA. `fn_conceptos_de` levanta
+       «Este perfil no tiene acceso a los costos del catálogo» precisamente
+       para que nadie vea un resultado ambiguo; sustituirlo por un texto
+       genérico desperdiciaría ese trabajo. Vale igual para «no se encuentra la
+       función» y para «permiso denegado»: tres causas distintas que si no se
+       ven producen el mismo diagnóstico equivocado. */
+    const dijo = err?.detalle?.message ? `\n\nLa base dijo: ${err.detalle.message}` : '';
     const extra = pistas[err?.causa] || '';
-    alert(`${err?.message || err}${extra}`);
+    alert(`${err?.message || err}${dijo}${extra}`);
     /* La portada se repinta porque «crear» y «duplicar» ya escribieron en la
        base antes de llegar aquí: sin refrescar, el proyecto existe y no se ve,
        y volver a pulsar crea otro. */

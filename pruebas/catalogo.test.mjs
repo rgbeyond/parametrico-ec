@@ -32,7 +32,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS,
-         consultaCatalogo, RPC_CATALOGO, AMBITO, AMBITOS_VISIBLES }
+         consultaCatalogo, RPC_CATALOGO, AMBITO, AMBITOS_VISIBLES,
+         COLUMNAS_CONSULTA }
   from '../src/lib/catalogo.js';
 
 /* Un catálogo local mínimo. No se importa el de verdad: lo que se comprueba es
@@ -108,8 +109,11 @@ test('nube con datos: usa Supabase y traduce los nombres de columna', async () =
   const c = conceptos[0];
   assert.equal(c.c, 'NUB-1');
   assert.equal(c.n, 'Concepto de la nube');
-  /* `precio` llega como cadena desde PostgREST por ser `numeric`. Si no se
-     convierte, las sumas del estimador concatenan en vez de sumar. */
+  /* `precio` se convierte con `Number()` por si acaso, y la fila de prueba lo
+     manda como cadena para ejercitar esa conversión. No es que PostgREST lo
+     mande así: PostgreSQL serializa `numeric` como número JSON. La defensa se
+     queda porque si algún día llegara una cadena, las sumas del estimador
+     concatenarían en vez de sumar, y eso no da error. */
   assert.equal(c.pu, 42.5);
   assert.equal(typeof c.pu, 'number');
   assert.equal(c.ambito, 'maestro');
@@ -303,25 +307,27 @@ test('se le pide a la base el ámbito ec, no la tabla entera', () => {
   assert.equal(visto.order, 'codigo');
 });
 
-test('con ec, comun y fv en la respuesta, el Paramétrico se queda con ec y comun',
+test('las filas que cruzan ec o comun pasan íntegras, incluida una que es también fv',
   async () => {
-    /* La separación la hace `fn_conceptos_de('ec')` en la base: los `fv` puros
-       no deberían llegar nunca. Esta prueba describe lo que la aplicación
-       RECIBE cuando la función cumple, y la siguiente lo que pasa si no. */
+    /* OJO CON LO QUE ESTA PRUEBA NO ES. No demuestra que se descarte nada: las
+       tres filas cumplen el contrato y por eso pasan las tres. Lo que fija es
+       que `['comun']` y `['ec','fv']` NO se rechacen —un concepto común es del
+       Paramétrico igual que uno propio, y uno que sirve a los dos ámbitos es
+       legítimo—. Que un `fv` puro no entre lo demuestra la prueba siguiente,
+       que es donde está el valor. */
     const respuesta = [
       conAmbitos('EC-1', ['ec']),
       conAmbitos('COM-1', ['comun']),
-      conAmbitos('MIX-1', ['ec', 'fv'])   // legítimo: sirve a los dos ámbitos
+      conAmbitos('MIX-1', ['ec', 'fv'])
     ];
-    const { conceptos } = await resolverCatalogo({
+    const { conceptos, origen } = await resolverCatalogo({
       conNube: true, conSesion: true, local,
       consultar: conNube({ data: respuesta, error: null })
     });
 
     assert.deepEqual(conceptos.map((c) => c.c), ['EC-1', 'COM-1', 'MIX-1']);
-    /* Ningún concepto exclusivamente fotovoltaico entra al estimador. */
-    assert.equal(conceptos.length, 3);
-    assert.equal(AMBITOS_VISIBLES.join(','), 'ec,comun');
+    /* Y sobre las tres se comprobó el ámbito: ninguna se saltó el control. */
+    assert.equal(origen.sinAmbitos, 0);
   });
 
 test('si un concepto solo fv se cuela, LANZA: la función no es la que se espera',
@@ -350,22 +356,46 @@ test('si un concepto solo fv se cuela, LANZA: la función no es la que se espera
     assert.equal(origenCatalogo.motivo, 'ambito');
   });
 
-test('una respuesta sin la columna ambitos no se rechaza', async () => {
-  /* La comprobación es del contrato, no una exigencia de forma. Una base que
-     no devuelva la columna —o un doble de prueba que no la ponga— no debe
-     hacer fallar el catálogo: lo que se rechaza es un ámbito ajeno, no una
-     ausencia. */
-  const { conceptos } = await resolverCatalogo({
+test('una fila sin la columna ambitos no se rechaza, pero se cuenta', async () => {
+  /* Por la vía real esto no pasa: `ambitos` va en el `select`, y una base sin
+     esa columna daría 400 de PostgREST, no filas incompletas. Lo que se fija
+     aquí es que un doble de prueba incompleto —los de arriba, sin ir más
+     lejos— no haga fallar el catálogo, y que aun así la falta se contabilice.
+     Un control que no se aplicó tiene que verse; si `sinAmbitos` no fuera
+     cero contra Beyond DEV, es que la columna dejó de pedirse. */
+  const { conceptos, origen } = await resolverCatalogo({
     conNube: true, conSesion: true, local,
     consultar: conNube({ data: [filaNube], error: null })
   });
   assert.equal(conceptos.length, 1);
+  assert.equal(origen.sinAmbitos, 1);
+  assert.equal(origenCatalogo.sinAmbitos, 1);
+});
+
+test('la columna que enciende el control se pide de verdad', () => {
+  /* Sin `ambitos` en la consulta, la comprobación de contrato pasa a ser un
+     filtro que nunca encuentra nada: se apagaría sola y en silencio. Esto ata
+     las dos cosas para que quitarla rompa una prueba. */
+  assert.ok(COLUMNAS_CONSULTA.includes('ambitos'));
+  for(const c of COLUMNAS) assert.ok(COLUMNAS_CONSULTA.includes(c));
+  assert.deepEqual(AMBITOS_VISIBLES, [AMBITO, 'comun']);
 });
 
 // ------------------------------------------------- el mensaje es para leerse
 test('los mensajes de error dicen qué revisar', async () => {
   const consulta = new ErrorCatalogo('consulta', { message: 'x' });
   const vacio = new ErrorCatalogo('vacio');
+  const ambito = new ErrorCatalogo('ambito');
+  const proyecto = new ErrorCatalogo('proyecto');
+
+  /* Cuatro causas, cuatro mensajes. Ninguna cae en el genérico del
+     constructor: un mensaje que no distingue manda a buscar donde no es. */
+  const textos = [consulta, vacio, ambito, proyecto].map((e) => e.message);
+  assert.equal(new Set(textos).size, 4);
+  for(const m of textos) assert.doesNotMatch(m, /^Fallo al leer/);
+  /* El de los conceptos propios tiene que decir por qué importa: no es que
+     falten partidas, es que las que hay se cotizan con otro precio. */
+  assert.match(proyecto.message, /precio|cifras/i);
   /* No se comprueba el texto exacto: se comprueba que diga algo distinto en
      cada caso y que no sea un genérico. Los dos fallos piden acciones
      diferentes —revisar la conexión, o cargar el catálogo— y un mensaje que

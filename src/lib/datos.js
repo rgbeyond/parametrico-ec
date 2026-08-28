@@ -18,9 +18,9 @@ export const slug = (t) => String(t || 'proyecto')
 // ---------------------------------------------------------------- catálogo
 /* La decisión vive en `catalogo.js`, sin dependencias, para poder probarla.
    Se reexporta para no romper a quien ya importaba desde aquí. */
-import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS,
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS, deFila,
          consultaCatalogo, RPC_CATALOGO, AMBITO } from './catalogo.js';
-export { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS,
+export { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS, deFila,
          consultaCatalogo, RPC_CATALOGO, AMBITO };
 
 const deLocal = () => catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
@@ -60,16 +60,24 @@ export async function catalogoMaestro(){
   }
 }
 
+/* EL OTRO RESPALDO SILENCIOSO, EN LA MISMA RUTA DE CARGA.
+
+   Esto decía `if(error) return []`, tres líneas debajo del que se retiró. Y
+   pesa igual o más: los conceptos propios del proyecto PISAN al maestro en
+   `contexto.js`, así que perderlos no deja al estimador sin partidas —lo deja
+   cotizando la misma partida al precio del catálogo general en vez de al que
+   se capturó para esa estación—. Sesión expirada a media sesión, RLS o red, y
+   el proyecto abría con otras cifras sin decir nada.
+
+   Una lista vacía sí es legítima: un proyecto puede no tener conceptos
+   propios. Lo que no es legítimo es no poder leerlos y seguir como si nada. */
 export async function conceptosDelProyecto(proyectoId){
   if(!hayNube || !sesion.perfil || !proyectoId) return [];
   const { data, error } = await supabase.from('proyecto_conceptos')
     .select(SELECT_CONCEPTOS)
     .eq('proyecto_id', proyectoId).order('codigo');
-  if(error) return [];
-  return (data || []).map(r => ({
-    c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
-    t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref, ambito: 'proyecto'
-  }));
+  if(error) throw new ErrorCatalogo('proyecto', error);
+  return (data || []).map(r => deFila(r, 'proyecto'));
 }
 
 export async function agregarConceptoAProyecto(proyectoId, c){

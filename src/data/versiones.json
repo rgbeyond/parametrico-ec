@@ -1,5 +1,21 @@
 [
   {
+    "v": "0.10.1",
+    "fecha": "2026-08-28",
+    "tipo": "parche",
+    "resumen": "Los conceptos propios de un proyecto dejan de perderse en silencio, y el mensaje de la base llega a la pantalla.",
+    "corregido": [
+      "`conceptosDelProyecto()` devolvía una lista vacía cuando la consulta fallaba. Pesa más de lo que parece: los conceptos propios sustituyen al precio del catálogo maestro, así que perderlos no dejaba al estimador sin partidas, lo dejaba cotizando las mismas partidas al precio general. Ahora lanza con causa propia. Una lista vacía sigue siendo legítima: un proyecto puede no tener conceptos propios.",
+      "El texto que devuelve la base se mostraba solo en la consola. `fn_conceptos_de` levanta un mensaje explícito cuando el perfil no tiene acceso a los costos, y el cliente lo sustituía por uno genérico. Ahora se muestra junto al de la aplicación.",
+      "La pista de error para un fallo de consulta ya no afirma que falte `fn_conceptos_de`: un 404 también puede ser la caché de esquema de PostgREST desactualizada."
+    ],
+    "agregado": [
+      "`origenCatalogo.sinAmbitos` cuenta las filas sobre las que no se pudo comprobar el ámbito. Sin ese contador, quitar la columna de la consulta apagaría la comprobación sin que nada avisara.",
+      "El traductor de columnas es uno solo para el catálogo maestro y para los conceptos del proyecto. Tener la lista de columnas junto a su traductor no sirve de nada si al lado hay un segundo traductor escrito a mano."
+    ],
+    "nota": "Sale de una revisión independiente del cambio anterior. El respaldo silencioso que retiró la v0.9.0 seguía vivo tres líneas más abajo, en la misma ruta de carga."
+  },
+  {
     "v": "0.10.0",
     "fecha": "2026-08-28",
     "tipo": "menor",
