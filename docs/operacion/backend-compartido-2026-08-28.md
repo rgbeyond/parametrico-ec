@@ -121,6 +121,26 @@ npm test    # 12/12
 npm run build
 ```
 
+## Este repositorio es público
+
+Comprobado el 2026-08-28 contra la API de GitHub: `rgbeyond/parametrico-ec` es
+**público**; `rgbeyond/beyond-platform` es privado.
+
+No hay credenciales comiteadas —`.env` está ignorado, y lo único con forma de
+JWT son los casos de prueba de los guardias y el marcador de `.env.example`—.
+Lo que sí es público es todo lo demás:
+
+- `src/data/catalogo.json`: 188 precios con su sustento, y renglones que citan
+  reglas internas de margen.
+- El identificador del proyecto de Supabase DEV, en este mismo documento. No es
+  una credencial —viaja en la URL del proyecto y la llave anónima llega al
+  navegador—, pero junto con lo anterior deja la superficie de DEV enumerada en
+  un archivo indexable.
+
+No es consecuencia de este cambio: ya era así. Se anota porque el bloque de
+catálogo mueve esos precios a un segundo repositorio y conviene que la decisión
+sea consciente. **Decisión pendiente de Rommel**, no del código.
+
 ## Lo que falta, y no se puede hacer desde aquí
 
 Este entorno no alcanza Supabase. La carga de los 188 conceptos en Beyond DEV y
