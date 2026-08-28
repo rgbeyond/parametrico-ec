@@ -1,5 +1,21 @@
 [
   {
+    "v": "0.9.0",
+    "fecha": "2026-08-28",
+    "tipo": "menor",
+    "resumen": "El catálogo compartido deja de fallar en silencio: si Supabase no responde o está vacío, la app lo dice en vez de disfrazarlo con el catálogo incluido.",
+    "agregado": [
+      "Primera prueba automatizada del repositorio. `npm test` ejercita los cuatro estados del catálogo maestro: sin nube, con Supabase respondiendo, con error y vacío.",
+      "La decisión de qué catálogo se usa vive en `src/lib/catalogo.js`, sin dependencias de Supabase, de la sesión ni del JSON incluido, para poder ejercitarla sin navegador.",
+      "`origenCatalogo` registra de dónde salieron los conceptos que están en pantalla: fuente, motivo, número de filas y hora."
+    ],
+    "corregido": [
+      "Con nube y sesión activas, un error de Supabase o una base sin conceptos devolvían el catálogo incluido en el paquete y la pantalla se veía idéntica. Una prueba de conexión contra el backend daba verde con la base vacía, con la RLS mal puesta o con las credenciales equivocadas. Ahora las dos situaciones lanzan un error con causa distinguible.",
+      "Al fallar la apertura de un proyecto, la excepción se perdía como rechazo de promesa no capturado: `portada.js` llama a `alAbrir` sin `await` y sin `catch` en cuatro sitios. Se atrapa en `abrir()` y se muestra."
+    ],
+    "nota": "El respaldo con el catálogo incluido se conserva, pero solo para el modo sin cuenta: la herramienta tiene que seguir siendo usable sin Supabase. Lo que se retira es usarlo para tapar un fallo del backend cuando sí hay nube y sesión."
+  },
+  {
     "v": "0.8.0",
     "fecha": "2026-08-13",
     "tipo": "menor",

@@ -32,8 +32,30 @@ const zonaApp = document.getElementById('estimador');
    aparezca de inmediato y no pague el costo de arrancarlo. */
 let estimadorCargado = false;
 
+/* EL ERROR TIENE QUE VERSE. Es la otra mitad de retirar el fallback silencioso
+   del catálogo: si `abrirProyecto` lanza y nadie lo atrapa, el resultado es un
+   rechazo de promesa no capturado —una línea en la consola y nada en pantalla—,
+   que es el mismo fallo invisible en otro sitio.
+
+   Se atrapa aquí y no en los cuatro sitios donde `portada.js` llama a
+   `alAbrir(p)`: los cuatro lo hacen sin `await` y sin `.catch()`, así que
+   ninguno vería la excepción. Un solo punto, y cubre a quien llame mañana. */
 async function abrir(proyecto){
-  await abrirProyecto(proyecto);
+  try {
+    await abrirProyecto(proyecto);
+  } catch (err) {
+    /* El catálogo compartido falló con nube y sesión. NO se abre el proyecto
+       con el catálogo local a medias: los precios de la pantalla vendrían de
+       otra fuente que la que el usuario cree, y eso alimenta una propuesta. */
+    console.error('No se pudo abrir el proyecto:', err);
+    const extra = err?.causa === 'vacio'
+      ? '\n\nRevisa que el catálogo esté cargado en la base.'
+      : err?.causa === 'consulta'
+        ? '\n\nRevisa la conexión, la sesión y los permisos de la base.'
+        : '';
+    alert(`${err?.message || err}${extra}`);
+    return;
+  }
   zonaPortada.classList.add('hide');
   zonaApp.classList.remove('hide');
   if(!estimadorCargado){

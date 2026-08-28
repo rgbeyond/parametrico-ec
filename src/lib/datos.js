@@ -16,16 +16,23 @@ export const slug = (t) => String(t || 'proyecto')
   .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'proyecto';
 
 // ---------------------------------------------------------------- catálogo
+/* La decisión vive en `catalogo.js`, sin dependencias, para poder probarla.
+   Se reexporta para no romper a quien ya importaba desde aquí. */
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo } from './catalogo.js';
+export { resolverCatalogo, ErrorCatalogo, origenCatalogo };
+
+const deLocal = () => catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
+
 export async function catalogoMaestro(){
-  if(!hayNube || !sesion.perfil) return catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
-  const { data, error } = await supabase.from('conceptos')
-    .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
-    .eq('activo', true).order('codigo');
-  if(error || !data?.length) return catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
-  return data.map(r => ({
-    c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
-    t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref, ambito: 'maestro'
-  }));
+  const { conceptos } = await resolverCatalogo({
+    conNube: hayNube,
+    conSesion: !!sesion.perfil,
+    local: deLocal,
+    consultar: () => supabase.from('conceptos')
+      .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
+      .eq('activo', true).order('codigo')
+  });
+  return conceptos;
 }
 
 export async function conceptosDelProyecto(proyectoId){

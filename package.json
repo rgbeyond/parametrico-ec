@@ -1,12 +1,13 @@
 {
   "name": "parametrico-ec",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "module",
   "description": "Estimador parametrico de electrolineras — Beyond AE",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node --test pruebas/*.test.mjs",
     "preview": "vite preview",
     "seed": "node scripts/generar-seed.mjs"
   },

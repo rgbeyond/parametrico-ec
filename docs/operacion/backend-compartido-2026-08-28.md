@@ -27,3 +27,77 @@ Antes de modificar integración con Supabase, leer el handoff canónico en:
 5. hay pruebas para los cuatro casos;
 6. `npm run build` pasa;
 7. no se despliega esta rama a producción durante la validación.
+
+---
+
+## Qué se implementó (2026-08-28, v0.9.0)
+
+### 1. El fallback silencioso, retirado
+
+`catalogoMaestro()` tenía una línea que colapsaba tres situaciones distintas en
+la misma respuesta feliz:
+
+```js
+if(error || !data?.length) return catalogoLocal.map(...)
+```
+
+Con eso, una prueba de conexión contra Beyond DEV daba verde con la base vacía,
+con la RLS mal puesta o con las credenciales equivocadas: la pantalla se veía
+idéntica porque el JSON empaquetado la llenaba.
+
+Ahora las tres se separan:
+
+| Situación | Antes | Ahora |
+|---|---|---|
+| Sin nube configurada | catálogo local | catálogo local, `motivo: 'sin-nube'` |
+| Con nube, sin sesión | catálogo local | catálogo local, `motivo: 'sin-sesion'` |
+| Supabase devuelve error | catálogo local, sin avisar | `ErrorCatalogo('consulta')` |
+| Supabase devuelve cero filas | catálogo local, sin avisar | `ErrorCatalogo('vacio')` |
+| Supabase devuelve filas | conceptos de la nube | igual, y lo declara |
+
+El respaldo local **se conserva** para los dos primeros casos. Es la decisión
+de producto de que la herramienta siga siendo usable sin cuenta, y no cambia.
+
+### 2. Dónde vive la decisión
+
+`src/lib/catalogo.js`, módulo nuevo, sin importar Supabase, sesión ni el JSON
+del catálogo. Es código puro para que `node --test` lo ejecute sin navegador,
+sin credenciales y sin el `import` de JSON que solo entiende Vite.
+
+`datos.js` lo ata a las dependencias reales y reexporta lo público, así que
+nadie que importara desde `datos.js` se rompe.
+
+### 3. El error tiene que verse
+
+`portada.js` llama a `alAbrir(p)` en cuatro sitios sin `await` y sin `.catch()`.
+Si `abrirProyecto` lanzara, el resultado sería un rechazo de promesa no
+capturado: una línea en la consola y nada en pantalla, que es el mismo fallo
+invisible mudado de sitio. Se atrapa en `abrir()` de `main.js` —un solo punto,
+que además cubre a cualquier llamador futuro— y se muestra con el mensaje que
+corresponde a la causa.
+
+### 4. `origenCatalogo`
+
+Objeto exportado con `fuente`, `motivo`, `filas` y `en`. Existe para poder
+**demostrar** de dónde salieron los conceptos de la pantalla en vez de deducirlo
+de que la pantalla se llenó. Es lo que se mira en la consola al validar contra
+Beyond DEV.
+
+### 5. Pruebas
+
+Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 9 casos que
+cubren los cuatro estados. Dos de ellos fallan con un mensaje explícito si el
+fallback silencioso regresa.
+
+```
+npm test    # 9/9
+npm run build
+```
+
+## Lo que falta, y no se puede hacer desde aquí
+
+Este entorno no alcanza Supabase. La carga de los 188 conceptos en Beyond DEV y
+su comprobación desde la aplicación están en
+`beyond-platform/docs/operacion/catalogo-base-dev.md`, pasos 1 a 6. El paso 6 es
+la prueba negativa: sin ella, lo único demostrado es que la app abre, que es
+justo lo que ya hacía con el backend mal.

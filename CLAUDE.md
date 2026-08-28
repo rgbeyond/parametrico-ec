@@ -58,12 +58,14 @@ src/ui/usuarios.js         administración de roles
 src/ui/bitacora.js         historial de versiones
 src/lib/sesion.js          sesión con Google, roles, objeto `puede`
 src/lib/datos.js           repositorio: proyectos, conceptos, comentarios
+src/lib/catalogo.js        de qué fuente sale el catálogo, y qué pasa si falla
 src/lib/contexto.js        proyecto abierto y su catálogo combinado
 src/lib/app.js             núcleo del estimador  ← 1,076 líneas, deuda declarada
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
 supabase/                  esquema, políticas y semilla (01–03 en esta rama)
 scripts/generar-seed.mjs   regenera 03_semilla.sql desde catalogo.json
+pruebas/                   node --test, sin navegador ni credenciales
 ```
 
 **Sin variables de entorno la aplicación funciona completa** y guarda en el
@@ -78,11 +80,21 @@ cuenta. No introduzcas dependencias que rompan ese modo.
 |---|---|
 | Desarrollo | `npm run dev` |
 | Compilar | `npm run build` |
+| Probar | `npm test` |
 | Regenerar semilla | `npm run seed` |
 
-**Este repositorio no tiene pruebas automatizadas.** Es su mayor hueco. Al
-terminar cualquier cambio, corre `npm run build`: si el build no pasa, Netlify
-tampoco.
+**Las pruebas cubren un solo módulo, y ese sigue siendo el hueco mayor.**
+`pruebas/catalogo.test.mjs` ejercita los cuatro estados del catálogo maestro. El
+resto del repositorio —el estimador entero, que es donde están las cifras— no
+tiene ninguna. No presentes «las pruebas pasan» como si cubrieran el cálculo.
+
+Al terminar cualquier cambio, corre `npm test` y `npm run build`: si el build no
+pasa, Netlify tampoco.
+
+Las pruebas corren en Node sin transpilar, así que un módulo que quiera ser
+probable **no puede importar JSON ni Supabase**: por eso la decisión del
+catálogo se mudó a `src/lib/catalogo.js`, que no importa nada. Es el patrón a
+seguir cuando saques lógica de `app.js`.
 
 ---
 
@@ -118,7 +130,7 @@ Detalle en `beyond-platform/docs/reconciliacion/compatibilidad-apps.md`.
 
 ## Definición de terminado
 
-1. `npm run build` pasa.
+1. `npm test` y `npm run build` pasan.
 2. Si tocaste `supabase/`: **trae `scripts/validar-sql.sh` primero**. No está
    en esta rama y aplicar SQL sin validarlo es cómo se descubre el error 55P04
    en producción. Ver `.claude/rules/supabase.md`.
