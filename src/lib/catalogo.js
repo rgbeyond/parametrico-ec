@@ -45,11 +45,14 @@ export class ErrorCatalogo extends Error {
       vacio: 'El catálogo compartido no devolvió ningún concepto. La base '
            + 'responde, así que o la tabla está vacía o la RLS no deja verla '
            + 'con este rol. En los dos casos es configuración incompleta, no '
-           + 'un catálogo sin material.'
+           + 'un catálogo sin material.',
+      ambito: 'El catálogo compartido devolvió conceptos que no son de este '
+           + 'ámbito. `fn_conceptos_de(\'ec\')` debería filtrarlos en la base; '
+           + 'si llegan aquí, la función no es la que se espera.'
     };
     super(textos[causa] || 'Fallo al leer el catálogo compartido.');
     this.name = 'ErrorCatalogo';
-    this.causa = causa;            // 'consulta' | 'vacio'
+    this.causa = causa;            // 'consulta' | 'vacio' | 'ambito'
     this.detalle = detalle ?? null;
   }
 }
@@ -61,7 +64,7 @@ export class ErrorCatalogo extends Error {
    «la app abrió» no distingue entre leer de Supabase y leer del JSON. */
 export const origenCatalogo = {
   fuente: null,      // 'local' | 'nube' | 'error'
-  motivo: null,      // 'sin-nube' | 'sin-sesion' | 'consulta-ok' | 'consulta' | 'vacio'
+  motivo: null,      // 'sin-nube' | 'sin-sesion' | 'consulta-ok' | 'consulta' | 'vacio' | 'ambito'
   filas: 0,
   en: null
 };
@@ -92,6 +95,41 @@ function anotarOrigen(fuente, motivo, filas){
    estimador—. `datos.js` construye el `select` desde aquí. */
 export const COLUMNAS = ['codigo', 'categoria', 'nombre', 'unidad', 'precio',
   'taxonomia', 'aplicabilidad', 'fuente', 'fecha_ref'];
+
+/* `ambitos` se pide además de las columnas que la pantalla usa. No se muestra
+   ni se guarda: sirve para comprobar el contrato de la función, más abajo. */
+const COLUMNAS_CONSULTA = [...COLUMNAS, 'ambitos'];
+
+// ---------------------------------------------------------------- el ámbito
+/* EL PARAMETRICO NO LEE TODO EL CATALOGO, LEE EL SUYO.
+ *
+ * La base compartida guarda en la misma tabla los 188 conceptos base del
+ * estimador de electrolineras y los 103 equipos fotovoltaicos del Portafolio.
+ * Los separa la columna `ambitos`: los primeros llevan `ec`, los segundos `fv`.
+ *
+ * Leer `conceptos` sin filtrar funcionaba mientras Beyond DEV solo tuviera los
+ * 188 —y hoy los tiene—, pero el día que el catálogo FV entre a la base
+ * compartida, el estimador empezaría a ofrecer módulos e inversores entre sus
+ * partidas de obra. Un fallo que no da error, solo cifras equivocadas.
+ *
+ * La separación la hace la base, no el cliente: `fn_conceptos_de(area)` está en
+ * el esquema canónico y devuelve los conceptos activos cuyos ámbitos cruzan
+ * `[area, 'comun']`. Reimplementar ese criterio aquí sería tener dos
+ * definiciones de lo mismo, y la que manda es la de la base.
+ *
+ * Nota de despliegue: esto convierte a la función en una dependencia dura. Si
+ * la base a la que apunta la aplicación no la tiene, el catálogo falla de forma
+ * visible en vez de degradarse, que es la decisión de esta rama. */
+export const RPC_CATALOGO = 'fn_conceptos_de';
+export const AMBITO = 'ec';
+export const AMBITOS_VISIBLES = [AMBITO, 'comun'];
+
+/* La consulta, armada en un solo sitio para poder comprobar contra qué se
+   pregunta sin levantar Supabase. `datos.js` le pasa el cliente real. */
+export const consultaCatalogo = (cliente) =>
+  cliente.rpc(RPC_CATALOGO, { area: AMBITO })
+    .select(COLUMNAS_CONSULTA.join(', '))
+    .order('codigo');
 
 const deFila = (r) => ({
   c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
@@ -126,6 +164,22 @@ export async function resolverCatalogo({ conNube, conSesion, consultar, local })
   if(!data || data.length === 0){
     anotarOrigen('error', 'vacio', 0);
     throw new ErrorCatalogo('vacio');
+  }
+
+  /* EL CONTRATO SE COMPRUEBA, NO SE SUPONE.
+     Esto no vuelve a filtrar —filtrar aquí sería una segunda definición de qué
+     es «del ámbito ec», y divergiría de la de la base—. Comprueba que lo que
+     llegó cumple lo que la función promete. Un concepto con `['ec','fv']` es
+     legítimo y pasa; uno con solo `['fv']` significa que la función no es la
+     que se espera, y eso hay que verlo, no absorberlo. */
+  const ajenos = data.filter((r) => Array.isArray(r.ambitos)
+    && !r.ambitos.some((a) => AMBITOS_VISIBLES.includes(a)));
+  if(ajenos.length){
+    anotarOrigen('error', 'ambito', 0);
+    throw new ErrorCatalogo('ambito', {
+      cuantos: ajenos.length,
+      ejemplos: ajenos.slice(0, 5).map((r) => `${r.codigo} [${r.ambitos}]`)
+    });
   }
 
   return { conceptos: data.map(deFila), origen: anotarOrigen('nube', 'consulta-ok', data.length) };

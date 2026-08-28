@@ -31,7 +31,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS }
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS,
+         consultaCatalogo, RPC_CATALOGO, AMBITO, AMBITOS_VISIBLES }
   from '../src/lib/catalogo.js';
 
 /* Un catálogo local mínimo. No se importa el de verdad: lo que se comprueba es
@@ -46,6 +47,10 @@ const filaNube = {
   unidad: 'pza', precio: '42.50', taxonomia: 'validado',
   aplicabilidad: 'Base', fuente: 'Beyond DEV', fecha_ref: '2026-08'
 };
+
+/* Una fila de la nube con su ámbito, que es lo que la función devuelve de
+   verdad. Se construye a partir de `filaNube` para que las dos no se separen. */
+const conAmbitos = (codigo, ambitos) => ({ ...filaNube, codigo, ambitos });
 
 const conNube = (respuesta) => () => Promise.resolve(respuesta);
 
@@ -263,6 +268,98 @@ test('las columnas que se piden son las que se traducen', async () => {
     assert.notEqual(v, undefined, `el campo ${k} quedó sin traducir`);
     assert.ok(!Number.isNaN(v), `el campo ${k} quedó en NaN`);
   }
+});
+
+// ------------------------------------------------------------- 5. el ámbito
+/* La base compartida guarda en la misma tabla los 188 conceptos del estimador
+ * y los 103 equipos fotovoltaicos del Portafolio. Los separa `ambitos`. Leer
+ * todo funcionaba mientras DEV solo tuviera los 188; el día que entre el
+ * catálogo FV, el estimador ofrecería módulos e inversores entre sus partidas
+ * de obra, sin dar ningún error.
+ */
+
+test('se le pide a la base el ámbito ec, no la tabla entera', () => {
+  /* Un cliente de mentira que apunta lo que se le pidió. Comprueba la consulta
+     REAL —la que `datos.js` le hace a Supabase—, no una descripción de ella. */
+  const visto = {};
+  const encadenable = {
+    select(cols){ visto.select = cols; return encadenable; },
+    order(col){ visto.order = col; return encadenable; }
+  };
+  const cliente = { rpc(fn, args){ visto.rpc = fn; visto.args = args; return encadenable; },
+                    from(){ throw new Error('NO debe leer la tabla directo: ' +
+                      'la separación por ámbito la hace la base, no el cliente'); } };
+
+  consultaCatalogo(cliente);
+
+  assert.equal(visto.rpc, RPC_CATALOGO);
+  assert.equal(visto.rpc, 'fn_conceptos_de');
+  assert.deepEqual(visto.args, { area: 'ec' });
+  assert.equal(AMBITO, 'ec');
+  /* `ambitos` se pide además de lo que la pantalla usa: sin esa columna no se
+     puede comprobar que la función cumplió lo que promete. */
+  assert.match(visto.select, /ambitos/);
+  for(const c of COLUMNAS) assert.match(visto.select, new RegExp(c));
+  assert.equal(visto.order, 'codigo');
+});
+
+test('con ec, comun y fv en la respuesta, el Paramétrico se queda con ec y comun',
+  async () => {
+    /* La separación la hace `fn_conceptos_de('ec')` en la base: los `fv` puros
+       no deberían llegar nunca. Esta prueba describe lo que la aplicación
+       RECIBE cuando la función cumple, y la siguiente lo que pasa si no. */
+    const respuesta = [
+      conAmbitos('EC-1', ['ec']),
+      conAmbitos('COM-1', ['comun']),
+      conAmbitos('MIX-1', ['ec', 'fv'])   // legítimo: sirve a los dos ámbitos
+    ];
+    const { conceptos } = await resolverCatalogo({
+      conNube: true, conSesion: true, local,
+      consultar: conNube({ data: respuesta, error: null })
+    });
+
+    assert.deepEqual(conceptos.map((c) => c.c), ['EC-1', 'COM-1', 'MIX-1']);
+    /* Ningún concepto exclusivamente fotovoltaico entra al estimador. */
+    assert.equal(conceptos.length, 3);
+    assert.equal(AMBITOS_VISIBLES.join(','), 'ec,comun');
+  });
+
+test('si un concepto solo fv se cuela, LANZA: la función no es la que se espera',
+  async () => {
+    /* No se filtra aquí. Filtrar sería una segunda definición de «del ámbito
+       ec» que puede divergir de la de la base, y además convertiría un backend
+       equivocado en una pantalla que se ve bien: el patrón que esta rama vino
+       a quitar. Se comprueba el contrato y se falla ruidosamente. */
+    await assert.rejects(
+      () => resolverCatalogo({
+        conNube: true, conSesion: true, local,
+        consultar: conNube({
+          data: [conAmbitos('EC-1', ['ec']), conAmbitos('FV-1', ['fv'])],
+          error: null
+        })
+      }),
+      (e) => {
+        assert.ok(e instanceof ErrorCatalogo);
+        assert.equal(e.causa, 'ambito');
+        assert.equal(e.detalle.cuantos, 1);
+        assert.match(e.detalle.ejemplos[0], /FV-1/);
+        return true;
+      }
+    );
+    assert.equal(origenCatalogo.fuente, 'error');
+    assert.equal(origenCatalogo.motivo, 'ambito');
+  });
+
+test('una respuesta sin la columna ambitos no se rechaza', async () => {
+  /* La comprobación es del contrato, no una exigencia de forma. Una base que
+     no devuelva la columna —o un doble de prueba que no la ponga— no debe
+     hacer fallar el catálogo: lo que se rechaza es un ámbito ajeno, no una
+     ausencia. */
+  const { conceptos } = await resolverCatalogo({
+    conNube: true, conSesion: true, local,
+    consultar: conNube({ data: [filaNube], error: null })
+  });
+  assert.equal(conceptos.length, 1);
 });
 
 // ------------------------------------------------- el mensaje es para leerse

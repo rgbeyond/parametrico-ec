@@ -1,5 +1,20 @@
 [
   {
+    "v": "0.10.0",
+    "fecha": "2026-08-28",
+    "tipo": "menor",
+    "resumen": "El catálogo maestro se pide por ámbito: el estimador lee los conceptos de electrolineras, no la tabla entera de la base compartida.",
+    "agregado": [
+      "La lectura del catálogo maestro pasa por `fn_conceptos_de('ec')`, la función del esquema canónico que devuelve los conceptos activos cuyos ámbitos cruzan `ec` o `comun`. La separación la hace la base, no el cliente.",
+      "Comprobación del contrato: si llega un concepto que no es de `ec` ni de `comun`, el catálogo falla con causa `ambito` en vez de aceptarlo. No se vuelve a filtrar en el cliente, porque tener dos definiciones de lo mismo es cómo divergen.",
+      "Cuatro pruebas más: contra qué se pregunta, qué recibe el Paramétrico cuando la respuesta trae `ec`, `comun` y `fv`, qué pasa si se cuela uno solo `fv`, y que una respuesta sin la columna no se rechaza."
+    ],
+    "corregido": [
+      "La consulta leía todos los conceptos activos sin filtrar por ámbito. Funciona mientras la base compartida solo tenga los 188 conceptos base, pero el día que entre el catálogo fotovoltaico el estimador ofrecería módulos e inversores entre sus partidas de obra, sin dar ningún error."
+    ],
+    "nota": "Esto convierte a `fn_conceptos_de` en dependencia dura: una base que no la tenga hace fallar el catálogo de forma visible en vez de degradarse en silencio, que es la decisión de esta rama. Antes de desplegar contra un backend hay que comprobar que la función existe y tiene EXECUTE para `authenticated`."
+  },
+  {
     "v": "0.9.0",
     "fecha": "2026-08-28",
     "tipo": "menor",

@@ -30,7 +30,40 @@ Antes de modificar integración con Supabase, leer el handoff canónico en:
 
 ---
 
-## Qué se implementó (2026-08-28, v0.9.0)
+## Qué se implementó (2026-08-28, v0.9.0 y v0.10.0)
+
+### 0. El catálogo se pide por ámbito (v0.10.0)
+
+La primera versión de este cambio leía `conceptos` con `.eq('activo', true)` y
+nada más. **Funciona hoy y sería incorrecta mañana**: la base compartida guarda
+en la misma tabla los 188 conceptos base del estimador —`ambitos` contiene
+`ec`— y los 103 equipos fotovoltaicos del Portafolio —`ambitos` contiene `fv` y
+no `ec`—. Mientras Beyond DEV solo tenga los 188 no se nota; el día que entre el
+catálogo FV, el estimador ofrecería módulos e inversores entre sus partidas de
+obra sin dar ningún error.
+
+La lectura pasa ahora por **`fn_conceptos_de('ec')`**, que ya existe en el
+esquema canónico —`20260827214619_ambitos.sql`, redefinida en
+`20260827214705_compatibilidad_vendedor.sql`— y devuelve los conceptos activos
+cuyos ámbitos cruzan `['ec','comun']`, con `EXECUTE` concedido a
+`authenticated`.
+
+No se reimplementa ese criterio en el cliente: dos definiciones de lo mismo
+divergen, y la que manda es la de la base. Lo que sí hace el cliente es
+**comprobar el contrato**: si llega un concepto que no es de `ec` ni de `comun`,
+falla con causa `ambito`. Un concepto con `['ec','fv']` es legítimo y pasa.
+
+**Consecuencia de despliegue, y hay que decirla:** `fn_conceptos_de` pasa a ser
+dependencia dura. Una base que no la tenga hace fallar el catálogo de forma
+visible. Es coherente con retirar el fallback silencioso, pero antes de apuntar
+la aplicación a un backend hay que comprobar que la función existe y está
+concedida. Para Beyond DEV está verificado en el repositorio canónico; **para
+Beyond PROD no se ha verificado desde aquí** —`origen/ec/04_ambitos.sql` sugiere
+que sí, porque es el mismo archivo que creó la columna `ambitos` que PROD tiene,
+pero eso es inferencia y no comprobación—. Esta rama no se despliega a
+producción, así que la comprobación va antes de cualquier mezcla a `main`.
+
+### El resto (v0.9.0)
 
 ### 1. El fallback silencioso, retirado
 
@@ -54,6 +87,7 @@ Ahora las tres se separan:
 | Supabase devuelve error | catálogo local, sin avisar | `ErrorCatalogo('consulta')` |
 | Supabase devuelve cero filas | catálogo local, sin avisar | `ErrorCatalogo('vacio')` |
 | Supabase devuelve filas | conceptos de la nube | igual, y lo declara |
+| Llega un concepto de otro ámbito | entraba al estimador | `ErrorCatalogo('ambito')` |
 
 El respaldo local **se conserva** para los dos primeros casos. Es la decisión
 de producto de que la herramienta siga siendo usable sin cuenta, y no cambia.
@@ -107,17 +141,18 @@ backend caído, que es el mismo defecto que esta rama vino a quitar.
 
 ### 5. Pruebas
 
-Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 12 casos que
+Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 16 casos que
 cubren los cuatro estados, el registro del origen —incluido el de después de un
-fallo— y la correspondencia entre las columnas que se piden y las que se
-traducen. Dos casos fallan con un aviso explícito si el fallback silencioso
+fallo—, la correspondencia entre las columnas que se piden y las que se
+traducen, y el ámbito: contra qué se pregunta, qué recibe el Paramétrico cuando
+la respuesta trae `ec`, `comun` y `fv`, y qué pasa si se cuela uno solo `fv`. Dos casos fallan con un aviso explícito si el fallback silencioso
 regresa.
 
 Siguen siendo el único módulo cubierto. El estimador, que es donde están las
 cifras, no tiene ninguna prueba.
 
 ```
-npm test    # 12/12
+npm test    # 16/16
 npm run build
 ```
 

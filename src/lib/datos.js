@@ -18,12 +18,16 @@ export const slug = (t) => String(t || 'proyecto')
 // ---------------------------------------------------------------- catálogo
 /* La decisión vive en `catalogo.js`, sin dependencias, para poder probarla.
    Se reexporta para no romper a quien ya importaba desde aquí. */
-import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS }
-  from './catalogo.js';
-export { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS };
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS,
+         consultaCatalogo, RPC_CATALOGO, AMBITO } from './catalogo.js';
+export { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS,
+         consultaCatalogo, RPC_CATALOGO, AMBITO };
 
 const deLocal = () => catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
 
+/* El catálogo del proyecto sigue siendo una lectura directa de tabla: son los
+   conceptos propios de ESE proyecto, no tienen ámbito y no se comparten. El
+   maestro es el que pasa por `fn_conceptos_de`. */
 const SELECT_CONCEPTOS = COLUMNAS.join(', ');
 
 /* El origen tiene que poder consultarse desde la consola del navegador.
@@ -45,9 +49,7 @@ export async function catalogoMaestro(){
       conNube: hayNube,
       conSesion: !!sesion.perfil,
       local: deLocal,
-      consultar: () => supabase.from('conceptos')
-        .select(SELECT_CONCEPTOS)
-        .eq('activo', true).order('codigo')
+      consultar: () => consultaCatalogo(supabase)
     });
     publicarOrigen(origen);
     return conceptos;
@@ -61,7 +63,7 @@ export async function catalogoMaestro(){
 export async function conceptosDelProyecto(proyectoId){
   if(!hayNube || !sesion.perfil || !proyectoId) return [];
   const { data, error } = await supabase.from('proyecto_conceptos')
-    .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
+    .select(SELECT_CONCEPTOS)
     .eq('proyecto_id', proyectoId).order('codigo');
   if(error) return [];
   return (data || []).map(r => ({

@@ -48,11 +48,15 @@ async function abrir(proyecto){
        con el catálogo local a medias: los precios de la pantalla vendrían de
        otra fuente que la que el usuario cree, y eso alimenta una propuesta. */
     console.error('No se pudo abrir el proyecto:', err);
-    const extra = err?.causa === 'vacio'
-      ? '\n\nRevisa que el catálogo esté cargado en la base.'
-      : err?.causa === 'consulta'
-        ? '\n\nRevisa la conexión, la sesión y los permisos de la base.'
-        : '';
+    const pistas = {
+      vacio: '\n\nRevisa que el catálogo esté cargado en la base, y que la '
+           + 'RLS deje verlo con este rol.',
+      consulta: '\n\nRevisa la conexión, la sesión y los permisos de la base. '
+              + 'Si la base no tiene `fn_conceptos_de`, es eso.',
+      ambito: '\n\nLa base devolvió conceptos de otro ámbito. Revisa la '
+            + 'definición de `fn_conceptos_de`.'
+    };
+    const extra = pistas[err?.causa] || '';
     alert(`${err?.message || err}${extra}`);
     /* La portada se repinta porque «crear» y «duplicar» ya escribieron en la
        base antes de llegar aquí: sin refrescar, el proyecto existe y no se ve,
