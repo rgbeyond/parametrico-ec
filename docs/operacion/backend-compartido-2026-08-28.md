@@ -53,15 +53,20 @@ divergen, y la que manda es la de la base. Lo que sí hace el cliente es
 **comprobar el contrato**: si llega un concepto que no es de `ec` ni de `comun`,
 falla con causa `ambito`. Un concepto con `['ec','fv']` es legítimo y pasa.
 
-**Consecuencia de despliegue, y hay que decirla:** `fn_conceptos_de` pasa a ser
-dependencia dura. Una base que no la tenga hace fallar el catálogo de forma
-visible. Es coherente con retirar el fallback silencioso, pero antes de apuntar
-la aplicación a un backend hay que comprobar que la función existe y está
-concedida. Para Beyond DEV está verificado en el repositorio canónico; **para
-Beyond PROD no se ha verificado desde aquí** —`origen/ec/04_ambitos.sql` sugiere
-que sí, porque es el mismo archivo que creó la columna `ambitos` que PROD tiene,
-pero eso es inferencia y no comprobación—. Esta rama no se despliega a
-producción, así que la comprobación va antes de cualquier mezcla a `main`.
+**Consecuencia de despliegue:** `fn_conceptos_de` pasa a ser dependencia dura.
+Una base que no la tenga hace fallar el catálogo de forma visible. Es coherente
+con retirar el fallback silencioso, y obliga a comprobar antes de apuntar la
+aplicación a cualquier backend que la función exista y esté concedida.
+
+**Comprobado en los dos, el 2026-08-28:** `fn_conceptos_de(text)` existe en
+Beyond DEV **y en Beyond PROD**, y en los dos el rol `authenticated` tiene
+`EXECUTE`. PROD se consultó **únicamente en lectura**. La evidencia está en
+`beyond-platform/docs/operacion/validacion-catalogo-dev-2026-08-28.md`.
+
+Esto cierra lo que hasta ese día era inferencia: se deducía de que
+`origen/ec/04_ambitos.sql` es el mismo archivo que creó la columna `ambitos` que
+PROD tiene. Ya no hace falta deducirlo. La dependencia dura no rompe producción
+cuando esta rama llegue a `main`.
 
 ### El resto (v0.9.0)
 
