@@ -50,13 +50,26 @@ Ahora las tres se separan:
 | Situación | Antes | Ahora |
 |---|---|---|
 | Sin nube configurada | catálogo local | catálogo local, `motivo: 'sin-nube'` |
-| Con nube, sin sesión | catálogo local | catálogo local, `motivo: 'sin-sesion'` |
+| Con nube, sin sesión | catálogo local | catálogo local, `motivo: 'sin-sesion'` (1) |
 | Supabase devuelve error | catálogo local, sin avisar | `ErrorCatalogo('consulta')` |
 | Supabase devuelve cero filas | catálogo local, sin avisar | `ErrorCatalogo('vacio')` |
 | Supabase devuelve filas | conceptos de la nube | igual, y lo declara |
 
 El respaldo local **se conserva** para los dos primeros casos. Es la decisión
 de producto de que la herramienta siga siendo usable sin cuenta, y no cambia.
+
+(1) De los cuatro estados, «con nube y sin sesión» hoy **no es alcanzable desde
+la interfaz**: con nube y sin usuario, `portada.js` pinta la puerta de acceso, y
+con usuario sin perfil pinta «tu cuenta todavía no tiene perfil». En ninguna de
+las dos hay tarjetas que abrir. La rama defensiva se queda y la prueba también,
+pero contarla como modo de uso inflaría la cobertura: los estados que la
+aplicación produce de verdad son tres.
+
+Queda además un **segundo respaldo al JSON**, en `src/lib/app.js`: si
+`ctx.conceptos` llegara vacío, el estimador cotiza con el archivo incluido. Hoy
+no es alcanzable —`app.js` solo se importa tras una apertura exitosa—, pero es
+el mismo patrón y toca la estructura de costos, así que se dejó anotado en su
+propio renglón y no se cambió. Decisión de producto pendiente.
 
 ### 2. Dónde vive la decisión
 
@@ -78,19 +91,33 @@ corresponde a la causa.
 
 ### 4. `origenCatalogo`
 
-Objeto exportado con `fuente`, `motivo`, `filas` y `en`. Existe para poder
-**demostrar** de dónde salieron los conceptos de la pantalla en vez de deducirlo
-de que la pantalla se llenó. Es lo que se mira en la consola al validar contra
-Beyond DEV.
+Objeto con `fuente`, `motivo`, `filas` y `en`. Existe para poder **demostrar**
+de dónde salieron los conceptos de la pantalla en vez de deducirlo de que la
+pantalla se llenó.
+
+Un export de módulo no se alcanza desde la consola —Vite empaqueta y el nombre
+desaparece—, así que `datos.js` lo publica de dos formas al resolver, y también
+al fallar: un `console.info('[catálogo] origen: …')` y `window.origenCatalogo`.
+Eso es lo que se mira al validar contra Beyond DEV.
+
+Los caminos de error **también anotan**, con `fuente: 'error'` y el motivo
+(`consulta` o `vacio`). Si no lo hicieran, tras un fallo el objeto seguiría
+diciendo `nube / consulta-ok / 188` de la vez anterior: una señal sana con el
+backend caído, que es el mismo defecto que esta rama vino a quitar.
 
 ### 5. Pruebas
 
-Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 9 casos que
-cubren los cuatro estados. Dos de ellos fallan con un mensaje explícito si el
-fallback silencioso regresa.
+Primeras del repositorio: `pruebas/catalogo.test.mjs`, `npm test`, 12 casos que
+cubren los cuatro estados, el registro del origen —incluido el de después de un
+fallo— y la correspondencia entre las columnas que se piden y las que se
+traducen. Dos casos fallan con un aviso explícito si el fallback silencioso
+regresa.
+
+Siguen siendo el único módulo cubierto. El estimador, que es donde están las
+cifras, no tiene ninguna prueba.
 
 ```
-npm test    # 9/9
+npm test    # 12/12
 npm run build
 ```
 

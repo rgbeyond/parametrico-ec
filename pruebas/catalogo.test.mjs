@@ -31,7 +31,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolverCatalogo, ErrorCatalogo, origenCatalogo }
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS }
   from '../src/lib/catalogo.js';
 
 /* Un catálogo local mínimo. No se importa el de verdad: lo que se comprueba es
@@ -48,6 +48,19 @@ const filaNube = {
 };
 
 const conNube = (respuesta) => () => Promise.resolve(respuesta);
+
+/* Un `local` que NO debe llamarse.
+ *
+ * El aviso no puede ir en un `assert.fail()` dentro del validador de
+ * `assert.rejects`: ahí el AssertionError lo consume la propia comprobación de
+ * tipo y quien corra `npm test` lee «The expression evaluated to a falsy
+ * value» en vez del aviso. Se registra en una bandera y se comprueba fuera,
+ * donde el mensaje sí llega entero. */
+function localProhibido(aviso){
+  const espia = () => { espia.llamado = aviso; return LOCAL; };
+  espia.llamado = null;
+  return espia;
+}
 
 // --------------------------------------------------------------- 1. local
 test('sin nube: usa el catálogo local y lo declara', async () => {
@@ -102,12 +115,14 @@ test('nube con datos: usa Supabase y traduce los nombres de columna', async () =
 
 // ------------------------------------------------------------- 3. nube error
 test('nube con error: LANZA, no devuelve el catálogo local', async () => {
+  const local = localProhibido('EL FALLBACK SILENCIOSO VOLVIO: un error de '
+    + 'Supabase se está ocultando con el catálogo local');
+
   await assert.rejects(
     () => resolverCatalogo({
       conNube: true,
       conSesion: true,
-      local: () => assert.fail('EL FALLBACK SILENCIOSO VOLVIO: un error de '
-        + 'Supabase se está ocultando con el catálogo local'),
+      local,
       consultar: conNube({ data: null, error: { message: 'JWT expired' } })
     }),
     (e) => {
@@ -119,6 +134,7 @@ test('nube con error: LANZA, no devuelve el catálogo local', async () => {
       return true;
     }
   );
+  assert.equal(local.llamado, null, local.llamado);
 });
 
 test('nube con error: tampoco cae al local aunque el error venga con data vacía',
@@ -137,12 +153,14 @@ test('nube con error: tampoco cae al local aunque el error venga con data vacía
 
 // ------------------------------------------------------------- 4. nube vacía
 test('nube vacía: LANZA. Cero conceptos es configuración incompleta', async () => {
+  const local = localProhibido('EL FALLBACK SILENCIOSO VOLVIO: una base vacía '
+    + 'se está disfrazando con el catálogo local');
+
   await assert.rejects(
     () => resolverCatalogo({
       conNube: true,
       conSesion: true,
-      local: () => assert.fail('EL FALLBACK SILENCIOSO VOLVIO: una base vacía '
-        + 'se está disfrazando con el catálogo local'),
+      local,
       consultar: conNube({ data: [], error: null })
     }),
     (e) => {
@@ -151,6 +169,7 @@ test('nube vacía: LANZA. Cero conceptos es configuración incompleta', async ()
       return true;
     }
   );
+  assert.equal(local.llamado, null, local.llamado);
 });
 
 test('nube que devuelve null sin error: se trata como vacía', async () => {
@@ -185,6 +204,67 @@ test('el origen queda registrado y permite demostrar qué fuente se usó',
     assert.equal(origenCatalogo.motivo, 'sin-nube');
   });
 
+test('tras un fallo, el origen NO sigue diciendo que la nube respondió bien',
+  async () => {
+    /* Una resolución buena primero, para que haya algo que quedara viejo. */
+    await resolverCatalogo({
+      conNube: true, conSesion: true, local,
+      consultar: conNube({ data: [filaNube], error: null })
+    });
+    assert.equal(origenCatalogo.fuente, 'nube');
+
+    await assert.rejects(() => resolverCatalogo({
+      conNube: true, conSesion: true, local,
+      consultar: conNube({ data: null, error: { message: 'JWT expired' } })
+    }));
+
+    /* Si esto fallara, el instrumento de diagnóstico estaría mintiendo con el
+       valor del éxito anterior: exactamente el modo de fallo que este módulo
+       vino a retirar, mudado a la señal que sirve para detectarlo. */
+    assert.equal(origenCatalogo.fuente, 'error');
+    assert.equal(origenCatalogo.motivo, 'consulta');
+    assert.equal(origenCatalogo.filas, 0);
+
+    await assert.rejects(() => resolverCatalogo({
+      conNube: true, conSesion: true, local,
+      consultar: conNube({ data: [], error: null })
+    }));
+    assert.equal(origenCatalogo.fuente, 'error');
+    assert.equal(origenCatalogo.motivo, 'vacio');
+  });
+
+test('el origen devuelto es una copia, no el objeto que cambia solo', async () => {
+  const { origen } = await resolverCatalogo({
+    conNube: true, conSesion: true, local,
+    consultar: conNube({ data: [filaNube], error: null })
+  });
+  await resolverCatalogo({
+    conNube: false, conSesion: false, local,
+    consultar: () => assert.fail('no debe consultar')
+  });
+  /* Quien guarde el origen de una resolución para registrar de dónde vino un
+     catálogo no debe encontrarse con que dice otra cosa más tarde. */
+  assert.equal(origen.fuente, 'nube');
+  assert.equal(origenCatalogo.fuente, 'local');
+});
+
+test('las columnas que se piden son las que se traducen', async () => {
+  /* `datos.js` arma el `select` desde COLUMNAS y `deFila` las consume. Si las
+     dos listas se separan, quitar una columna del `select` no rompe nada
+     visible: `deFila` produciría `Number(undefined)` —NaN— y ese NaN entra a
+     las sumas del estimador. Esta prueba ata las dos. */
+  assert.deepEqual(COLUMNAS, Object.keys(filaNube));
+
+  const { conceptos } = await resolverCatalogo({
+    conNube: true, conSesion: true, local,
+    consultar: conNube({ data: [filaNube], error: null })
+  });
+  for(const [k, v] of Object.entries(conceptos[0])){
+    assert.notEqual(v, undefined, `el campo ${k} quedó sin traducir`);
+    assert.ok(!Number.isNaN(v), `el campo ${k} quedó en NaN`);
+  }
+});
+
 // ------------------------------------------------- el mensaje es para leerse
 test('los mensajes de error dicen qué revisar', async () => {
   const consulta = new ErrorCatalogo('consulta', { message: 'x' });
@@ -194,6 +274,11 @@ test('los mensajes de error dicen qué revisar', async () => {
      diferentes —revisar la conexión, o cargar el catálogo— y un mensaje que
      no los distinga manda a buscar en el sitio equivocado. */
   assert.notEqual(consulta.message, vacio.message);
-  assert.match(vacio.message, /vac[íi]o|incompleta/i);
+  assert.match(vacio.message, /incompleta/i);
+  /* Y nombra la RLS: PostgREST devuelve `[]` sin error cuando la política
+     filtra las filas, así que «no hay conceptos» y «este rol no los ve» son
+     indistinguibles desde el cliente. Un mensaje que solo mande a cargar el
+     catálogo manda a cargar algo que quizá ya está cargado. */
+  assert.match(vacio.message, /RLS/);
   assert.equal(consulta.name, 'ErrorCatalogo');
 });

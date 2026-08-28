@@ -36,7 +36,16 @@ const POT_EVSE=[
 import CAT_GEN_RAW from '../data/catalogo.json';
 import { ctx, guardarEstado, agregarConcepto, promover, puede } from './contexto.js';
 /* El catálogo del proyecto abierto: maestro más los conceptos propios de esa
-   estación. Sin sesión cae al archivo incluido, para poder trabajar en local. */
+   estación. Sin sesión cae al archivo incluido, para poder trabajar en local.
+
+   ESTE ES UN SEGUNDO RESPALDO AL JSON, Y ESTA DECLARADO A PROPOSITO.
+   El de `catalogo.js` se retiró para los casos con nube y sesión; éste sigue
+   aquí. Hoy no es alcanzable por esa vía: `app.js` solo se importa después de
+   una apertura exitosa, y una apertura exitosa deja `ctx.conceptos` lleno o
+   lanza. Pero es el mismo patrón, a un cable de distancia, y sin cobertura:
+   si algún día `ctx.conceptos` llegara vacío, el estimador cotizaría con el
+   JSON del paquete sin decirlo. Cambiarlo toca la estructura de costos, así
+   que es decisión de producto y no de refactor. Queda anotado, no borrado. */
 const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_RAW).map(x=>({...x}));
 
 const cfg={nom:"",loc:"",modo:"propia",

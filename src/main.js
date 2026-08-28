@@ -54,6 +54,10 @@ async function abrir(proyecto){
         ? '\n\nRevisa la conexión, la sesión y los permisos de la base.'
         : '';
     alert(`${err?.message || err}${extra}`);
+    /* La portada se repinta porque «crear» y «duplicar» ya escribieron en la
+       base antes de llegar aquí: sin refrescar, el proyecto existe y no se ve,
+       y volver a pulsar crea otro. */
+    if(portada) portada.refrescar();
     return;
   }
   zonaPortada.classList.add('hide');

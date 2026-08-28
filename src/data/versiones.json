@@ -13,7 +13,7 @@
       "Con nube y sesión activas, un error de Supabase o una base sin conceptos devolvían el catálogo incluido en el paquete y la pantalla se veía idéntica. Una prueba de conexión contra el backend daba verde con la base vacía, con la RLS mal puesta o con las credenciales equivocadas. Ahora las dos situaciones lanzan un error con causa distinguible.",
       "Al fallar la apertura de un proyecto, la excepción se perdía como rechazo de promesa no capturado: `portada.js` llama a `alAbrir` sin `await` y sin `catch` en cuatro sitios. Se atrapa en `abrir()` y se muestra."
     ],
-    "nota": "El respaldo con el catálogo incluido se conserva, pero solo para el modo sin cuenta: la herramienta tiene que seguir siendo usable sin Supabase. Lo que se retira es usarlo para tapar un fallo del backend cuando sí hay nube y sesión."
+    "nota": "El respaldo con el catálogo incluido se conserva para el modo sin cuenta: la herramienta tiene que seguir siendo usable sin Supabase. Lo que se retira es usarlo para tapar un fallo del backend cuando sí hay nube y sesión. Queda un segundo respaldo al archivo incluido dentro del estimador, hoy inalcanzable desde ese camino, anotado en su renglón y pendiente de decisión."
   },
   {
     "v": "0.8.0",

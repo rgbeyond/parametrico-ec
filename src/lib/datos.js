@@ -18,21 +18,44 @@ export const slug = (t) => String(t || 'proyecto')
 // ---------------------------------------------------------------- catálogo
 /* La decisión vive en `catalogo.js`, sin dependencias, para poder probarla.
    Se reexporta para no romper a quien ya importaba desde aquí. */
-import { resolverCatalogo, ErrorCatalogo, origenCatalogo } from './catalogo.js';
-export { resolverCatalogo, ErrorCatalogo, origenCatalogo };
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS }
+  from './catalogo.js';
+export { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS };
 
 const deLocal = () => catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
 
+const SELECT_CONCEPTOS = COLUMNAS.join(', ');
+
+/* El origen tiene que poder consultarse desde la consola del navegador.
+
+   Un export de módulo no es alcanzable desde ahí: Vite empaqueta y los nombres
+   desaparecen. Sin esto, el paso de validación contra Beyond DEV —«mira
+   `origenCatalogo` y comprueba que dice nube»— sería una instrucción que no se
+   puede ejecutar, y la comprobación se reduciría a «la app abrió», que es lo
+   que ya hacía con el backend mal. */
+function publicarOrigen(origen){
+  if(typeof window !== 'undefined') window.origenCatalogo = origen;
+  console.info('[catálogo] origen:', origen);
+  return origen;
+}
+
 export async function catalogoMaestro(){
-  const { conceptos } = await resolverCatalogo({
-    conNube: hayNube,
-    conSesion: !!sesion.perfil,
-    local: deLocal,
-    consultar: () => supabase.from('conceptos')
-      .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
-      .eq('activo', true).order('codigo')
-  });
-  return conceptos;
+  try {
+    const { conceptos, origen } = await resolverCatalogo({
+      conNube: hayNube,
+      conSesion: !!sesion.perfil,
+      local: deLocal,
+      consultar: () => supabase.from('conceptos')
+        .select(SELECT_CONCEPTOS)
+        .eq('activo', true).order('codigo')
+    });
+    publicarOrigen(origen);
+    return conceptos;
+  } catch (err) {
+    /* También al fallar: es cuando más falta hace saber qué se intentó. */
+    publicarOrigen({ ...origenCatalogo });
+    throw err;
+  }
 }
 
 export async function conceptosDelProyecto(proyectoId){
