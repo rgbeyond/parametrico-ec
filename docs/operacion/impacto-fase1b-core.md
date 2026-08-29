@@ -69,7 +69,23 @@ Hay que decidir cuál de las dos:
 **Recomendación: error honesto en 1B.** Un estimador de CAPEX sin precios no
 estima; fingir que sí es peor que decir que este perfil no puede abrirlo.
 
-### 3.2 `fn_asignar_rol` puede empezar a mentir
+### 3.2 La pantalla de usuarios ofrece una acción que la base rechaza
+
+`fn_asignar_rol` ahora **rechaza siempre** el cambio de rol propio. Es más
+estricto que el guardián anterior, que solo impedía quitarse `admin` siendo el
+único, y es a propósito: un administrador que se degrada por error deja la
+organización sin quien la administre, y la función de arranque ya no sirve
+porque exige que no haya ninguno.
+
+`src/ui/usuarios.js:56` solo deshabilita el selector cuando queda **un solo**
+administrador. Con dos, la pantalla ofrece cambiar el rol propio y la base lo
+rechaza con una excepción. No es un fallo de seguridad —la base gana— pero es
+un mensaje de error donde debería haber un control deshabilitado.
+
+**Trabajo de aplicación pendiente:** deshabilitar el selector del propio
+usuario, siempre, no solo cuando sea el último administrador.
+
+### 3.3 `fn_asignar_rol` ya no puede mentir
 
 Hoy la pantalla de usuarios llama a `fn_asignar_rol`, que escribe
 `perfiles.rol`, y repinta leyendo esa misma columna.
@@ -79,11 +95,27 @@ función, **la pantalla mostraría «Rol actualizado» y la base seguiría trata
 esa persona como antes**. Un control de autorización que informa éxito sin
 efecto es peor que uno que falla.
 
-Está resuelto en el diseño del lado de la base —la función escribe la membresía
-o falla explícitamente— pero **esta aplicación tiene que confirmar que lo que
-muestra es lo que decide**. Es coordinación, no solo esquema.
+**Ya está resuelto del lado de la base:** `fn_asignar_rol` escribe la membresía
+y el espejo `perfiles.rol` en la misma transacción, o falla. Si el perfil no
+tiene membresía en la organización interna, lanza una excepción en vez de
+devolver éxito. La pantalla puede seguir leyendo `perfiles.rol` para pintar.
 
-### 3.3 Comentarios: la incrustación de PostgREST
+Lo que sí cambia para esta aplicación: al asignar un rol se **sincronizan las
+capacidades** de ese rol, y al degradar se revocan. Un editor que baja a lector
+pierde `view_billing_data` y `can_download`.
+
+### 3.4 Un lector o comentarista interno deja de ver los recibos
+
+`pf_recibos` lleva RFC, razón social y número de servicio. Desde la Fase 1B
+requiere la capacidad `view_billing_data` **además** del acceso al proyecto, y
+por omisión solo la reciben `admin` y `editor`. Hoy cualquier autenticado los
+ve.
+
+Es la decisión D8 y por tanto intencional, pero es un cambio de comportamiento
+visible para roles internos, no solo para externos. Afecta al Portafolio, no a
+esta aplicación, y se anota aquí porque comparten backend.
+
+### 3.5 Comentarios: la incrustación de PostgREST
 
 `datos.js` pide `perfiles(nombre, correo)` incrustado, que necesita una relación
 que PostgREST detecte.
@@ -101,7 +133,7 @@ Conclusión para esta aplicación: **una vista de compatibilidad es viable**, pe
 depende de una inferencia del servidor que solo se comprueba contra la Data API
 real. Por eso el diseño deja los comentarios genéricos **fuera** de la Fase 1B.
 
-### 3.4 `perfiles_lectura` va a dejar de ser «cualquiera con sesión»
+### 3.6 `perfiles_lectura` va a dejar de ser «cualquiera con sesión»
 
 Cuando existan externos, el directorio deja de estar abierto. Eso afecta a la
 incrustación de arriba: si el autor de un comentario queda fuera del alcance de
