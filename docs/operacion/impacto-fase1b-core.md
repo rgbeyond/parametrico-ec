@@ -113,12 +113,27 @@ de rol, y ponerle `editor` le daría el catálogo maestro con precios y techo de
 edición sobre toda la organización interna: el alcance no intervenía en ningún
 sitio. Ahora la base lanza `Esa membresia esta acotada a proyectos…`.
 
-**Lo que le toca a esta aplicación:** la pantalla de usuarios va a recibir esa
-excepción y hoy no la distingue de cualquier otro fallo. O bien pinta el
+**Y una tercera, de la revisión final: `fn_asignar_rol` rechaza también los
+perfiles globalmente desactivados** (`perfiles.activo = false`). `activo` no
+toca `bp_membresias.estado`, así que alguien desactivado puede conservar
+membresía activa; asignarle rol le escribía capacidades vigentes que empezarían
+a valer solas el día que alguien reactivara el perfil. La pantalla de usuarios
+ya muestra perfiles desactivados, así que este caso sí es alcanzable hoy.
+
+**Lo que le toca a esta aplicación:** la pantalla de usuarios va a recibir esas
+excepciones y hoy no las distingue de cualquier otro fallo. O bien pinta el
 mensaje tal cual, o bien deja de ofrecer el selector para esos perfiles. No se
 cambió código en este commit; queda anotado como pendiente concreto, no como
-riesgo genérico. Mientras no exista ninguna membresía `solo_proyectos` —hoy no
-hay ninguna— la pantalla se comporta igual que siempre.
+riesgo genérico.
+
+### 3.3-bis `tipologias` se cierra a los internos, y aquí no se nota
+
+La Fase 1B cierra la lectura de `tipologias` y `tipologia_conceptos` a los
+internos de Beyond. **Esta aplicación no las consulta**: no hay ninguna
+referencia a `tipologia` en `src/`. `proyectos.tipologia_id` es una columna
+escalar y `select('*')` la devuelve sin incrustar la tabla, así que su RLS no
+interviene. `ambitos` y `familias_articulo` se quedan legibles para cualquier
+autenticado.
 
 ### 3.4 Un lector o comentarista interno deja de ver los recibos
 
