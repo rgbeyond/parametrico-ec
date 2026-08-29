@@ -1,7 +1,8 @@
 # Qué le hace la Fase 1B a esta aplicación
 
 **Fecha:** 2026-08-29 · **Estado: propuesta de diseño.** Nada aplicado a Beyond
-DEV. **No se cambió código funcional en este commit.**
+DEV. **No se cambió código funcional en este commit.** Actualizado tras las dos
+revisiones independientes de `beyond-platform`.
 
 El diseño del Core vive en
 `rgbeyond/beyond-platform` → `claude/phase1b-core` →
@@ -103,6 +104,21 @@ devolver éxito. La pantalla puede seguir leyendo `perfiles.rol` para pintar.
 Lo que sí cambia para esta aplicación: al asignar un rol se **sincronizan las
 capacidades** de ese rol, y al degradar se revocan. Un editor que baja a lector
 pierde `view_billing_data` y `can_download`.
+
+**Y una segunda cosa, posterior a la revisión externa: `fn_asignar_rol` rechaza
+las membresías con alcance `solo_proyectos`.** Para compartirle un proyecto
+interno a alguien de fuera hay que darle membresía en `beyond` con ese alcance.
+Esa persona aparecerá en la lista de usuarios de esta pantalla, con su selector
+de rol, y ponerle `editor` le daría el catálogo maestro con precios y techo de
+edición sobre toda la organización interna: el alcance no intervenía en ningún
+sitio. Ahora la base lanza `Esa membresia esta acotada a proyectos…`.
+
+**Lo que le toca a esta aplicación:** la pantalla de usuarios va a recibir esa
+excepción y hoy no la distingue de cualquier otro fallo. O bien pinta el
+mensaje tal cual, o bien deja de ofrecer el selector para esos perfiles. No se
+cambió código en este commit; queda anotado como pendiente concreto, no como
+riesgo genérico. Mientras no exista ninguna membresía `solo_proyectos` —hoy no
+hay ninguna— la pantalla se comporta igual que siempre.
 
 ### 3.4 Un lector o comentarista interno deja de ver los recibos
 
