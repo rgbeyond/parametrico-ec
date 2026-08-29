@@ -133,7 +133,14 @@ Conclusión para esta aplicación: **una vista de compatibilidad es viable**, pe
 depende de una inferencia del servidor que solo se comprueba contra la Data API
 real. Por eso el diseño deja los comentarios genéricos **fuera** de la Fase 1B.
 
-### 3.6 `perfiles_lectura` va a dejar de ser «cualquiera con sesión»
+### 3.6 Los permisos manuales sobreviven a un cambio de rol
+
+Cada concesión de capacidad lleva su origen. Al cambiar el rol de alguien, la
+plantilla administra únicamente lo que ella misma puso: una capacidad concedida
+a mano no se pierde, y una revocada a propósito no vuelve. Importa para la
+pantalla de usuarios: cambiar un rol ya no es una forma de reiniciar permisos.
+
+### 3.7 `perfiles_lectura` va a dejar de ser «cualquiera con sesión»
 
 Cuando existan externos, el directorio deja de estar abierto. Eso afecta a la
 incrustación de arriba: si el autor de un comentario queda fuera del alcance de
@@ -143,6 +150,12 @@ pantalla mostraría un comentario sin autor.
 No es un fallo de la base: es lo que hace la RLS. Pero es exactamente la clase
 de degradación silenciosa que esta rama vino a eliminar del catálogo, y conviene
 tratarla igual: que la interfaz distinga «sin autor visible» de «sin autor».
+
+**Entre internos no cambia nada**, y para los externos la regla quedó acotada a
+lo mínimo: un externo ve su propio perfil, a quien le compartió el proyecto, y a
+quien tiene acceso explícito al mismo proyecto. No ve el directorio de la
+organización. Eso basta para que el autor de un comentario en un proyecto
+compartido siga resolviendo.
 
 ---
 
