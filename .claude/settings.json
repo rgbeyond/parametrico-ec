@@ -1,5 +1,173 @@
 {
-  "enabledPlugins":{"security-guidance@claude-plugins-official":true},
-  "permissions":{"defaultMode":"auto","disableBypassPermissionsMode":"disable","allow":["Read","Glob","Grep","Bash(git status *)","Bash(git diff *)","Bash(git log *)","Bash(git fetch *)","Bash(npm test)","Bash(npm run build)"],"deny":["Read(./.env)","Read(./.env.*)","Edit(./.env)","Edit(./.env.*)","Write(./.env)","Write(./.env.*)","Bash(git reset --hard *)","Bash(git clean -fd*)","Bash(git push --force*)","Bash(git push -f *)"]},
-  "hooks":{"PreToolUse":[{"matcher":"Bash|PowerShell|mcp__.*","hooks":[{"type":"command","command":"python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/beyond_guard.py\"","timeout":5}]}],"PermissionRequest":[{"matcher":"*","hooks":[{"type":"command","command":"python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/explain_permission.py\"","timeout":5}]}]}
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledPlugins": {
+    "security-guidance@claude-plugins-official": true
+  },
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git fetch *)",
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(cat *)",
+      "Bash(diff *)",
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git ls-files *)",
+      "Bash(git rev-parse *)",
+      "Bash(git show *)",
+      "Bash(git stash list *)",
+      "Bash(head *)",
+      "Bash(ls *)",
+      "Bash(npm run dev)",
+      "Bash(npm run seed)",
+      "Bash(tail *)",
+      "Bash(wc *)"
+    ],
+    "ask": [
+      "Bash(curl *)",
+      "Bash(find *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(grep *)",
+      "Bash(jq *)",
+      "Bash(netlify *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npx *)",
+      "Bash(psql *)",
+      "Bash(python3 -c *)",
+      "Bash(rg *)",
+      "Bash(supabase *)",
+      "Bash(wget *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -fd*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.production)",
+      "Read(./.env.development)",
+      "Read(//**/.env)",
+      "Read(//**/.env.local)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.pfx)",
+      "Read(./**/id_rsa)",
+      "Read(./**/id_ed25519)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.aws/**)",
+      "Read(~/.ssh/**)",
+      "Edit(./.env.local)",
+      "Edit(./.env.*.local)",
+      "Edit(./.env.production)",
+      "Edit(./.env.development)",
+      "Edit(./**/*.pem)",
+      "Edit(./**/id_rsa)",
+      "Bash(git push --force *)",
+      "Bash(git push origin main *)",
+      "Bash(git push origin main)",
+      "Bash(git push origin master *)",
+      "Bash(git filter-branch *)",
+      "Bash(git filter-repo *)",
+      "Bash(git reset --hard origin/main *)",
+      "Bash(supabase db reset *)",
+      "Bash(supabase link *)",
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(env)",
+      "Bash(printenv *)",
+      "Edit(./**/*.p12)",
+      "Edit(./**/*.pfx)",
+      "Edit(./**/id_ed25519)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/beyond_guard.py\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/ejecutar-guardia.sh\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-secretos.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/ejecutar-guardia.sh\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-destructivo.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/ejecutar-guardia.sh\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-commit.py\"",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/explain_permission.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/comprobar-guardias.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/verifica-por-ruta.sh",
+            "timeout": 90
+          }
+        ]
+      }
+    ]
+  }
 }

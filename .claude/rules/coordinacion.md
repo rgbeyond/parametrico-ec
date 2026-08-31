@@ -9,3 +9,6 @@ Antes de un permiso visible explica: Qué voy a hacer; Para qué; Dónde afecta;
 
 ## Límites
 No bypassPermissions; no PROD/main/deploy producción sin autorización explícita; DEV no implica PROD; nunca dos writers sobre el mismo sistema.
+
+## Reglas de seguridad Beyond
+`.claude/claude-security-guidance.md` lleva las reglas concretas de este producto (PROD vs DEV, sesión, `user_metadata`, catálogo, costos, secretos/PII, proxy). Léelo antes de revisar o cambiar auth, RLS, catálogo o rutas. El plugin `security-guidance` no lo carga solo: no lee rutas arbitrarias del proyecto, así que sin esta referencia el archivo no lo abre nadie.

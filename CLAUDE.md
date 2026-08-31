@@ -208,3 +208,4 @@ Su integración es una decisión aparte. Detalle en
 | Revisión independiente de un cambio | subagente `code-critic` |
 | Investigación regulatoria | subagente `normative-researcher` |
 | Arquitectura objetivo de la plataforma | `propuestas-fv/docs/arquitectura/` |
+| Reglas de seguridad Beyond para revisión | `.claude/claude-security-guidance.md` |
