@@ -22,7 +22,8 @@ command -v python3 >/dev/null 2>&1 || faltas+=(
    comando.")
 
 for g in ejecutar-guardia.sh guardia-destructivo.py guardia-commit.py \
-         guardia-secretos.sh verifica-por-ruta.sh; do
+         guardia-secretos.sh verifica-por-ruta.sh beyond_guard.py \
+         explain_permission.py; do
   if [ ! -f "$raiz/$g" ]; then
     faltas+=("$g no existe en .claude/hooks/")
   elif [ ! -x "$raiz/$g" ]; then

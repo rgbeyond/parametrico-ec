@@ -401,6 +401,18 @@ COMMIT_CASOS = [
     dict(nombre="baja de un archivo fuera del corpus",
          previo=[("src/viejo.js", "export const a = 1;\n")],
          borrar=["src/viejo.js"], bloquea=False),
+    # Binarios DE VERDAD, con bytes que no son UTF-8. El guardia reventaba al
+    # decodificar el diff y bloqueaba por excepcion: fallaba cerrado con el
+    # mensaje equivocado, y de paso bloqueaba commits legitimos con cualquier
+    # binario en el indice.
+    dict(nombre="binario real fuera del corpus pasa",
+         archivos=[("src/assets/icono.png",
+                    b"\x89PNG\r\n\x1a\n\x00\x80\x9f\xfe datos")],
+         bloquea=False),
+    dict(nombre="binario real en el corpus bloquea por la RUTA",
+         archivos=[("casos/recibos/00000_0000.pdf",
+                    b"%PDF-1.4\n\x80\x9f\xfe\xd0\xc3 flujo binario")],
+         bloquea=True),
 ]
 
 
@@ -568,7 +580,12 @@ def probar_commit():
                 for ruta, contenido in pares:
                     f = repo / ruta
                     f.parent.mkdir(parents=True, exist_ok=True)
-                    f.write_text(contenido)
+                    # bytes para los casos de binario real: un PDF sintetico de
+                    # puro texto no ejercita la decodificacion del diff.
+                    if isinstance(contenido, bytes):
+                        f.write_bytes(contenido)
+                    else:
+                        f.write_text(contenido)
                     if add:
                         subprocess.run(
                             ["git", "add"] + (["-f"] if forzar else [])

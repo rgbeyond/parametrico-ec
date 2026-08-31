@@ -112,8 +112,15 @@ COMMIT_TODO = re.compile(r'-[a-zA-Z]*a[a-zA-Z]*$')
 
 
 def git(args, cwd):
+    # `errors="replace"` NO es un detalle. Un binario real preparado -un PDF de
+    # verdad, no el "%PDF-1.4" sintetico de la suite- puede llevar bytes que no
+    # son UTF-8 dentro del diff, y con la decodificacion estricta el guardia
+    # reventaba con UnicodeDecodeError. Fallaba cerrado, que es el lado bueno,
+    # pero con el mensaje equivocado -"el guardia fallo"- y bloqueando tambien
+    # commits LEGITIMOS con cualquier binario en el indice. Lo encontro el
+    # ensayo con un recibo real al portar los guardias a Solar.
     return subprocess.run(["git"] + args, cwd=cwd, capture_output=True,
-                          text=True, timeout=30)
+                          text=True, errors="replace", timeout=30)
 
 
 def revisar_indice(cwd, incluye_arbol=False):
