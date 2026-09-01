@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-08-31
+**Última actualización:** 2026-09-01
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -177,7 +177,7 @@ Corrección:
 - snapshots clonados con `structuredClone`;
 - cache interno separado de la UI;
 - regresión añadida;
-- v0.35.3 desplegada en preview.
+- v0.35.3 desplegada en preview (la rama avanzó después a **v0.36.0**, ver 8.5).
 
 Resultado E2E confirmado por RG:
 
@@ -222,7 +222,12 @@ Decisión corregida:
 
 El permiso temporal de RG fue restaurado inmediatamente en DEV y verificado activo.
 
-**Estado de implementación a tener en cuenta:** la rama Phase 1C-A todavía puede contener código de `view_billing_data` en `almacen_proyectos.js`/UI heredado de la decisión anterior. Antes de cerrar issue #3, Claude debe contrastar el árbol real con esta decisión y retirar ese gate de Proyectos de Energía, manteniendo `view_costs` donde corresponda. No asumir que quedó retirado sólo porque la decisión fue corregida.
+**Estado de implementación — YA EJECUTADO Y VERIFICADO (2026-08-31, registrado 2026-09-01):**
+
+- El gate está **retirado del código de la aplicación** en `propuestas-fv@deaff35` (v0.36.0, rama `claude/phase1c-a-solar-core`): se fue `acceso_recibos` con sus tres estados, la consulta por proyecto a `fn_bp_tiene_capacidad`, el expediente con `recibos: null` y los avisos de las cinco pestañas. Se conservaron las mejoras independientes ya validadas (borrado cloud-first con verificación de filas, error legible de membresía, snapshot del cache, mapeo de recibos). El mismo commit añadió la **puerta de autenticación del shell**: sin sesión sólo se ve la portada, los enlaces profundos vuelven a ella, salir/caducar invalidan la navegación; sin variables de entorno la herramienta local sigue abierta, por diseño. Verificación: 315 pruebas de motor, 31 de navegador, build y reconstrucción canónica en verde.
+- La mitad **RLS** del retiro es la migración `20260831042000_bp_recibos_acceso_proyecto.sql` en `beyond-platform` (revisada; redefine las cuatro políticas de `pf_recibos` a `view`/`edit` sobre el proyecto y conserva la capability en el Core y en el bucket `recibos`). Las suites del Core que afirmaban el gate viejo se realinearon en `beyond-platform@91858af..3cfb837` y el arnés completo quedó en verde. Runbook: `docs/operacion/aplicar-recibos-acceso-proyecto.md`.
+- **La migración NO está aplicada a Beyond DEV.** Hasta que se aplique, las políticas desplegadas en DEV siguen exigiendo `view_billing_data`: un E2E contra DEV hoy mostraría el comportamiento viejo y eso NO es una regresión de la app.
+- **El cuerpo del issue #3 todavía contiene los criterios antiguos** («lectura/escritura de `pf_recibos` respeta `view_billing_data`»). Por la prelación del §15 manda esta decisión corregida; al cerrar #3 hay que validar contra esta sección, no contra ese texto, y conviene enmendar el issue.
 
 ### 8.6 Deuda de privacidad del repo `propuestas-fv`
 
@@ -367,12 +372,13 @@ No asumir:
 Antes de seguir infraestructura:
 
 1. sincronizar ramas y leer issue #3 + este documento;
-2. contrastar el árbol Phase 1C-A con la decisión corregida de `view_billing_data` y retirar el gate de Proyectos de Energía si todavía existe;
-3. conservar/validar `view_costs` como separación de información comercial interna;
-4. completar E2E de permisos que correspondan realmente al modelo de usuario: acceso al proyecto, roles, edición/archivo y costos internos;
-5. normalizar/limpiar el proyecto E2E y datos reales de DEV cuando se cierre la prueba;
-6. documentar el cierre de 1C-A en issue #3 y documento E2E;
-7. después hacer checkpoint de decisiones de producto antes del shell común Beyond.
+2. ~~retirar el gate de `view_billing_data`~~ — **hecho y verificado** en `propuestas-fv@deaff35` (ver 8.5); no repetirlo;
+3. **aplicar a Beyond DEV la migración `20260831042000_bp_recibos_acceso_proyecto.sql`** con su runbook (`aplicar-recibos-acceso-proyecto.md`), previa autorización del flujo del issue #3 — es el único paso que falta para que DEV y la app digan lo mismo;
+4. conservar/validar `view_costs` como separación de información comercial interna;
+5. completar E2E de permisos que correspondan realmente al modelo de usuario: acceso al proyecto, roles, edición/archivo, costos internos y la puerta del shell (el plan actualizado está en `propuestas-fv/docs/operacion/impacto-fase1b-core.md`, sección 7);
+6. normalizar/limpiar el proyecto E2E y datos reales de DEV cuando se cierre la prueba;
+7. documentar el cierre de 1C-A en issue #3 y documento E2E, enmendando los criterios antiguos del cuerpo del issue;
+8. después hacer checkpoint de decisiones de producto antes del shell común Beyond.
 
 No cerrar 1C-A basándose en la antigua prueba de `view_billing_data`.
 
