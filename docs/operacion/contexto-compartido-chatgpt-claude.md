@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-09-01
+**Última actualización:** 2026-09-01 (checkpoint de cierre de Phase 1C-A)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -229,7 +229,32 @@ El permiso temporal de RG fue restaurado inmediatamente en DEV y verificado acti
 - **La migración NO está aplicada a Beyond DEV.** Hasta que se aplique, las políticas desplegadas en DEV siguen exigiendo `view_billing_data`: un E2E contra DEV hoy mostraría el comportamiento viejo y eso NO es una regresión de la app.
 - **El cuerpo del issue #3 todavía contiene los criterios antiguos** («lectura/escritura de `pf_recibos` respeta `view_billing_data`»). Por la prelación del §15 manda esta decisión corregida; al cerrar #3 hay que validar contra esta sección, no contra ese texto, y conviene enmendar el issue.
 
-### 8.6 Deuda de privacidad del repo `propuestas-fv`
+### 8.6 Checkpoint final — Phase 1C-A CERRADA (2026-09-01)
+
+La fase quedó completa y el issue #3 cerrado como `completed`. Lo que la cierra:
+
+- **Modelo de permisos validado de punta a punta.** Arnés canónico con la misma
+  cadena de migraciones que DEV: suite federada de 13 bloques (acceso por
+  membresía/rol, recibos por nivel de proyecto sin `view_billing_data`, viewer
+  vs editor sobre recibos Y sobre la fila del proyecto, archivar sí / hard
+  delete no, `view_costs` con revocación real y sin superficie cableada, sin
+  fugas entre organizaciones). `propuestas-fv@dc9d222`, registro en
+  `docs/operacion/e2e-permisos-1ca-2026-09-01.md`.
+- **Smoke real de RG en navegador contra la preview DEV: PASS** (proyecto abre,
+  recibo visible, edición persiste, F5 y recarga profunda persisten, sin sesión
+  sólo portada/login, re-login restaura).
+- **Limpieza DEV ejecutada y verificada externamente:** recibo, `pf_proyectos`
+  y contenedor Core del E2E eliminados; conteos 0/0/0. No se tocó nada más.
+- **El cuerpo del issue #3 quedó enmendado** en sus dos menciones obsoletas de
+  `view_billing_data`, con marcas visibles de enmienda.
+
+Pendientes que la fase deja DECLARADOS, no abiertos a medias: superficie de
+producto para `view_costs` (la capacidad existe y se revoca bien; nada la
+consume aún); deuda de privacidad del corpus (8.7); PR draft del Paramétrico
+sigue NO MERGE; la integración de las ramas `claude/phase1c-a-solar-core` e
+`claude/infra-claude-code` hacia `main` es una decisión separada de RG.
+
+### 8.7 Deuda de privacidad del repo `propuestas-fv`
 
 Existe corpus versionado con documentos/clientes reales bajo `casos/`. No ampliar esa deuda.
 
@@ -367,18 +392,23 @@ No asumir:
 
 ---
 
-## 13. Próximos pasos de producto al retomar Phase 1C-A
+## 13. Phase 1C-A cerrada — próximos pasos de producto
 
-Antes de seguir infraestructura:
+**Todos los pasos operativos de 1C-A están hechos** (ver 8.6): gate retirado,
+migración aplicada y verificada en DEV, E2E de permisos en arnés, smoke real
+PASS, limpieza 0/0/0, issue #3 enmendado y cerrado.
 
-1. sincronizar ramas y leer issue #3 + este documento;
-2. ~~retirar el gate de `view_billing_data`~~ — **hecho y verificado** en `propuestas-fv@deaff35` (ver 8.5); no repetirlo;
-3. **aplicar a Beyond DEV la migración `20260831042000_bp_recibos_acceso_proyecto.sql`** con su runbook (`aplicar-recibos-acceso-proyecto.md`), previa autorización del flujo del issue #3 — es el único paso que falta para que DEV y la app digan lo mismo;
-4. conservar/validar `view_costs` como separación de información comercial interna;
-5. completar E2E de permisos que correspondan realmente al modelo de usuario: acceso al proyecto, roles, edición/archivo, costos internos y la puerta del shell (el plan actualizado está en `propuestas-fv/docs/operacion/impacto-fase1b-core.md`, sección 7);
-6. normalizar/limpiar el proyecto E2E y datos reales de DEV cuando se cierre la prueba;
-7. documentar el cierre de 1C-A en issue #3 y documento E2E, enmendando los criterios antiguos del cuerpo del issue;
-8. después hacer checkpoint de decisiones de producto antes del shell común Beyond.
+Lo que sigue, en orden:
+
+1. **Checkpoint de decisiones de producto antes del shell común Beyond**
+   (§3): qué módulos, qué navegación, qué organización por defecto.
+2. Decidir la **superficie de producto de `view_costs`**: qué
+   pestañas/campos oculta y a quién; la capacidad ya existe y su revocación
+   funciona (bloque 13 de la suite federada).
+3. Decidir la **integración de ramas**: `claude/phase1c-a-solar-core` e
+   `claude/infra-claude-code` hacia `main` son decisiones separadas de RG;
+   ningún PR draft se mezcla sin autorización explícita.
+4. La **deuda de privacidad del corpus** (8.7) mantiene su tarea propia.
 
 No cerrar 1C-A basándose en la antigua prueba de `view_billing_data`.
 
