@@ -1,7 +1,7 @@
 # Coordinación multiagente — regla obligatoria
 
 ## Contexto canónico obligatorio
-Antes de continuar cualquier trabajo Beyond, lee `docs/operacion/contexto-compartido-chatgpt-claude.md` y contrástalo con el issue activo y la evidencia más reciente. Ese documento contiene decisiones de producto, forma de trabajo de RG, límites DEV/PROD y correcciones de alcance que no deben depender de memoria de sesión. La copia de `beyond-platform` es canónica; si cambia una decisión material, sincroniza primero esa copia, replica los tres espejos y registra los SHAs antes del handoff.
+Antes de continuar cualquier trabajo Beyond, lee `docs/operacion/contexto-compartido-chatgpt-claude.md` y contrástalo con el issue activo y la evidencia más reciente. Ese documento contiene decisiones de producto, forma de trabajo de RG, límites DEV/PROD y correcciones de alcance que no deben depender de memoria de sesión. Si el archivo no existe en la rama actual, NO asumas que no hay contexto: haz fetch y lee la copia canónica de `rgbeyond/beyond-platform:claude/infra-claude-code` antes de trabajar. La copia de `beyond-platform` es canónica; si cambia una decisión material, sincroniza primero esa copia, replica los tres espejos y registra los SHAs antes del handoff.
 
 Tras trabajo externo: sincroniza; lee protocolo/issue/evidencia; resume qué cambió, hecho, no repetir y pendiente antes de escribir. Un writer, reviewers read-only, todo cambio comiteado/pusheado antes del handoff.
 
