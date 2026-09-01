@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-09-01 (checkpoint de cierre de Phase 1C-A)
+**Última actualización:** 2026-09-01 (issue #5 cerrado; Beyond Module Contract v1, issue #6)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -282,12 +282,15 @@ Decisiones:
 
 ### 9.1 Subagentes y skills
 
-Cuatro reviewers read-only:
+Cinco reviewers read-only:
 
 - `beyond-security-reviewer`
 - `beyond-database-reviewer`
 - `beyond-frontend-e2e-reviewer`
 - `beyond-adversarial-reviewer`
+- `beyond-product-ux-reviewer` — agregado en el issue #5; corre en
+  `claude-fable-5` por decisión de RG; parte del protocolo de revisión
+  frontend.
 
 Skills:
 
@@ -400,8 +403,10 @@ PASS, limpieza 0/0/0, issue #3 enmendado y cerrado.
 
 Lo que sigue, en orden:
 
-1. **Checkpoint de decisiones de producto antes del shell común Beyond**
-   (§3): qué módulos, qué navegación, qué organización por defecto.
+1. **Checkpoint de decisiones de producto — HECHO en el issue #6** (ver
+   §17): Proyecto Beyond transversal, taxonomía de dominios, Module
+   Contract v1 y dimensiones de acceso. El shell común NO se construye
+   todavía; la prioridad vuelve a los módulos funcionales.
 2. Decidir la **superficie de producto de `view_costs`**: qué
    pestañas/campos oculta y a quién; la capacidad ya existe y su revocación
    funciona (bloque 13 de la suite federada).
@@ -440,3 +445,77 @@ En caso de conflicto:
 6. memoria conversacional del agente.
 
 La memoria del agente nunca debe ganar a una decisión canónica más reciente.
+
+---
+
+## 16. Issue #5 cerrado — Design System y experiencia de acceso v1
+
+Cerrado por RG el 2026-09-01 con validación visual y la instrucción de
+**congelar esta dirección visual como v1** para no iterar Platform
+indefinidamente. Rama `claude/design-system-ux` de `beyond-platform`
+(HEAD `ac5e7ff`, sin merge a `main`).
+
+Queda como baseline para los módulos:
+
+- `design-system/` es el espejo canónico completo del paquete fuente
+  (tokens con `[data-theme]` en inglés, fuentes, wordmarks PNG —«beyond»
+  en Comfortaa, sin punto—, componentes React, kits website/portal,
+  guidelines, SKILL.md). Desviaciones abiertas documentadas en su README
+  (p. ej. contraste del token `--focus-ring`).
+- Experiencia de acceso: pantalla completa oscura con la red viva del
+  ecosistema energético; la organización entra **solo con Google**; el
+  correo (verificado) es **solo para invitados** con invitación emitida
+  por quien tiene esa capability. Lenguaje de telemetría
+  interno/externo (`CLEARANCE · L5` / `EXTERNAL ACCESS`) sembrado como
+  semilla de los Member Levels, sin implementarlos.
+- La preview es teatro de diseño declarado en pantalla: sin autenticación
+  real; al integrar el shell los handlers se reemplazan, no se envuelven;
+  la restricción por dominio vive en Supabase/RLS.
+- Refinamientos futuros solo por necesidad concreta de producto, no como
+  bloqueo de módulos funcionales.
+
+---
+
+## 17. Beyond Module Contract v1 — issue #6 (activo)
+
+Estrategia formalizada: **Modules First, Platform Ready.** No se construye
+más Platform en esta iteración; Core y Design System quedan como
+foundation.
+
+Decisiones canónicas (detalle en
+`beyond-platform:docs/arquitectura/beyond-module-contract-v1.md`, rama
+`claude/module-contract-v1`):
+
+- **Proyecto Beyond** = unidad comercial transversal (cliente + propuesta
+  + cierre + ejecución + cobranza + O&M). Los módulos lo alimentan; nadie
+  crea definiciones incompatibles de proyecto.
+- **Ocho dominios iniciales**, taxonomía evolutiva: Growth & Commercial,
+  Energy Solutions, Electromobility, Delivery & Operations, Finance &
+  Corporate, People & Governance, Intelligence, Platform Core.
+- **Manifiesto por módulo** (`beyond-module.json` en la raíz del repo del
+  módulo, schema en `docs/arquitectura/manifiestos/module.schema.json`):
+  identidad, madurez, superficies, relación con Proyecto Beyond
+  (`si`/`no`/`al-integrarse`), entidades propias vs consumidas,
+  capabilities requeridas vs previstas, roles interpretados, KPIs con
+  unidad+fuente+estado (`estimada`/`conciliada`/`no-aplica`), auth,
+  Design System y desviaciones.
+- **Estados de madurez**: `standalone` → `platform-ready` →
+  `core-integrated` → `platform-native`. Un módulo standalone avanza sin
+  esperar a Platform; la coordinación llega al integrarse.
+- **Acceso en dimensiones separadas** (identidad, Member Level, acceso a
+  módulo, rol de proyecto, capabilities, clearances Alpha/Omega como
+  autorizaciones adicionales). Solo se declara; no se implementa aún.
+- **Entidades del Core que no se duplican**: identidad, organizaciones,
+  membresías, `bp_proyectos`, capacidades, invitaciones, auditoría,
+  documentos y el catálogo de conceptos. Membresías, invitaciones,
+  capacidades y auditoría no admiten sustituto local.
+- Manifiestos de comprobación: `proyectos-de-energia` (real,
+  `core-integrated`) y `bitacora-om` (conceptual mínimo, `standalone`).
+- Revisión del contrato: adversarial (claude-fable-5, seis vectores del
+  issue) y database contra el esquema real; hallazgos corregidos en la
+  misma rama.
+
+Siguiente fase acordada tras este checkpoint: volver a
+`propuestas-fv`/Proyectos de Energía con un milestone funcional de
+negocio (proyecto FV real + propuesta comercial utilizable de extremo a
+extremo).
