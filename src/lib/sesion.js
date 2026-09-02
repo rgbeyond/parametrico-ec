@@ -52,7 +52,12 @@ export async function salir(){
   /* Bajo Beyond, cerrar sesión es cerrar la sesión DE LA PLATAFORMA (es
      la misma), y el lugar donde se vuelve a entrar es el login de
      Beyond: recargar aquí dejaría al usuario frente a una segunda
-     puerta. `replace` para que Atrás no reviva la pantalla cerrada. */
+     puerta. `replace` para que Atrás no reviva la pantalla cerrada.
+     El signOut también dispara SIGNED_OUT, cuyo manejador vuelve a
+     correr la guardia y produce un segundo replace('/') al mismo
+     destino: la doble navegación es deliberadamente tolerada —las dos
+     rutas deben poder cerrar solas— y es inofensiva porque ninguna
+     pinta nada entre medias. */
   if (bajoBeyond()) { window.location.replace('/'); return; }
   window.location.reload();
 }

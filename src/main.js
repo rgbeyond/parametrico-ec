@@ -113,10 +113,28 @@ let portada = null;
    el historial, o el botón Atrás la resucitaría. */
 function guardiaBeyond(){
   if (!bajoBeyond() || !hayNube) return false;
-  if (sesion.usuario) return false;
+  /* LA MISMA VARA QUE LA PUERTA DE BEYOND: sesión CON perfil activo.
+     Pedir solo sesión dejaba pasar a una cuenta dada de baja o sin alta
+     —que Beyond acaba de rechazar en su puerta— hasta la portada de
+     proyectos, porque la RLS de lectura pide autenticación, no perfil.
+     Y quien rebota aquí recibe el mensaje honesto DE LA PLATAFORMA
+     (sin alta / dada de baja / sin respuesta), no la tarjeta standalone
+     de esta app, que es la segunda superficie que el issue prohíbe. */
+  if (sesion.usuario && sesion.perfil && sesion.perfil.activo !== false) {
+    return false;
+  }
   window.location.replace('/');
   return true;
 }
+
+/* Una página restaurada desde el bfcache es la FOTO de antes: si la
+   sesión se cerró en otra página, esta seguiría pintada como si nada.
+   Recargar al restaurar hace que la guardia vuelva a correr. En Chrome
+   el canal de auth-js ya inhabilita el bfcache; esto cubre a los demás
+   navegadores sin depender de ese detalle. */
+window.addEventListener('pageshow', (ev) => {
+  if (ev.persisted) window.location.reload();
+});
 
 (async () => {
   await iniciarSesion();

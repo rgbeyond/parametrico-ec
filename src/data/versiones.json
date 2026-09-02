@@ -1,5 +1,19 @@
 [
   {
+    "v": "0.11.1",
+    "fecha": "2026-09-02",
+    "tipo": "parche",
+    "resumen": "La guardia bajo Beyond usa la misma vara que la puerta de la plataforma, el OAuth deja de dejar tokens en el historial, y una pagina restaurada del bfcache vuelve a decidir.",
+    "corregido": [
+      "La guardia de /ec/ pedia solo sesion: una cuenta dada de baja o sin alta -que Beyond acababa de rechazar en su puerta- pasaba hasta la portada de proyectos, porque la RLS de lectura pide autenticacion, no perfil. Ahora exige sesion CON perfil activo, y quien rebota recibe el mensaje honesto de la plataforma en la raiz, no la tarjeta standalone de esta app. (Hallazgo adversarial de beyond-platform#7.)",
+      "El flujo OAuth implicito dejaba la URL con tokens como entrada del historial: el boton Atras tras entrar la reponia en la barra, refresh token incluido. El cliente usa ahora PKCE: codigo de un solo uso y limpieza con replaceState, sin entrada extra.",
+      "Una pagina restaurada desde el bfcache era la foto de antes del cierre de sesion; ahora recarga al restaurarse y la guardia vuelve a correr."
+    ],
+    "notas": [
+      "El doble replace('/') al cerrar sesion bajo Beyond (el propio salir y el manejador de SIGNED_OUT) es deliberado y quedo dicho en el codigo: las dos rutas deben poder cerrar solas."
+    ]
+  },
+  {
     "v": "0.11.0",
     "fecha": "2026-09-02",
     "tipo": "menor",
