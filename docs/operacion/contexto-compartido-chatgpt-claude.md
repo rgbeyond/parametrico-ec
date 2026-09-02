@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-09-01 (issue #5 cerrado; Beyond Module Contract v1, issue #6)
+**Última actualización:** 2026-09-02 (control maestro, issue #8; corrección de #7)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -519,3 +519,28 @@ Siguiente fase acordada tras este checkpoint: volver a
 `propuestas-fv`/Proyectos de Energía con un milestone funcional de
 negocio (proyecto FV real + propuesta comercial utilizable de extremo a
 extremo).
+
+---
+
+## 18. Control maestro — issue #8 (activo)
+
+Desde 2026-09-02 la memoria operativa del proyecto vive en tres
+documentos de `docs/operacion/` de este repositorio (canónicos aquí, no
+se espejan; los espejos de ESTE contexto sí se mantienen):
+
+- **`control-maestro.md`** — roadmap vivo: TERMINADO / ACTIVO / NEXT /
+  LATER / interrupciones / bloqueado / diferido, por producto, con el
+  PUNTO DE RETORNO vigente. Hoy: **Proyectos de Energía → Bloque B →
+  Bloque C** (`propuestas-fv#2`).
+- **`pendientes-historicos.md`** — insumos/datos/referencias que faltan
+  (tarifas, tabuladores, datasets, catálogos, decisiones), CONFIRMADOS
+  con evidencia y separados de los INFERIDOS.
+- **`bitacora-versiones.md`** — índice consolidado de versiones con
+  repo/rama/SHA/banderas; la narrativa sigue en el `versiones.json` de
+  cada app.
+
+Regla (convenciones §4.1 y §10): todo handoff significativo actualiza el
+control maestro; todo cambio de versión, su bitácora; y el cierre de
+cada iteración dice qué se cerró, dónde estamos, qué sigue según lo
+acordado, y las opciones con recomendación. Los tres documentos
+sobreviven a cambios de chat, rama, issue o prioridad.
