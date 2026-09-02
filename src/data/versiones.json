@@ -1,5 +1,22 @@
 [
   {
+    "v": "0.11.0",
+    "fecha": "2026-09-02",
+    "tipo": "menor",
+    "resumen": "Bajo Beyond Platform la puerta es de Beyond: sesion compartida, sin login propio, y el paquete funciona tambien montado en /ec/*.",
+    "agregado": [
+      "Montada por el proxy del shell en /ec/*, la aplicacion comparte origen y sesion de Supabase con Beyond Platform: quien ya entro por el login de la plataforma entra directo a sus proyectos, sin segunda puerta. Sin sesion (enlace profundo, sesion caducada) se devuelve a la raiz, donde vive el login de Beyond, con replace para que Atras no reviva la parada intermedia.",
+      "Cerrar sesion bajo Beyond vuelve al login de la plataforma, no a la portada propia: es la misma sesion.",
+      "Un enlace discreto de regreso a Beyond Platform encabeza la pantalla cuando la app corre bajo el shell; en el host propio no hay a donde volver y no aparece."
+    ],
+    "corregido": [
+      "El paquete usaba rutas absolutas (/assets/...) y bajo el proxy /ec/* pedia los archivos al host de Beyond, que no los tiene: pantalla en blanco. Vite compila ahora con base relativa y los mismos archivos funcionan en el host propio y bajo el shell."
+    ],
+    "notas": [
+      "En el host propio (standalone) nada cambia: portada, login con Google y modo local siguen igual. La decision de producto de unica puerta aplica a la presentacion DENTRO de Beyond; retirar o proteger el host standalone es una decision aparte registrada en beyond-platform#7."
+    ]
+  },
+  {
     "v": "0.10.1",
     "fecha": "2026-08-28",
     "tipo": "parche",
@@ -90,7 +107,12 @@
     "v": "0.5.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
-    "commits": ["b45bedb", "054d258", "e8603be", "58c5562"],
+    "commits": [
+      "b45bedb",
+      "054d258",
+      "e8603be",
+      "58c5562"
+    ],
     "resumen": "Tarifa del suministrador capturada como dato del proyecto, y depósito en garantía calculado por tarifa en vez de por provisión.",
     "agregado": [
       "Demanda contratada como parámetro, con el piso que fija la tarifa GDMTH en su apartado 4: no menor al 60% de la carga conectada ni a 100 kW.",
@@ -113,7 +135,13 @@
     "v": "0.4.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
-    "commits": ["49b78ca", "3c58c1e", "27d77f5", "8cfd4b5", "8424368"],
+    "commits": [
+      "49b78ca",
+      "3c58c1e",
+      "27d77f5",
+      "8cfd4b5",
+      "8424368"
+    ],
     "resumen": "Ingeniería: balanceo dinámico de cargas, dimensionamiento contra la demanda de diseño y tensiones declaradas.",
     "agregado": [
       "Balanceo dinámico de cargas, con el porcentaje de potencia reservada declarado y su efecto sobre el dimensionamiento del transformador.",
@@ -141,7 +169,10 @@
     "v": "0.3.0",
     "fecha": "2026-08-12",
     "tipo": "menor",
-    "commits": ["bf07b9b", "55d0c47"],
+    "commits": [
+      "bf07b9b",
+      "55d0c47"
+    ],
     "resumen": "Base de datos operando: Supabase configurado, acceso con Google, perfiles con rol, políticas RLS y gobierno de precios.",
     "agregado": [
       "Cuatro roles: administrador, editor, comentarista y solo lectura.",
@@ -159,7 +190,9 @@
     "v": "0.2.0",
     "fecha": "2026-08-12",
     "tipo": "menor",
-    "commits": ["bf07b9b"],
+    "commits": [
+      "bf07b9b"
+    ],
     "resumen": "Modularización: portada de proyectos, sesión, repositorio de datos y contexto, con varios proyectos por organización.",
     "agregado": [
       "Portada de proyectos con alta, duplicado, archivado y búsqueda.",
@@ -178,7 +211,12 @@
     "v": "0.1.0",
     "fecha": "2026-08-12",
     "tipo": "inicial",
-    "commits": ["749adbb", "dc91c97", "6bc9cfd", "b47dc69"],
+    "commits": [
+      "749adbb",
+      "dc91c97",
+      "6bc9cfd",
+      "b47dc69"
+    ],
     "resumen": "Prototipo del estimador: cálculo paramétrico, catálogo de 188 conceptos y salida a propuesta, sin cuentas ni catálogo compartido.",
     "nota": "El prototipo llegó al repositorio por carga de archivos y no por commits incrementales, así que la fecha corresponde a su incorporación y no a su desarrollo."
   }

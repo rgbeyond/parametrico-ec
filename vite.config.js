@@ -8,6 +8,12 @@ import { readFileSync } from 'node:fs';
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 export default defineConfig({
+  /* Rutas RELATIVAS en el paquete. Beyond Platform monta esta aplicación por
+     proxy de Netlify bajo /ec/*, y con la base absoluta por omisión el índice
+     pedía /assets/... al host de Beyond —que no los tiene— y la pantalla
+     quedaba en blanco. Con base relativa los mismos archivos funcionan en el
+     host propio y bajo el proxy, sin duplicar builds. */
+  base: './',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString())

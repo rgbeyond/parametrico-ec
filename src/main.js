@@ -3,7 +3,9 @@ import './styles/tokens.css';
 import './styles/app.css';
 import logoUrl from './assets/logos/beyond-orange.png';
 import { VERSION_TXT } from './lib/version.js';
-import { iniciarSesion, alCambiarSesion } from './lib/sesion.js';
+import { iniciarSesion, alCambiarSesion, sesion, bajoBeyond }
+  from './lib/sesion.js';
+import { hayNube } from './lib/supabase.js';
 import { montarPortada } from './ui/portada.js';
 import { abrirProyecto } from './lib/contexto.js';
 
@@ -98,8 +100,40 @@ window.volverAPortada = volverAPortada;
 
 let portada = null;
 
+/* BAJO BEYOND PLATFORM LA PUERTA ES DE BEYOND, NO DE ESTA APLICACIÓN.
+   Montada en /ec/* por el proxy del shell, esta app comparte origen y
+   sesión de Supabase con Beyond: quien llega aquí ya entró por el login
+   de la plataforma. Si NO hay sesión —enlace profundo sin entrar, o una
+   sesión que caducó estando dentro—, mostrar la portada propia con
+   «Continuar con Google» sería una segunda puerta, que es exactamente lo
+   que la decisión de producto de única entrada prohíbe: se devuelve a la
+   raíz, donde vive el login de Beyond. En el host propio (desarrollo,
+   standalone) nada de esto aplica y la portada sigue siendo la de
+   siempre. `replace` y no `href`: la parada intermedia no debe quedar en
+   el historial, o el botón Atrás la resucitaría. */
+function guardiaBeyond(){
+  if (!bajoBeyond() || !hayNube) return false;
+  if (sesion.usuario) return false;
+  window.location.replace('/');
+  return true;
+}
+
 (async () => {
   await iniciarSesion();
+  if (guardiaBeyond()) return;
+  /* El camino de regreso al shell, sólo cuando el shell existe: en el
+     host propio no hay a dónde volver. */
+  if (bajoBeyond()) {
+    const volver = document.createElement('a');
+    volver.className = 'volver-beyond';
+    volver.href = '/';
+    volver.textContent = '← Beyond Platform';
+    document.body.prepend(volver);
+  }
   portada = montarPortada(zonaPortada, { alAbrir: abrir });
-  alCambiarSesion(async () => { await iniciarSesion(); portada.refrescar(); });
+  alCambiarSesion(async () => {
+    await iniciarSesion();
+    if (guardiaBeyond()) return;
+    portada.refrescar();
+  });
 })();

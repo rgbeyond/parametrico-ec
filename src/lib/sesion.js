@@ -26,6 +26,12 @@ export const dominioValido = (correo) =>
 
 export const dominio = DOMINIO;
 
+/* Montada bajo Beyond Platform, esta app vive en /ec/* del mismo origen
+   y comparte su sesión de Supabase. La ruta es el único hecho que lo
+   distingue del host propio, y de él dependen la guardia de entrada y a
+   dónde vuelve un cierre de sesión. */
+export const bajoBeyond = () => window.location.pathname.startsWith('/ec');
+
 export async function entrar(){
   if(!hayNube) throw new Error('No hay conexión a la base configurada');
   const { error } = await supabase.auth.signInWithOAuth({
@@ -43,6 +49,11 @@ export async function entrar(){
 export async function salir(){
   if(hayNube) await supabase.auth.signOut();
   sesion.usuario = null; sesion.perfil = null;
+  /* Bajo Beyond, cerrar sesión es cerrar la sesión DE LA PLATAFORMA (es
+     la misma), y el lugar donde se vuelve a entrar es el login de
+     Beyond: recargar aquí dejaría al usuario frente a una segunda
+     puerta. `replace` para que Atrás no reviva la pantalla cerrada. */
+  if (bajoBeyond()) { window.location.replace('/'); return; }
   window.location.reload();
 }
 
