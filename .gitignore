@@ -13,3 +13,4 @@ dist
 # dejan cache compilada, y esa no se versiona.
 __pycache__/
 *.pyc
+dist-nube/
