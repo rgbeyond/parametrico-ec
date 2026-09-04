@@ -28,13 +28,17 @@
    donde viven: duplicarlas aquí crearía dos vocabularios que se separan.
 */
 
-// Las mismas palabras de la pantalla, en el mismo orden, más dos que el archivo
-// necesita y la tabla no: `Categoría` —que en pantalla es el renglón de grupo—
-// y `Tratamiento`, sin la cual la suma de la columna Importe no cuadra con el
-// subtotal (el depósito en garantía viaja en la lista y no es costo de obra).
+/* Las mismas palabras de la pantalla, en el mismo orden, más tres que el
+   archivo necesita y la tabla resuelve de otra forma:
+   - `Categoría`, que en pantalla es el renglón de grupo;
+   - `Tratamiento`, sin la cual la suma de la columna Importe no cuadra con el
+     subtotal (el depósito en garantía viaja en la lista y no es costo de obra);
+   - `Editado a mano`, que en pantalla es la marca «Monto editado» debajo del
+     sustento. Sin ella, quien reciba el archivo no puede distinguir un precio
+     del catálogo de uno que alguien teclas a mano. */
 export const COLUMNAS = ["Código", "Categoría", "Concepto", "Unidad",
   "Cantidad", "Precio unitario", "Importe", "Sustento", "Tratamiento",
-  "Base del número"];
+  "Editado a mano", "Base del número"];
 
 // Las mismas palabras que usa la app para el tratamiento de cada renglón.
 export const TRATO = {
@@ -67,6 +71,13 @@ export function modeloExport({ rows, t, cfg, catn = {}, taxn = {}, uab = (u) => 
     cantidad: redCant(r.q),
     pu: redPU(r.pu),
     importe: redImp(r.imp),
+    /* El importe SIN redondear, y sólo para agregar. La app suma en crudo y
+       redondea al final —`tec` sale de sumar `r.imp` completos—, así que un
+       subtotal armado con los importes ya redondeados se separa del subtotal
+       declarado. Es un peso, pero es un peso que no cuadra en un documento que
+       sale a un cliente. No entra al archivo: lo que se exporta sigue siendo
+       el número que se vio en pantalla. */
+    importeCrudo: +r.imp || 0,
     sustento: taxn[r.tax] || r.tax,
     trato: TRATO[r.tr] || TRATO.capex,
     base: r.r || "",
@@ -124,12 +135,27 @@ export function modeloExport({ rows, t, cfg, catn = {}, taxn = {}, uab = (u) => 
    sume sin tener que limpiarlos. */
 const BOM = "\uFEFF";
 
+/* LOS NÚMEROS PASAN COMO NÚMEROS Y EL TEXTO SE NEUTRALIZA.
+   La distinción importa por un detalle que costó entender: la mitigación de
+   inyección de fórmulas —prefijar con apóstrofo lo que empieza con `=`, `+`,
+   `-` o `@`— aplicada a un importe NEGATIVO lo convertiría en texto, y Excel
+   dejaría de sumarlo. Por eso `typeof v === "number"` sale crudo y sin
+   neutralizar: los tres campos numéricos los construye este módulo, no un
+   usuario. Lo señalaron los dos reviewers, el de seguridad y el adversarial. */
 export function campoCSV(v) {
   if (v == null) return "";
+  if (typeof v === "number") return Number.isFinite(v) ? String(v) : "";
   const s = String(v);
+  /* Excel y LibreOffice evalúan como FÓRMULA cualquier celda que empiece con
+     `=`, `+`, `-` o `@`, y el entrecomillado del RFC 4180 no defiende de eso.
+     El nombre del proyecto lo teclea quien quiera —«=HYPERLINK(...)» es un
+     nombre válido para la aplicación— y el archivo se manda por correo. Se
+     prefija un apóstrofo, que es la mitigación estándar: Excel lo esconde y lo
+     lee como texto. Otros lectores sí lo verán, y ese es el precio. */
+  const seguro = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
   // Comilla doble duplicada y campo entrecomillado: RFC 4180. La `Base del
   // número` trae comas, comillas y a veces saltos, así que esto no es teórico.
-  return /[",\r\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return /[",\r\n;]/.test(seguro) ? `"${seguro.replace(/"/g, '""')}"` : seguro;
 }
 
 export function aCSV(modelo) {
@@ -145,13 +171,18 @@ export function aCSV(modelo) {
   l.push("");
   fila(COLUMNAS);
   for (const r of modelo.renglones) {
+    /* «Editado a mano» sale porque en pantalla ese renglón lleva la marca
+       «Monto editado», y el archivo no puede perderla: quien lo reciba tiene
+       que poder distinguir un precio del catálogo de uno que alguien teclas
+       esa tarde. Lo encontró el reviewer adversarial: el campo se calculaba y
+       no se exportaba. */
     fila([r.codigo, r.categoria, r.concepto, r.unidad, r.cantidad, r.pu,
-      r.importe, r.sustento, r.trato, r.base]);
+      r.importe, r.sustento, r.trato, r.editado ? "Sí" : "", r.base]);
   }
   l.push("");
   for (const x of modelo.totales) fila([x.concepto, "", "", "", "", "", x.importe]);
   for (const x of modelo.aparte) {
-    fila([x.concepto, "", "", "", "", "", x.importe, "", TRATO.dep, x.nota]);
+    fila([x.concepto, "", "", "", "", "", x.importe, "", TRATO.dep, "", x.nota]);
   }
   return BOM + l.join("\r\n") + "\r\n";
 }
@@ -210,25 +241,44 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .cat td{background:#F0EFEC;font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:.04em}
 .tot td{border-bottom:0;padding-top:7px;font-size:10.5px}
 .tot .fin{font-weight:700;color:#B4590C;font-size:12px}
+/* La misma marca que la pantalla pone en un renglon con monto editado. */
+.ed{color:#B4590C;font-size:8.5px;white-space:nowrap}
 .pie{margin-top:14px;font-size:9px;color:#5A5A57;border-top:1px solid rgba(0,0,0,.14);padding-top:8px}
 @media print{.noprint{display:none}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 img{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .noprint{background:#F0EFEC;border-radius:8px;padding:9px 13px;font-size:10px;color:#5A5A57;margin-bottom:12px}`;
-  // Agrupado por categoría, como la tabla de pantalla: un renglón de grupo con
-  // su subtotal y debajo sus partidas. El subtotal por grupo se suma de los
-  // importes que ya vienen en el modelo; no es un total nuevo, es el mismo
-  // renglón de grupo que la pantalla ya muestra.
+  /* Agrupado por categoría: un renglón de grupo con su subtotal y debajo sus
+     partidas.
+
+     EL SUBTOTAL DEL GRUPO NO CUENTA LA GARANTÍA REEMBOLSABLE, y esto lo
+     encontró el reviewer adversarial. El depósito ante el suministrador es un
+     renglón activo de la categoría CFE, así que sumaba dentro de su grupo; pero
+     el «Subtotal de obra y equipo» que este mismo documento declara al pie NO
+     lo incluye —`totals()` lo excluye a propósito, porque es garantía y no
+     costo de obra—. Resultado: quien sumara los subtotales de categoría de la
+     hoja obtenía una cifra mayor que el subtotal impreso en la misma hoja, por
+     exactamente el monto del depósito, y podía leerse como cobrado dos veces.
+
+     En un documento que sale a un cliente eso es indefendible, así que aquí la
+     suma del grupo excluye los renglones de garantía. El renglón sigue listado
+     —el catálogo tiene que estar completo— con su tratamiento a la vista y su
+     nota al pie. Es la única cifra de este documento que no coincide con el
+     renglón de grupo de la PANTALLA, que sí suma todo lo activo; se documenta
+     aquí porque la alternativa era una hoja que no cuadra consigo misma. */
   const grupos = [];
   for (const r of modelo.renglones) {
     let g = grupos.find((x) => x.cat === r.categoria);
     if (!g) { g = { cat: r.categoria, items: [], st: 0 }; grupos.push(g); }
-    g.items.push(r); g.st += r.importe;
+    g.items.push(r);
+    // Se agrega EN CRUDO y se redondea al imprimir, como hace la app.
+    if (r.trato !== TRATO.dep) g.st += r.importeCrudo;
   }
   const filas = grupos.map((g) => `
     <tr class="cat"><td colspan="5">${escH(g.cat)}</td>
-      <td class="num">${pesos(g.st)}</td><td colspan="2"></td></tr>
+      <td class="num">${pesos(Math.round(g.st))}</td><td colspan="2"></td></tr>
     ${g.items.map((r) => `<tr>
-      <td>${escH(r.codigo)}</td><td>${escH(r.concepto)}</td>
+      <td>${escH(r.codigo)}</td><td>${escH(r.concepto)}${r.editado
+    ? ' <span class="ed">· monto editado</span>' : ""}</td>
       <td>${escH(r.unidad)}</td><td class="num">${r.cantidad}</td>
       <td class="num">${pesos(r.pu)}</td><td class="num">${pesos(r.importe)}</td>
       <td>${escH(r.sustento)}</td><td>${escH(r.trato)}</td></tr>`).join("")}`)

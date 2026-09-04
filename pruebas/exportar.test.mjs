@@ -118,6 +118,31 @@ test("sin renglones no se exporta un archivo vacío: se levanta el error", () =>
   assert.throws(() => modeloExport({ rows: null, t: null }), /nada que exportar/);
 });
 
+/* Un lector de CSV mínimo, con las reglas del RFC 4180. Está aquí para que la
+   prueba lea el archivo COMO LO LEE EXCEL —campo por campo, respetando las
+   comillas— en vez de buscar subcadenas: buscar texto suelto daba verde a un
+   archivo cuyas columnas estuvieran corridas, y encontraba el `$` de la prosa
+   del sustento creyendo que era un importe con formato. */
+function leerCSV(texto) {
+  const t = texto.replace(/^﻿/, "");
+  const filas = []; let campo = ""; let fila = []; let dentro = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (dentro) {
+      if (c === '"' && t[i + 1] === '"') { campo += '"'; i++; }
+      else if (c === '"') dentro = false;
+      else campo += c;
+    } else if (c === '"') dentro = true;
+    else if (c === ",") { fila.push(campo); campo = ""; }
+    else if (c === "\r" && t[i + 1] === "\n") {
+      fila.push(campo); filas.push(fila); fila = []; campo = ""; i++;
+    } else campo += c;
+  }
+  if (campo || fila.length) { fila.push(campo); filas.push(fila); }
+  return filas;
+}
+
+
 // --- el CSV -----------------------------------------------------------------
 
 test("el CSV abre en Excel: BOM, CRLF y encabezados", () => {
@@ -148,30 +173,6 @@ test("comas, comillas y saltos de línea se escapan como manda el RFC", () => {
   // Y un salto de línea dentro del campo, entrecomillado.
   assert.ok(csv.includes('"Referencia interna.\nSegunda línea'));
 });
-
-/* Un lector de CSV mínimo, con las reglas del RFC 4180. Está aquí para que la
-   prueba lea el archivo COMO LO LEE EXCEL —campo por campo, respetando las
-   comillas— en vez de buscar subcadenas: buscar texto suelto daba verde a un
-   archivo cuyas columnas estuvieran corridas, y encontraba el `$` de la prosa
-   del sustento creyendo que era un importe con formato. */
-function leerCSV(texto) {
-  const t = texto.replace(/^﻿/, "");
-  const filas = []; let campo = ""; let fila = []; let dentro = false;
-  for (let i = 0; i < t.length; i++) {
-    const c = t[i];
-    if (dentro) {
-      if (c === '"' && t[i + 1] === '"') { campo += '"'; i++; }
-      else if (c === '"') dentro = false;
-      else campo += c;
-    } else if (c === '"') dentro = true;
-    else if (c === ",") { fila.push(campo); campo = ""; }
-    else if (c === "\r" && t[i + 1] === "\n") {
-      fila.push(campo); filas.push(fila); fila = []; campo = ""; i++;
-    } else campo += c;
-  }
-  if (campo || fila.length) { fila.push(campo); filas.push(fila); }
-  return filas;
-}
 
 // Si el número llevara `$` o separador de miles, Excel lo trataría como texto y
 // no se podría sumar. Es el defecto que más molesta al usar el archivo.
@@ -218,6 +219,87 @@ test("el nombre del archivo es estable y sin acentos", () => {
   assert.equal(nombreArchivo(null, new Date("2026-01-02T00:00:00"), "csv"),
     "catalogo-catalogo-2026-01-02.csv");
 });
+
+/* --- los tres hallazgos de los reviewers ---------------------------------- */
+
+/* Excel evalúa como fórmula cualquier celda que empiece con `=`, `+`, `-` o
+   `@`, y el entrecomillado del RFC no defiende de eso. El nombre del proyecto
+   lo teclea el usuario y el archivo se manda por correo. Lo marcaron los dos
+   reviewers. */
+test("un valor que Excel leería como fórmula sale neutralizado", () => {
+  assert.equal(campoCSV("=HYPERLINK(\"http://x\",\"clic\")"),
+    "\"'=HYPERLINK(\"\"http://x\"\",\"\"clic\"\")\"");
+  assert.equal(campoCSV("=1+1"), "'=1+1");
+  assert.equal(campoCSV("+52 55 1234 5678"), "'+52 55 1234 5678");
+  assert.equal(campoCSV("-descuento"), "'-descuento");
+  assert.equal(campoCSV("@usuario"), "'@usuario");
+  // Texto normal no se toca.
+  assert.equal(campoCSV("Transformador"), "Transformador");
+  const csv = aCSV(modeloExport({ rows: ROWS, t: T,
+    cfg: { ...CFG, nom: '=cmd|\'/c calc\'!A1' }, catn: CATN, taxn: TAXN, uab }));
+  const primera = csv.replace(/^﻿/, "").split("\r\n")[0];
+  assert.ok(!primera.split(",")[1].startsWith("="),
+    `el nombre del proyecto entró como fórmula: ${primera}`);
+});
+
+/* Y el otro lado de la misma moneda: si la neutralización se aplicara a un
+   número, un importe NEGATIVO se volvería texto y Excel dejaría de sumarlo. */
+test("un número negativo sigue siendo número", () => {
+  assert.equal(campoCSV(-1234.5), "-1234.5");
+  assert.equal(campoCSV(0), "0");
+  assert.equal(campoCSV(NaN), "");
+  assert.equal(campoCSV(Infinity), "");
+});
+
+// En pantalla el renglón editado lleva la marca «Monto editado». El archivo no
+// puede perderla: es la diferencia entre un precio del catálogo y uno tecleado.
+test("un renglón editado a mano se marca en las dos salidas", () => {
+  const m = modelo();
+  const editado = m.renglones.find((r) => r.codigo === "MT-002");
+  assert.equal(editado.editado, true, "MT-002 trae eq:1 en el fixture");
+  const filas = leerCSV(aCSV(m));
+  const iCol = COLUMNAS.indexOf("Editado a mano");
+  const fila = filas.find((f) => f[0] === "MT-002");
+  assert.equal(fila[iCol], "Sí");
+  const limpia = filas.find((f) => f[0] === "MT-001");
+  assert.equal(limpia[iCol], "", "un renglón sin editar no se marca");
+  const html = documentoHTML(m, {});
+  assert.match(html, /monto editado/,
+    "el documento imprimible también tiene que decirlo");
+});
+
+/* EL HALLAZGO MÁS IMPORTANTE DEL REVIEWER ADVERSARIAL.
+   El depósito en garantía es un renglón activo de la categoría CFE, así que
+   sumaba en su grupo; pero el «Subtotal de obra y equipo» que el mismo
+   documento declara al pie NO lo incluye. Quien sumara los subtotales de
+   categoría obtenía una cifra mayor que el subtotal impreso en la misma hoja,
+   por el monto del depósito, y podía leerse como cobrado dos veces. */
+test("los subtotales por categoría del documento suman el subtotal declarado",
+  () => {
+    const m = modelo();
+    const html = documentoHTML(m, {});
+    const subtotales = [...html.matchAll(
+      /<tr class="cat"><td colspan="5">([^<]+)<\/td>\s*<td class="num">\$([\d,.]+)<\/td>/g)]
+      .map((x) => ({ cat: x[1], v: Number(x[2].replace(/,/g, "")) }));
+    assert.equal(subtotales.length, 2, "dos categorías en el fixture");
+    const suma = subtotales.reduce((a, b) => a + b.v, 0);
+    const declarado = m.totales
+      .find((x) => x.concepto === "Subtotal de obra y equipo").importe;
+    /* La tolerancia es de un peso por grupo, y tiene una razón exacta: cada
+       subtotal se imprime redondeado al peso, así que sumar los impresos puede
+       separarse del subtotal declarado hasta medio peso por grupo. Eso es
+       redondeo de presentación y se ve en cualquier documento.
+       Lo que esta prueba impide es lo OTRO: el defecto que encontró el reviewer
+       adversarial era una diferencia del monto entero del depósito en garantía
+       —cientos de miles de pesos—, no un peso de redondeo. */
+    assert.ok(Math.abs(suma - declarado) <= subtotales.length,
+      `la hoja no cuadra consigo misma: los grupos suman ${suma} y el subtotal `
+      + `declarado es ${declarado} (diferencia ${suma - declarado})`);
+    // El renglón del depósito SIGUE listado: el catálogo tiene que estar
+    // completo. Lo que no hace es sumar en el grupo.
+    assert.ok(html.includes("CFE-005"));
+    assert.ok(html.includes("Garantía reembolsable"));
+  });
 
 // --- el documento imprimible ------------------------------------------------
 
