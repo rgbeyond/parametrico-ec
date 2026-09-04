@@ -61,11 +61,13 @@ src/lib/datos.js           repositorio: proyectos, conceptos, comentarios
 src/lib/catalogo.js        de qué fuente sale el catálogo, y qué pasa si falla
 src/lib/contexto.js        proyecto abierto y su catálogo combinado
 src/lib/app.js             núcleo del estimador  ← 1,076 líneas, deuda declarada
+src/lib/exportar.js        CSV y documento imprimible del catálogo del proyecto
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
 supabase/                  esquema, políticas y semilla (01–03 en esta rama)
 scripts/generar-seed.mjs   regenera 03_semilla.sql desde catalogo.json
 pruebas/                   node --test, sin navegador ni credenciales
+pruebas-navegador/         Chromium (`npm run test:ui`), aparte a propósito
 ```
 
 **Sin variables de entorno la aplicación funciona completa** y guarda en el
@@ -81,12 +83,19 @@ cuenta. No introduzcas dependencias que rompan ese modo.
 | Desarrollo | `npm run dev` |
 | Compilar | `npm run build` |
 | Probar | `npm test` |
+| Probar en navegador | `npm run test:ui` |
 | Regenerar semilla | `npm run seed` |
 
-**Las pruebas cubren un solo módulo, y ese sigue siendo el hueco mayor.**
-`pruebas/catalogo.test.mjs` ejercita los cuatro estados del catálogo maestro. El
-resto del repositorio —el estimador entero, que es donde están las cifras— no
-tiene ninguna. No presentes «las pruebas pasan» como si cubrieran el cálculo.
+**Las pruebas cubren dos módulos, y el estimador sigue siendo el hueco mayor.**
+`pruebas/catalogo.test.mjs` ejercita los cuatro estados del catálogo maestro y
+`pruebas/exportar.test.mjs` el modelo, el CSV y el documento imprimible del
+export. **El motor —`app.js`, que es donde están las cifras— no tiene ninguna.**
+No presentes «las pruebas pasan» como si cubrieran el cálculo.
+
+`pruebas-navegador/` es la excepción declarada a la línea de abajo: ahí sí hay
+Chromium, porque lo que comprueba —que el archivo exportado dice lo mismo que la
+pantalla— no se puede comprobar sin una pantalla. Corre aparte (`npm run
+test:ui`) para que `npm test` siga sin navegador y sin credenciales.
 
 Al terminar cualquier cambio, corre `npm test` y `npm run build`: si el build no
 pasa, Netlify tampoco.

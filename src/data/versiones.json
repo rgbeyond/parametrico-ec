@@ -1,5 +1,27 @@
 [
   {
+    "v": "0.12.0",
+    "fecha": "2026-09-04",
+    "tipo": "menor",
+    "resumen": "El catalogo de conceptos del proyecto se puede descargar en CSV y como documento imprimible para guardar en PDF, desde la misma seccion donde se ve.",
+    "agregado": [
+      "Menu Exportar en la seccion Catalogo, con CSV y PDF. Vive junto a Guardar y Restablecer precios, dentro de la propia seccion del presupuesto: no hay pestaña nueva ni pantalla nueva.",
+      "CSV con encabezado del proyecto -nombre, ubicacion, fecha y hora de exportacion, version compilada, nivel de definicion y precision esperada-, una fila por renglon activo y los totales que la aplicacion ya calcula. UTF-8 con BOM y fin de linea CRLF para que Excel no rompa los acentos ni la ñ; comas, comillas y saltos de linea escapados segun el RFC 4180; y cantidades, precios e importes como numeros crudos, sin signo de pesos ni separador de miles, para poder sumarlos sin limpiarlos. Nombre de archivo estable: catalogo-<proyecto>-AAAA-MM-DD.csv.",
+      "Documento imprimible con la misma estrategia que ya usaba la propuesta: HTML propio con logotipo y tipografias incrustados, enviado al dialogo de impresion del navegador para Guardar como PDF. Sin biblioteca de PDF; una pesaria mas que todo el estimador. Pagina en tamaño Carta, repite el encabezado de la tabla en cada hoja y no corta un renglon a la mitad.",
+      "Columna Tratamiento en las dos salidas: Costo de obra, Pass-through o Garantia reembolsable. Sin ella la suma de la columna Importe no cuadra con el subtotal, porque el deposito en garantia viaja en la lista y no es costo de obra. Es la misma distincion que la aplicacion ya hace; la columna solo la hace legible en un archivo.",
+      "Modulo src/lib/exportar.js con el modelo intermedio, el CSV y el documento. No importa nada, asi que se puede probar en Node."
+    ],
+    "notas": [
+      "EL EXPORT NO CALCULA NADA. Recibe los mismos renglones que build() dejo y los mismos totales que devolvio totals() -los que la pantalla acaba de pintar- y solo les da forma de archivo. No hay segunda ruta de calculo ni consulta paralela: un export que recalculara acabaria, el dia que alguien toque una formula, entregando al cliente una cifra distinta a la que el proyectista reviso en pantalla.",
+      "Exporta los renglones ACTIVOS del proyecto -cantidad mayor que cero-, no lo que la tabla tenga filtrado en ese momento. La tabla pinta tambien los inactivos atenuados y admite filtro por categoria y busqueda; un archivo que respetara ese filtro se leeria como el BOM del proyecto siendo un subconjunto.",
+      "Los numeros se redondean como en pantalla: precios a dos decimales, importes al peso. El archivo trae el numero que el proyectista reviso, no una version con mas precision que la que vio.",
+      "ES UNA OPERACION DE LECTURA. Exportar no llama a touch(), ni a render(), ni a guardarEstado(): no marca el proyecto como sucio, asi que no puede disparar un guardado ni mover actualizado_en. Hay prueba de navegador que compara la huella completa del almacenamiento antes y despues de exportar en los dos formatos.",
+      "La visibilidad de costos no cambia y el export no agrega ninguna capacidad. Quien no puede leer los costos del catalogo no llega a tener un proyecto abierto: fn_conceptos_de levanta el error y la apertura falla, asi que no hay renglones en memoria que exportar. El archivo no puede mostrar un precio que la pantalla no habria mostrado.",
+      "Pruebas: 16 nuevas en Node sobre el modelo, el escapado del CSV y el documento; y 5 de navegador que comparan el archivo contra la pantalla renglon por renglon -codigo, concepto, unidad, cantidad, precio unitario, importe y sustento-, contrastan los totales contra los de la vista de Propuesta, revisan que el documento no lleve ni un control interactivo, y comprueban que exportar no escribe nada. Las de navegador viven en pruebas-navegador/ y corren con npm run test:ui: npm test sigue sin navegador ni credenciales, que es una decision del repositorio.",
+      "Este cambio no toca el motor de calculo, ni el catalogo, ni los precios, ni el esquema. No requiere migracion. Los ocho proyectos que hoy viven en el backend de produccion abren igual: lo unico que se agrega es un boton que lee lo que ya estaba en pantalla."
+    ]
+  },
+  {
     "v": "0.11.1",
     "fecha": "2026-09-02",
     "tipo": "parche",
