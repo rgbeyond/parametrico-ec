@@ -390,3 +390,156 @@ test("exportar no le quita nada al estado guardado de un proyecto anterior",
       "las ediciones guardadas siguen intactas");
     await pagina.close();
   });
+
+/* --- CICLO DE VIDA DEL DIÁLOGO DE IMPRESIÓN ------------------------------
+   Esta es la prueba que faltaba, y su ausencia es la razón de que el PDF en
+   blanco llegara hasta la validación de RG.
+
+   La prueba anterior sustituye `print()` por una función vacía y captura el
+   `srcdoc`: demuestra que el HTML se construye, y no puede ver lo que de
+   verdad falló. En Chrome `print()` DEVUELVE EL CONTROL antes de que la
+   previsualización termine de consumir el documento; el ayudante borraba el
+   iframe al segundo y a Chrome se le quitaba el documento de debajo.
+
+   Aquí `print()` se sustituye por algo que IMITA ese comportamiento: no hace
+   nada de inmediato, y 2.5 segundos después —cuando la implementación
+   anterior ya habría borrado el iframe— comprueba si el marco sigue conectado
+   y si su documento todavía tiene contenido. Sólo entonces emite `afterprint`,
+   como haría el navegador al cerrarse el diálogo, y verifica que la limpieza
+   ocurra ahí y no antes.
+
+   Con `setTimeout(..., 1000)` esta prueba se pone roja: es su propósito. */
+/* El espía se instala desde el realm PADRE, no dentro del iframe.
+   `addInitScript` no alcanza el realm de un iframe `srcdoc` —ya se vio con la
+   otra prueba—, así que sustituir `Window.prototype.print` ahí dentro no sirve.
+   Lo que sí funciona: interceptar el descriptor de `contentWindow` en el padre
+   y, la primera vez que alguien lo lee, poner un `print` propio en ESA ventana.
+   La aplicación lee `iframe.contentWindow` dentro de su manejador de `load` y
+   sólo después llama a `print()`, así que el espía siempre llega antes. */
+const espiaImpresion = (pagina) => pagina.addInitScript(() => {
+  window.__vida = { llamadas: 0, vivoDespues: null, textoDespues: null,
+    ancho: null, alto: null, quitadoTrasAfterprint: null };
+  const d = Object.getOwnPropertyDescriptor(
+    HTMLIFrameElement.prototype, "contentWindow");
+  Object.defineProperty(HTMLIFrameElement.prototype, "contentWindow", {
+    ...d,
+    get() {
+      const w = d.get.call(this);
+      if (w && !w.__espiado) {
+        try {
+          w.__espiado = 1;
+          const marco = this;
+          const addOrig = w.addEventListener.bind(w);
+          w.addEventListener = (tipo, fn, o) => {
+            if (tipo === "afterprint") window.__vida.oyente = true;
+            return addOrig(tipo, fn, o);
+          };
+          w.print = function espia() {
+            const v = window.__vida;
+            v.llamadas += 1;
+            v.ancho = marco.offsetWidth; v.alto = marco.offsetHeight;
+            v.idMarco = marco.id || "(sin id)";
+            v.iframes = document.querySelectorAll("iframe").length;
+            try { v.urlAlImprimir = w.location.href; } catch { v.urlAlImprimir = "?"; }
+            try {
+              v.textoAlImprimir = w.document.body
+                ? w.document.body.innerText.length : 0;
+            } catch { v.textoAlImprimir = -1; }
+            // 2.5 s: más de lo que tardaba la versión rota en borrar el iframe.
+            setTimeout(() => {
+              let texto = -1;
+              try {
+                texto = w.document.body ? w.document.body.innerText.length : 0;
+              } catch { texto = -1; }
+              v.vivoDespues = !!(marco && marco.isConnected);
+              v.textoDespues = texto;
+              // El diálogo "se cierra": el navegador emitiría afterprint.
+              try { window.__vida.emitido = w.dispatchEvent(new Event("afterprint")); }
+              catch (e) { window.__vida.emitido = "ERROR " + e.message; }
+              setTimeout(() => {
+                v.quitadoTrasAfterprint = !(marco && marco.isConnected);
+              }, 400);
+            }, 2500);
+          };
+        } catch { /* otro origen: no aplica aquí */ }
+      }
+      return w;
+    },
+  });
+});
+
+async function medirVida(pagina) {
+  await pagina.waitForFunction(
+    () => window.__vida && window.__vida.quitadoTrasAfterprint !== null,
+    null, { timeout: 30000 });
+  return pagina.evaluate(() => window.__vida);
+}
+
+function revisarVida(v, quien) {
+  assert.equal(v.llamadas, 1, `${quien}: se llamó a print() una vez`);
+  /* EL SÍNTOMA QUE REPORTÓ RG, EN UNA LÍNEA. Un iframe recién conectado emite
+     un `load` por su `about:blank` inicial: si el ayudante imprime en ese
+     momento, manda a la impresora un documento vacío. */
+  assert.notEqual(v.urlAlImprimir, "about:blank",
+    `${quien}: se llamó a print() sobre el about:blank inicial del iframe. Eso `
+    + "es exactamente el PDF en blanco");
+  assert.ok(v.textoAlImprimir > 200,
+    `${quien}: al llamar a print() el documento tenía ${v.textoAlImprimir} `
+    + "caracteres. Se estaría imprimiendo una hoja vacía");
+  assert.equal(v.vivoDespues, true,
+    `${quien}: el iframe YA NO EXISTÍA 2.5 s después de print(). Es el defecto `
+    + "que dejó el PDF en blanco: Chrome sigue consumiendo el documento "
+    + "después de que print() devuelve, y se le quitó de debajo");
+  assert.ok(v.textoDespues > 200,
+    `${quien}: el documento quedó vacío mientras el diálogo seguía abierto `
+    + `(${v.textoDespues} caracteres)`);
+  assert.ok(v.ancho > 100 && v.alto > 100,
+    `${quien}: el iframe mide ${v.ancho}x${v.alto}. Un marco colapsado no da `
+    + "composición, y sin composición puede no haber nada que paginar");
+  assert.equal(v.quitadoTrasAfterprint, true,
+    `${quien}: el iframe tiene que retirarse al terminar el diálogo. `
+    + `oyente=${v.oyente} emitido=${v.emitido} marco=${v.idMarco} `
+    + `iframes=${v.iframes}`);
+}
+
+test("el documento del BOM sigue vivo mientras Chrome imprime", async (t) => {
+  if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+  const pagina = await navegador.newPage({ acceptDownloads: true });
+  await espiaImpresion(pagina);
+  await pagina.goto(base, { waitUntil: "domcontentloaded" });
+  await pagina.locator('[data-acc="plantilla"], [data-acc="abrir"]').first()
+    .click({ timeout: 20000 });
+  await pagina.locator("#p-conf").waitFor({ timeout: 20000 });
+  await pagina.locator('.tab[data-t="boq"]').click();
+  await pagina.locator("#b_body tr").first().waitFor({ timeout: 20000 });
+
+  await pagina.locator("#x_menu > summary").click();
+  await pagina.locator("#x_pdf").click();
+  revisarVida(await medirVida(pagina), "BOM");
+  await pagina.close();
+});
+
+/* El ayudante lo comparte la descarga de propuesta, que existía desde antes:
+   si el arreglo la rompiera, se rompería una salida que ya funcionaba. */
+test("la impresión de Propuesta usa el mismo ayudante y también sobrevive",
+  async (t) => {
+    if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+    const pagina = await navegador.newPage({ acceptDownloads: true });
+    await espiaImpresion(pagina);
+    await pagina.goto(base, { waitUntil: "domcontentloaded" });
+    await pagina.locator('[data-acc="plantilla"], [data-acc="abrir"]').first()
+      .click({ timeout: 20000 });
+    await pagina.locator("#p-conf").waitFor({ timeout: 20000 });
+    await pagina.locator('.tab[data-t="exp"]').click();
+    await pagina.waitForFunction(
+      () => document.querySelector("#e_doc table") != null,
+      null, { timeout: 20000 });
+
+    // «Descargar propuesta» baja un respaldo .html y abre el diálogo.
+    const respaldo = pagina.waitForEvent("download", { timeout: 30000 });
+    await pagina.locator("#b_dl").click();
+    const d = await respaldo;
+    assert.match(d.suggestedFilename(), /-propuesta\.html$/);
+    revisarVida(await medirVida(pagina), "Propuesta");
+    await pagina.close();
+  });
