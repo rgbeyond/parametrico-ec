@@ -8,3 +8,9 @@ dist
 .vite
 .netlify
 .claude/settings.local.json
+
+# Los guardias de .claude/hooks/ son Python: al importarlos entre si
+# dejan cache compilada, y esa no se versiona.
+__pycache__/
+*.pyc
+dist-nube/

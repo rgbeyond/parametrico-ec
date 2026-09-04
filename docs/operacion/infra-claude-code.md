@@ -1,0 +1,2 @@
+# Infraestructura Claude Code — Paramétrico EC
+Issue canónico: `rgbeyond/beyond-platform#4`. Un writer; cuatro reviewers Sonnet read-only; skills comunes para handoff, validación, E2E y migraciones. Auto mode preferido, bypassPermissions deshabilitado, hooks para PROD/main y explicación humana de permisos. Plugin oficial security-guidance habilitado con reglas Beyond. CI tradicional ejecuta tests/build sin credenciales Claude. Claude Code GitHub Action queda pendiente de decisión explícita.

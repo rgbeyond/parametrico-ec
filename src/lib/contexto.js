@@ -10,14 +10,25 @@ export const ctx = {
   soloLectura: false
 };
 
+/* PRIMERO SE RESUELVE TODO, Y AL FINAL SE TOCA `ctx`.
+
+   El orden importa desde que `catalogoMaestro()` puede lanzar. Si se asignara
+   `ctx.proyecto = p` antes del await, un fallo del catálogo dejaría el
+   contexto apuntando al proyecto que NO se abrió, mientras el estimador
+   conserva en memoria el estado del anterior. La pantalla no lo delataría —no
+   se muestra el estimador—, pero el autoguardado con retardo de `app.js`
+   escribe contra `ctx.proyecto.id`: un temporizador pendiente guardaría el
+   estado del proyecto viejo en el renglón del nuevo. Ventana estrecha y
+   pérdida de datos silenciosa, que es la peor combinación. */
 export async function abrirProyecto(p){
-  ctx.proyecto = p;
-  ctx.soloLectura = !puede.editar;
   const maestro = await datos.catalogoMaestro();
   const propios = await datos.conceptosDelProyecto(p?.id);
-  ctx.propios = new Set(propios.map(c => c.c));
   const porCodigo = new Map(maestro.map(c => [c.c, c]));
   for(const c of propios) porCodigo.set(c.c, c);   // el propio del proyecto gana
+
+  ctx.proyecto = p;
+  ctx.soloLectura = !puede.editar;
+  ctx.propios = new Set(propios.map(c => c.c));
   ctx.conceptos = [...porCodigo.values()].sort((a,b) => a.c.localeCompare(b.c));
   return ctx;
 }

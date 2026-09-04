@@ -16,28 +16,68 @@ export const slug = (t) => String(t || 'proyecto')
   .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'proyecto';
 
 // ---------------------------------------------------------------- catálogo
-export async function catalogoMaestro(){
-  if(!hayNube || !sesion.perfil) return catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
-  const { data, error } = await supabase.from('conceptos')
-    .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
-    .eq('activo', true).order('codigo');
-  if(error || !data?.length) return catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
-  return data.map(r => ({
-    c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
-    t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref, ambito: 'maestro'
-  }));
+/* La decisión vive en `catalogo.js`, sin dependencias, para poder probarla.
+   Se reexporta para no romper a quien ya importaba desde aquí. */
+import { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS, deFila,
+         consultaCatalogo, RPC_CATALOGO, AMBITO } from './catalogo.js';
+export { resolverCatalogo, ErrorCatalogo, origenCatalogo, COLUMNAS, deFila,
+         consultaCatalogo, RPC_CATALOGO, AMBITO };
+
+const deLocal = () => catalogoLocal.map(x => ({ ...x, ambito: 'maestro' }));
+
+/* El catálogo del proyecto sigue siendo una lectura directa de tabla: son los
+   conceptos propios de ESE proyecto, no tienen ámbito y no se comparten. El
+   maestro es el que pasa por `fn_conceptos_de`. */
+const SELECT_CONCEPTOS = COLUMNAS.join(', ');
+
+/* El origen tiene que poder consultarse desde la consola del navegador.
+
+   Un export de módulo no es alcanzable desde ahí: Vite empaqueta y los nombres
+   desaparecen. Sin esto, el paso de validación contra Beyond DEV —«mira
+   `origenCatalogo` y comprueba que dice nube»— sería una instrucción que no se
+   puede ejecutar, y la comprobación se reduciría a «la app abrió», que es lo
+   que ya hacía con el backend mal. */
+function publicarOrigen(origen){
+  if(typeof window !== 'undefined') window.origenCatalogo = origen;
+  console.info('[catálogo] origen:', origen);
+  return origen;
 }
 
+export async function catalogoMaestro(){
+  try {
+    const { conceptos, origen } = await resolverCatalogo({
+      conNube: hayNube,
+      conSesion: !!sesion.perfil,
+      local: deLocal,
+      consultar: () => consultaCatalogo(supabase)
+    });
+    publicarOrigen(origen);
+    return conceptos;
+  } catch (err) {
+    /* También al fallar: es cuando más falta hace saber qué se intentó. */
+    publicarOrigen({ ...origenCatalogo });
+    throw err;
+  }
+}
+
+/* EL OTRO RESPALDO SILENCIOSO, EN LA MISMA RUTA DE CARGA.
+
+   Esto decía `if(error) return []`, tres líneas debajo del que se retiró. Y
+   pesa igual o más: los conceptos propios del proyecto PISAN al maestro en
+   `contexto.js`, así que perderlos no deja al estimador sin partidas —lo deja
+   cotizando la misma partida al precio del catálogo general en vez de al que
+   se capturó para esa estación—. Sesión expirada a media sesión, RLS o red, y
+   el proyecto abría con otras cifras sin decir nada.
+
+   Una lista vacía sí es legítima: un proyecto puede no tener conceptos
+   propios. Lo que no es legítimo es no poder leerlos y seguir como si nada. */
 export async function conceptosDelProyecto(proyectoId){
   if(!hayNube || !sesion.perfil || !proyectoId) return [];
   const { data, error } = await supabase.from('proyecto_conceptos')
-    .select('codigo, categoria, nombre, unidad, precio, taxonomia, aplicabilidad, fuente, fecha_ref')
+    .select(SELECT_CONCEPTOS)
     .eq('proyecto_id', proyectoId).order('codigo');
-  if(error) return [];
-  return (data || []).map(r => ({
-    c: r.codigo, cat: r.categoria, n: r.nombre, u: r.unidad, pu: Number(r.precio),
-    t: r.taxonomia, ap: r.aplicabilidad, f: r.fuente, fe: r.fecha_ref, ambito: 'proyecto'
-  }));
+  if(error) throw new ErrorCatalogo('proyecto', error);
+  return (data || []).map(r => deFila(r, 'proyecto'));
 }
 
 export async function agregarConceptoAProyecto(proyectoId, c){

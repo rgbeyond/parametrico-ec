@@ -1,310 +1,220 @@
-# Contexto del proyecto
+# Paramétrico de electrolineras
 
-Herramienta interna de Beyond AE para estimar el CAPEX de electrolineras
-(estaciones de carga para vehículos eléctricos) a partir de datos macro del
-sitio. El nivel de definición del estimado se **calcula**, no se declara a mano.
+Herramienta interna de Beyond AE para estimar el CAPEX de estaciones de carga
+para vehículos eléctricos a partir de datos macro del sitio. El nivel de
+definición del estimado se **calcula**, no se declara a mano.
 
-Trabaja en **español**. El código, los comentarios, los mensajes de interfaz y
-los commits van en español. Sin emoji.
+Trabaja en **español**. Código, comentarios, interfaz y commits en español. Sin
+emoji.
+
+<!-- Reducido de 352 a ~150 líneas en la Fase 0 (2026-08-26). Lo que salió está
+     en .claude/rules/ y en docs/. Mapeo completo en
+     docs/claude-engineering-phase0.md. Git conserva el original. -->
 
 ---
 
-## Reglas de datos que no se negocian
+## Lo que hay que saber siempre
 
-Estas reglas vienen del negocio, no del código. Romperlas produce propuestas
-que no se pueden defender frente a un cliente.
+**Toda cifra lleva su taxonomía**: `validado`, `fuente`, `supuesto`,
+`allowance`. Nunca las colapses ni presentes un supuesto como hecho. Un concepto
+sin base declarada es «pendiente de cotizar», no un número inventado. Si llenas
+un hueco con una regla de escalamiento, dilo en el propio renglón: una regla no
+convierte un supuesto en dato.
 
-**Toda cifra lleva su taxonomía.** Cuatro niveles: `validado`, `fuente`,
-`supuesto`, `allowance`. Nunca colapsarlos ni presentar un supuesto como hecho.
-Un concepto sin base declarada es "pendiente de cotizar", no un número
-inventado. Si vas a llenar un hueco con una regla de escalamiento, dilo en el
-propio renglón: una regla no convierte un supuesto en dato.
+**El nivel de definición se calcula.** Índice = promedio del puntaje de sustento
+de cada renglón, **ponderado por importe**, no por conteo. `validado` 1.00,
+`fuente` 0.75, `supuesto` 0.35, `allowance` 0.00. Se mapea a clases 5–1 según
+AACE 18R-97. Un renglón mal sustentado en una partida dominante pesa más que
+cuarenta validados en partidas menores.
 
-**El nivel de definición se calcula.** Índice = promedio del puntaje de
-sustento de cada renglón, **ponderado por importe**, no por conteo. Puntajes:
-validado 1.00, fuente 0.75, supuesto 0.35, allowance 0.00. Se mapea a clases 5
-a 1 según la práctica de AACE 18R-97. Un renglón mal sustentado en una partida
-dominante pesa más que cuarenta validados en partidas menores.
+**Los rangos son asimétricos.** La cola larga está del lado alto. No los
+conviertas en ± simple en el cálculo interno, aunque al cliente se le comunique
+así.
 
-**Los rangos son asimétricos.** Los sobrecostos no se distribuyen de forma
-simétrica: la cola larga está del lado alto. No los conviertas en ± simple en
-el cálculo interno, aunque al cliente se le comunique así.
+**Verifica antes de afirmar.** No inventes nombres de elementos de interfaz de
+productos de terceros, ni artículos de norma, ni valores de configuración.
 
-**Norma vigente: NOM-001-SEDE-2012.** La revisión 2018 nunca se publicó en el
-DOF; no citarla. Interruptores principales y derivados se verifican contra 125%
-de la carga continua, artículo 625-21.
+**Señala riesgos, huecos e inconsistencias sin suavizar.**
 
-**El transformador se dimensiona contra la demanda de diseño, no contra la suma
-de placas.** Con balanceo dinámico declarado, la demanda de diseño es la
-potencia instalada menos el porcentaje reservado; sin balanceo son iguales. La
-conversión de kW a kVA usa `FP_DIM` 0.80 más `MARGEN_TRAFO` 1.10, ambos en
-`app.js`. Ese 0.80 es **criterio de dimensionamiento de Beyond, no el factor de
-potencia del equipo**: los cargadores de corriente directa con corrección activa
-operan entre 0.95 y 0.99, así que el criterio ya incorpora del orden de 16% de
-colchón encima del margen explícito. No presentarlo como si fuera la física del
-equipo. El balance eléctrico convierte en el sentido inverso con el mismo 0.80,
-a propósito: con dos valores distintos los dos paneles se contradicen. **Sujeto
-a validación contra proyectos cerrados.**
-
-La reserva de balanceo tiene consecuencia operativa, no solo de costo: en el pico
-los vehículos cargan más lento. Es decisión comercial de throughput y debe quedar
-declarada en la propuesta, no escondida en el cálculo. Depende de `GE-001`: sin
-sistema de gestión no se sostiene la reserva, y por lo tanto tampoco se puede
-dimensionar el transformador por debajo de la suma de placas.
-
-**El balance eléctrico compara kVA contra kVA**, no kW contra kW. Convertir la
-capacidad del transformador a kW con el mismo 0.80 mezclaba unidades y además la
-subestimaba, porque el 0.80 es criterio de dimensionamiento y no el factor de
-potencia real de la carga.
-
-**Las tensiones se declaran, no se asumen.** Configuración tiene tensión primaria
-y secundaria, 23 kV y 480 V por omisión. Antes el cálculo de corriente para el
-criterio de 125% traía 440 V escrito en el código, y la diferencia no es
-cosmética: a 1,500 kVA son 1,968 A contra 1,804 A, marcos de interruptor
-distintos. Los materiales de media tensión del catálogo son clase 25 kV,
-consistentes con 23 kV; si se declara otra tensión primaria la app avisa en el
-renglón del transformador pero **no** cambia los materiales. Seleccionarlos por
-clase de aislamiento es motor de cantidades, no un campo.
-
-**El depósito en garantía se calcula sobre la demanda contratada, no sobre el
-transformador.** La tarifa GDMTH, apartado 9: *tres veces el importe que resulte
-de aplicar el cargo por capacidad a cada kilowatt de demanda contratada*. La
-provisión histórica de `$3,100/kVA` sobre la capacidad del transformador está
-calculada sobre la variable equivocada y es probable que sobreestime. Con el
-cargo por capacidad capturado en Configuración, `CFE-005` deja de ser
-`allowance` y pasa a `fuente`. Mientras no se capture, se mantiene la provisión
-con la advertencia escrita en el propio renglón.
-
-**La demanda contratada tiene un piso de tarifa.** Apartado 4: no menor al 60%
-de la carga total conectada, ni menor a 100 kW. Si el 60% de la carga conectada
-excede la capacidad de la subestación, la demanda contratada se toma como esa
-capacidad al 90% —regla cuya conversión de kVA a kW está **pendiente de
-confirmar**. Consecuencia práctica: un proyecto por fases puede contratar menos
-y reducir el depósito, pero no por debajo del 60% de lo que tenga conectado.
-`pisoDemCon` en `app.js` usa la potencia de los equipos como carga conectada,
-que es la que domina; si el sitio tiene otras cargas, el piso real es mayor.
-
-**Cobro medido contra calculado.** El cargo por capacidad se aplica a la **menor**
-entre la demanda máxima medida en punta y `Qmensual / (24 × d × F.C.)`; el cargo
-por distribución, entre la máxima **mensual** —no la de punta— y la misma
-fórmula. Dos consecuencias para cualquier modelo de recorte de picos con
-almacenamiento: recortar solo en punta no baja el cargo por distribución, y si
-el término calculado es el que manda, recortar el pico no ahorra nada en
-capacidad. El valor del `F.C.` está en el apartado 3.1.2 del Anexo Único del
-Acuerdo A/T58/2024 y **no lo tenemos**: sin él no se puede afirmar que el peak
-shaving se pague.
-
-**Las citas regulatorias de la presentación interna de almacenamiento no están
-verificadas.** Ese mazo se generó con NotebookLM y los números de acuerdo
-(RES/550/2021 para el Código de Red, A/108/2024 de electromovilidad) son
-exactamente el tipo de dato que una herramienta generativa produce plausible
-pero equivocado. El Código de Red podría venir de RES/151/2016. No citar
-ninguno en documento a cliente sin verificarlo en el DOF.
-
-**Especificación de cable en corriente directa: RHW-2/XHHW-2 XLPE 1000 V.**
-"THHW-LS 1000 V" no existe comercialmente: el THHW-LS llega a 600 V. Corregirlo
-donde aparezca.
-
-**Naranja de marca: `#FF8700`**, el del archivo `beyond-orange.png`. Un token
-anterior decía `#FB8722`; se corrigió porque una marca debe coincidir con su
-logo. Para texto naranja sobre papel se usa `--accent-ink` `#B4590C`, que es la
-versión con contraste AA.
-
-**Actualizar el precio del catálogo maestro es de admin y editor.** Se
-flexibilizó (2026-08) para no dejar toda aprobación en una sola persona: un
-editor puede escribir precio, taxonomía y fuente directo en `conceptos`, sin
-pasar por propuesta. Lo que sigue siendo exclusivo de administrador es *crear
-o eliminar* un concepto del maestro (`conceptos_alta`, `conceptos_baja` en
-`02_politicas.sql`) y aplicar/rechazar una propuesta formal
-(`fn_aprobar_precio`, `fn_rechazar_precio`). El sistema de propuestas
-(`precio_propuestas`) sigue existiendo para quien prefiera pasar por una
-revisión antes de tocar el maestro, pero ya no es obligatorio.
-
-Para no perder trazabilidad al abrir la escritura directa, cualquier cambio
-de precio en `conceptos` —lo escriba quien lo escriba— queda registrado solo
-una vez en `precio_historial` vía el disparador `tr_registrar_historial_precio`.
-La verificación de quién puede escribir qué vive en la base de datos, en las
-políticas RLS y en las funciones `security definer`. Nunca mover esa
-validación al cliente: un navegador se puede alterar, una política no.
-
-**Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
-en esa estación hasta que un administrador lo promueve con
-`fn_promover_concepto`. Así una estación captura lo que necesita sin ensuciar
-la fuente única de precios.
+**No sobrescribas márgenes ni estructura de costos** sin instrucción explícita.
+Cualquier cambio se documenta con su razón.
 
 ---
 
 ## Arquitectura
 
-**Sin framework de interfaz, a propósito.** JavaScript de módulos ES sobre
-Vite. La lógica del estimador ya funcionaba en vanilla y portarla a React
-habría sido reescribirla. Si algún día se migra, que sea por partes.
+Dos repositorios federados, no un monorepo. Este es el paramétrico; el
+Portafolio Energético vive en `rgbeyond/propuestas-fv` y monta este sitio por
+proxy de Netlify en `/ec/*`. Comparten **un solo proyecto de Supabase**, tabla
+`perfiles` y funciones de rol.
+
+**Sin framework de interfaz, a propósito.** JavaScript de módulos ES sobre Vite.
 
 ```
 index.html                 marcado completo de la aplicación
-src/main.js                orquestación: sesión, portada, carga diferida del estimador
+src/main.js                sesión, portada, carga diferida del estimador
 src/ui/portada.js          pantalla de proyectos
 src/ui/usuarios.js         administración de roles
+src/ui/bitacora.js         historial de versiones
 src/lib/sesion.js          sesión con Google, roles, objeto `puede`
 src/lib/datos.js           repositorio: proyectos, conceptos, comentarios
+src/lib/catalogo.js        de qué fuente sale el catálogo, y qué pasa si falla
 src/lib/contexto.js        proyecto abierto y su catálogo combinado
-src/lib/app.js             núcleo del estimador
+src/lib/app.js             núcleo del estimador  ← 1,076 líneas, deuda declarada
+src/lib/exportar.js        CSV y documento imprimible del catálogo del proyecto
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
-src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
-src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
-src/styles/               tokens de marca, fuentes y estilos
-supabase/                 esquema, políticas RLS y semilla
-scripts/generar-seed.mjs  regenera 03_semilla.sql desde catalogo.json
+supabase/                  esquema, políticas y semilla (01–03 en esta rama)
+scripts/generar-seed.mjs   regenera 03_semilla.sql desde catalogo.json
+pruebas/                   node --test, sin navegador ni credenciales
+pruebas-navegador/         Chromium (`npm run test:ui`), aparte a propósito
 ```
 
 **Sin variables de entorno la aplicación funciona completa** y guarda en el
-navegador. Es una decisión deliberada: la herramienta debe seguir siendo usable
-sin cuenta. No introduzcas dependencias que rompan ese modo.
-
-**Carga diferida.** `app.js` se importa sólo cuando se abre un proyecto, y se
-comunica por el evento `proyecto:abierto`. No lo vuelvas a importar en el
-arranque: la portada debe aparecer de inmediato.
-
-### Deuda técnica conocida
-
-`src/lib/app.js` son ~76 KB en un solo archivo, heredado de un prototipo.
-Funciona y está probado. **Dividirlo por pestaña es la primera refactorización
-pendiente**, pero hazlo con pruebas de por medio: ya se rompió varias veces.
-
-Al terminar cualquier cambio, corre `npm run build`. Si el build no pasa,
-Netlify tampoco.
+navegador. Es decisión deliberada: la herramienta debe seguir siendo usable sin
+cuenta. No introduzcas dependencias que rompan ese modo.
 
 ---
 
-## Versión y bitácora
+## Comandos
 
-La versión vive **únicamente en `package.json`**. `vite.config.js` la lee al
-compilar y la inyecta junto con la fecha del build; `src/lib/version.js` la
-expone ya formateada. No escribirla a mano en ningún otro archivo: dos fuentes
-se desincronizan.
+| Qué | Comando |
+|---|---|
+| Desarrollo | `npm run dev` |
+| Compilar | `npm run build` |
+| Probar | `npm test` |
+| Probar en navegador | `npm run test:ui` |
+| Regenerar semilla | `npm run seed` |
 
-Numeración por **versionado semántico** (SemVer), `mayor.menor.parche`:
+**Las pruebas cubren dos módulos, y el estimador sigue siendo el hueco mayor.**
+`pruebas/catalogo.test.mjs` ejercita los cuatro estados del catálogo maestro y
+`pruebas/exportar.test.mjs` el modelo, el CSV y el documento imprimible del
+export. **El motor —`app.js`, que es donde están las cifras— no tiene ninguna.**
+No presentes «las pruebas pasan» como si cubrieran el cálculo.
 
-- **parche**: correcciones que no agregan capacidad.
-- **menor**: capacidad nueva, compatible con lo anterior.
-- **mayor**: rompe compatibilidad. Aquí eso significa algo concreto: que el
-  formato del estado guardado de los proyectos deje de abrir. Por eso las
-  cuatro rutas de carga mezclan con `Object.assign` en lugar de reemplazar, y
-  por eso al renombrar la etiqueta "grupo" a "tipo de cargador" **no** se
-  renombró la llave de datos `grupos`.
+`pruebas-navegador/` es la excepción declarada a la línea de abajo: ahí sí hay
+Chromium, porque lo que comprueba —que el archivo exportado dice lo mismo que la
+pantalla— no se puede comprobar sin una pantalla. Corre aparte (`npm run
+test:ui`) para que `npm test` siga sin navegador y sin credenciales.
 
-`1.0.0` cuando cierren los pendientes de interfaz de producto, no cuando se vea
-bien. No confundir dos ejes: la versión mide el software y la clase del estimado
-mide la calidad del dato. Se puede estar en 1.0 con un estimado Clase 4.
+Al terminar cualquier cambio, corre `npm test` y `npm run build`: si el build no
+pasa, Netlify tampoco.
 
-**Antes de subir a producción, revisa si la versión debe moverse.** Si el cambio
-agrega capacidad o corrige algo visible, `package.json` y `src/data/versiones.json`
-van en el mismo empujón. Se ha olvidado ya: acumular varios commits con capacidad
-nueva bajo la misma versión deja la bitácora mintiendo sobre qué hay publicado.
+Las pruebas corren en Node sin transpilar, así que un módulo que quiera ser
+probable **no puede importar JSON ni Supabase**: por eso la decisión del
+catálogo se mudó a `src/lib/catalogo.js`, que no importa nada. Es el patrón a
+seguir cuando saques lógica de `app.js`.
 
-La bitácora es `src/data/versiones.json`, y se abre desde el pie de la
-interfaz. Está en el repositorio y no en la base de datos a propósito: describe
-el código, así que se despliega junto con el cambio que documenta y no puede
-anunciar una versión que no existe. **Al subir de versión, su entrada va en el
-mismo commit.** Cada entrada declara sus commits para que sea verificable; las
-versiones 0.2.0 y 0.3.0 son una reconstrucción retroactiva de etapas reales que
-nunca se publicaron por separado, y así está anotado.
+---
 
-La versión y la fecha de compilación también van en el pie del documento de
-propuesta. Sin eso, una propuesta impresa no se puede reconciliar con el código
-que produjo sus cifras.
+---
+
+## ⚠ Las migraciones del esquema compartido ya no viven aquí
+
+**Desde la Fase 1A, la fuente de verdad del esquema de Supabase es
+`rgbeyond/beyond-platform`.**
+
+Las dos aplicaciones comparten un solo proyecto de Supabase, y evolucionar el
+mismo esquema desde dos repositorios es lo que produjo la divergencia que la
+Fase 1A tuvo que reconciliar: la base desplegada acabó por delante de las dos
+ramas principales, y una base nueva construida desde Git **no arrancaba**.
+
+| | Dónde |
+|---|---|
+| Migración nueva del esquema compartido | `beyond-platform/supabase/migrations/` |
+| Migraciones de aquí | **se quedan**, como registro |
+
+**Las migraciones de este repositorio no se borran.** Son la arqueología de
+cómo se llegó al esquema actual, y `beyond-platform/origen/` guarda una copia
+exacta para poder diffear la línea base contra su fuente. Borrarlas no
+arreglaría nada y quitaría la única forma de comprobar la reconstrucción.
+
+**Lo que sí cambia:** no escribas aquí una migración nueva del esquema
+compartido. Si un cambio de esquema hace falta, va en `beyond-platform`, se
+prueba con `beyond-platform/scripts/reconstruir.sh` contra una
+base vacía, se aplica a
+Beyond DEV y solo entonces se propone para producción.
+
+Detalle en `beyond-platform/docs/reconciliacion/compatibilidad-apps.md`.
+
+## Definición de terminado
+
+1. `npm test` y `npm run build` pasan.
+2. Si tocaste `supabase/`: **trae `scripts/validar-sql.sh` primero**. No está
+   en esta rama y aplicar SQL sin validarlo es cómo se descubre el error 55P04
+   en producción. Ver `.claude/rules/supabase.md`.
+3. Si el cambio agrega capacidad o corrige algo visible: versión en
+   `package.json` **y** entrada en `src/data/versiones.json`, mismo commit.
+4. El razonamiento de cada supuesto queda en el propio renglón del código.
+5. Si tocaste `.claude/`: `python3 .claude/hooks/probar-guardias.py` en verde.
+   Los guardias han fallado abierto tres veces y las tres parecían estar bien.
+6. Si tocaste `CLAUDE.md` o `.claude/rules/`:
+   `python3 scripts/verificar-referencias.py .` sin rutas rotas ni globs
+   huérfanos. Una regla cuyo `paths:` no casa con nada **no se carga nunca** y
+   no avisa. Una ausencia declarada a propósito no cuenta como error.
+
+---
 
 ## Roles
 
 | Rol | Puede |
 |---|---|
 | `admin` | Todo: aprobar precios, promover conceptos, asignar roles |
-| `editor` | Crear y editar proyectos, actualizar precio/taxonomía/fuente en el catálogo maestro, agregar conceptos |
+| `editor` | Crear y editar proyectos, actualizar precio/taxonomía/fuente, agregar conceptos |
 | `comentarista` | Leer todo y dejar comentarios |
 | `lector` | Consultar sin modificar |
 
-El primero que entra queda administrador; los siguientes entran como `lector` y
-un administrador los promueve. Es deliberado: quien acaba de entrar no debería
-poder mover precios que alimentan propuestas a cliente. El dominio permitido
-está en `fn_dominio_permitido`, en `01_esquema.sql`.
+**`vendedor` no está en esta rama** —ni en `sesion.js` ni en `supabase/`— pero
+**sí está aplicado en la base de datos desplegada**. Es una de las divergencias
+que documenta `.claude/rules/supabase.md`. La decisión de producto es
+**retirarlo**, en Fase 1.
+
+El primero que entra queda administrador; los siguientes entran como `lector`.
+Es deliberado: quien acaba de entrar no debería poder mover precios que
+alimentan propuestas a cliente. El dominio permitido está en
+`fn_dominio_permitido`.
 
 ---
 
-## Estado actual
-
-Publicado en Netlify desde `rgbeyond/paremetrico-ec`. Supabase **en proceso de
-configuración**: mientras no existan las variables de entorno, el sitio corre
-en modo local.
-
-### Pendientes de producto
-
-- Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
-  ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
-  memoria de la sesión.
-- Interfaz de comentarios. La tabla y las políticas existen; el rol de
-  comentarista aún no tiene dónde escribir.
-- Interfaz de tipologías. Las tablas `tipologias` y `tipologia_conceptos` están
-  creadas para discretizar tipos de electrolinera por subconjunto de conceptos.
-  El modelo de esa parte no está definido: pregunta antes de construirlo.
-- Leer el catálogo desde Supabase como fuente primaria y dejar
-  `catalogo.json` sólo como semilla y respaldo sin conexión.
-- Motor de cantidades. Varias partidas se calculan con reglas de escalamiento
-  lineal declaradas en el propio renglón: alimentadores de baja tensión,
-  tableros e interruptores derivados, sistema de tierras, aportación y depósito
-  del suministrador. **Validar contra proyectos cerrados antes de usarlas en
-  propuesta firme.**
-
-### Estado del catálogo
-
-De 188 conceptos: 9 con dato validado, 18 con fuente identificable, el resto
-supuestos con criterio declarado y 8 provisiones sin base de precio. Esas 8 son
-lo primero a cotizar; el índice de definición las castiga con cero.
-
-### Caso de referencia: Atlacomulco Fase 1
+## Caso de referencia: Atlacomulco Fase 1
 
 5 equipos de 240 kW, 10 puntos de carga, 1,200 kW, balanceo dinámico con 30%
-reservado —lo que baja la demanda de diseño a 840 kW y es lo que sostiene el
-transformador de 1,500 kVA; sin esa reserva el criterio pediría 2,000 kVA—,
-transformador de 1,500 kVA,
-615 kWp fotovoltaico llave en mano a 0.79 USD/Wp, 2 módulos de almacenamiento
-de 261 kWh. Tarifa GDMTH de la división **Centro Sur**, captura de agosto 2026
-—Atlacomulco es Centro Sur; Ecatepec sería Valle de México Norte, con cargos
-distintos pese a estar en el mismo estado—. Costo directo $36,370,522;
-inversión total $48,670,755; depósito de garantía $757,944 aparte, calculado
-sobre 720 kW de demanda contratada. Clase 4, índice 0.42.
+reservado —lo que baja la demanda de diseño a 840 kW y sostiene el transformador
+de 1,500 kVA; sin esa reserva el criterio pediría 2,000 kVA—, 615 kWp
+fotovoltaico, 2 módulos de almacenamiento de 261 kWh. Tarifa GDMTH división
+**Centro Sur**, captura de agosto 2026. Costo directo $36,370,522; inversión
+total $48,670,755; depósito de garantía $757,944 aparte, sobre 720 kW de demanda
+contratada. **Clase 4, índice 0.42.**
 
-**Dos problemas abiertos en ese caso, y son de negocio, no de código:**
+**Problema abierto, de negocio y no de código:** la obra civil está costeada
+para los 29 equipos del desarrollo completo, no para los 5 de la fase 1.
+Sobreestima cerca de $700,000.
 
-1. La obra civil está costeada para los 29 equipos del desarrollo completo, no
-   para los 5 de la fase 1. Sobreestima cerca de $700,000.
-2. **Resuelto (2026-08).** El depósito de $4,650,000 estaba calculado sobre la
-   capacidad del transformador a $3,100/kVA, cuando la tarifa lo calcula sobre
-   la demanda contratada. Con la tarifa GDMTH de Centro Sur —la división que
-   corresponde a Atlacomulco— de agosto de 2026, el cargo por capacidad es
-   $350.90/kW y el piso de demanda contratada es 720 kW, el 60% de los 1,200 kW
-   conectados: **3 × 350.90 × 720 = $757,944**. La provisión anterior
-   sobreestimaba **seis veces**. No mueve el costo directo ni la inversión
-   total, porque el depósito se reporta aparte. Lo que sigue pendiente es
-   confirmarlo con oficio del suministrador y refrescar la tarifa, que la CRE
-   aprueba cada mes.
+Este caso debería convertirse en la primera prueba dorada del repositorio.
 
 ---
 
-## Cómo trabajar aquí
+## De qué base parte esta rama
 
-**Verifica antes de afirmar.** No inventes nombres de elementos de interfaz de
-productos de terceros ni valores de configuración: consúltalos en su
-documentación vigente. Si no puedes verificar algo, dilo en lugar de
-aproximarlo.
+`origin/main`. **No incluye** los nueve commits de
+`claude/solar-proposal-skill-iwp1oi` —framework FV, `conceptos.ambitos`,
+diagnóstico, rol `vendedor`— por decisión explícita: el rol `vendedor` se
+retira, no se completa, y meterlo a producción como parte de una fase de
+configuración sería exactamente lo contrario.
 
-**Señala riesgos, huecos e inconsistencias sin suavizar.** Si una decisión del
-usuario tiene un problema, dilo y propón la alternativa. Estar de acuerdo por
-inercia no ayuda.
+Su integración es una decisión aparte. Detalle en
+`docs/claude-engineering-phase0.md`.
 
-**No sobrescribas márgenes ni estructura de costos** sin instrucción explícita.
-Cualquier cambio se documenta con su razón.
+---
 
-**Los archivos deben ser autoexplicativos** para quien los abre por primera
-vez. Documenta el razonamiento de todo supuesto en el propio renglón, no en un
-archivo aparte.
+## Dónde está lo demás
+
+| Tema | Dónde |
+|---|---|
+| Dimensionamiento eléctrico, GDMTH, depósito | `.claude/rules/motor-ec.md` |
+| Migraciones, RLS, y la divergencia con la base desplegada | `.claude/rules/supabase.md` |
+| Interfaz, marca, estado guardado, versión | `.claude/rules/ui.md` |
+| Revisión independiente de un cambio | subagente `code-critic` |
+| Investigación regulatoria | subagente `normative-researcher` |
+| Arquitectura objetivo de la plataforma | `propuestas-fv/docs/arquitectura/` |
+| Reglas de seguridad Beyond para revisión | `.claude/claude-security-guidance.md` |

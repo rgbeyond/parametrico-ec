@@ -35,8 +35,18 @@ const POT_EVSE=[
 ];
 import CAT_GEN_RAW from '../data/catalogo.json';
 import { ctx, guardarEstado, agregarConcepto, promover, puede } from './contexto.js';
+import { modeloExport, aCSV, documentoHTML, nombreArchivo } from './exportar.js';
 /* El catálogo del proyecto abierto: maestro más los conceptos propios de esa
-   estación. Sin sesión cae al archivo incluido, para poder trabajar en local. */
+   estación. Sin sesión cae al archivo incluido, para poder trabajar en local.
+
+   ESTE ES UN SEGUNDO RESPALDO AL JSON, Y ESTA DECLARADO A PROPOSITO.
+   El de `catalogo.js` se retiró para los casos con nube y sesión; éste sigue
+   aquí. Hoy no es alcanzable por esa vía: `app.js` solo se importa después de
+   una apertura exitosa, y una apertura exitosa deja `ctx.conceptos` lleno o
+   lanza. Pero es el mismo patrón, a un cable de distancia, y sin cobertura:
+   si algún día `ctx.conceptos` llegara vacío, el estimador cotizaría con el
+   JSON del paquete sin decirlo. Cambiarlo toca la estructura de costos, así
+   que es decisión de producto y no de refactor. Queda anotado, no borrado. */
 const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_RAW).map(x=>({...x}));
 
 const cfg={nom:"",loc:"",modo:"propia",
@@ -1002,6 +1012,58 @@ msg.innerHTML='<span style="color:var(--success)">Listo. En el diálogo de impre
 msg.innerHTML='<span style="color:var(--danger)">No se pudo generar el archivo: '+(err&&err.message||err)+'</span>';
 }
 b.disabled=false; b.textContent=rot;
+});
+/* EXPORTAR EL CATÁLOGO DEL PROYECTO (issue #4)
+   ============================================
+   Las dos salidas parten del MISMO modelo, y el modelo parte de `rows` y
+   `totals()`, que es exactamente lo que la tabla de arriba acaba de pintar. No
+   hay una segunda ruta de cálculo: si la pantalla y el archivo pudieran
+   discrepar, el archivo sería inservible para mandárselo a un cliente.
+
+   ES UNA OPERACIÓN DE LECTURA. No llama a `touch()`, ni a `render()`, ni a
+   `guardarEstado()`: exportar no marca el proyecto como sucio, así que no puede
+   disparar un guardado ni mover `actualizado_en`. Es la condición que RG puso
+   para los proyectos que ya existen. */
+function modeloActual(){
+  if(!rows||!rows.length) throw new Error("Todavía no hay catálogo calculado para este proyecto. Abre la sección del presupuesto y vuelve a intentarlo.");
+  return modeloExport({rows,t:totals(),cfg,catn:CATN,taxn:TAXN,uab,
+    versionTxt:VERSION_TXT,ahora:new Date()});
+}
+function descargar(nombre,contenido,tipo){
+  const blob=new Blob([contenido],{type:tipo});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+/* `textContent` y no `innerHTML`: aquí entran un nombre de archivo derivado del
+   nombre del proyecto y el mensaje de un error, o sea texto de origen ajeno. No
+   hace falta marcado para decir una línea. */
+const xMsg=(texto,mal)=>{ const el=$("#x_msg"); if(!el) return;
+  el.textContent=texto; el.style.color=mal?"var(--danger)":""; };
+$("#x_csv").addEventListener("click",()=>{
+  try{
+    const m=modeloActual();
+    const n=nombreArchivo(cfg.nom,new Date(),"csv");
+    /* `text/csv;charset=utf-8` y el BOM que ya trae el contenido: las dos cosas
+       hacen falta para que Excel no rompa los acentos ni la ñ. */
+    descargar(n,aCSV(m),"text/csv;charset=utf-8");
+    xMsg(`Descargado ${n} con ${m.meta.activos} renglones activos.`);
+  }catch(err){ xMsg(String(err&&err.message||err),true); }
+});
+$("#x_pdf").addEventListener("click",async e=>{
+  const b=e.target, rot=b.textContent;
+  b.disabled=true; b.textContent="Preparando…";
+  try{
+    const m=modeloActual();
+    /* Mismo camino que la propuesta: documento propio con logo y tipografías
+       incrustados, y el diálogo de impresión del navegador para «Guardar como
+       PDF». Sin biblioteca de PDF: pesaría más que todo el estimador. */
+    const inl=await activosIncrustados();
+    await abrirDialogoImpresion(documentoHTML(m,{fuentes:inl.fuentes,logo:inl.logo}));
+    xMsg("En el diálogo de impresión elige Guardar como PDF, tamaño Carta.");
+  }catch(err){ xMsg(String(err&&err.message||err),true); }
+  b.disabled=false; b.textContent=rot;
 });
 const KEY="beyond:est:proyecto-activo";
 let dirty=false;

@@ -5,6 +5,14 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Los Deploy Previews son el entorno E2E de desarrollo. Estas variables son
+# publicables por diseño (Vite las entrega al navegador) y apuntan SOLO a
+# Beyond DEV. No afectan el contexto production ni modifican `main`.
+[context.deploy-preview.environment]
+  VITE_SUPABASE_URL = "https://gtxvzbeyywtqihfcvezk.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_Ml5ta-Gkizo6ET16BNznyw_Lq6x_vWe"
+  VITE_DOMINIO_PERMITIDO = "beyond-ae.com"
+
 # Aplicacion de una sola pagina: todo va al index
 [[redirects]]
   from = "/*"

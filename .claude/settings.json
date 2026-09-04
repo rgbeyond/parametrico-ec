@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledPlugins": {
+    "security-guidance@claude-plugins-official": true
+  },
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "additionalDirectories": [
+      "/home/user/propuestas-fv",
+      "/home/user/beyond-platform"
+    ],
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit(./**)",
+      "Write(./**)",
+      "Read(//home/user/propuestas-fv/**)",
+      "Edit(//home/user/propuestas-fv/**)",
+      "Write(//home/user/propuestas-fv/**)",
+      "Read(//home/user/beyond-platform/**)",
+      "Edit(//home/user/beyond-platform/**)",
+      "Write(//home/user/beyond-platform/**)",
+      "Read(//tmp/claude-0/**)",
+      "Edit(//tmp/claude-0/**)",
+      "Write(//tmp/claude-0/**)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(ls *)",
+      "Bash(diff *)",
+      "Bash(sed -n *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(jq *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(cut *)",
+      "Bash(tr *)",
+      "Bash(file *)",
+      "Bash(stat *)",
+      "Bash(du *)",
+      "Bash(basename *)",
+      "Bash(dirname *)",
+      "Bash(command -v *)",
+      "Bash(which *)",
+      "Bash(echo *)",
+      "Bash(pwd)",
+      "Bash(date *)",
+      "Bash(mkdir -p *)",
+      "Bash(cp *)",
+      "Bash(touch *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git blame *)",
+      "Bash(git grep *)",
+      "Bash(git ls-files *)",
+      "Bash(git ls-tree *)",
+      "Bash(git rev-parse *)",
+      "Bash(git rev-list *)",
+      "Bash(git fetch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git tag *)",
+      "Bash(git worktree *)",
+      "Bash(git remote -v)",
+      "Bash(git remote show *)",
+      "Bash(git config --get *)",
+      "Bash(git stash list *)",
+      "Bash(git stash show *)",
+      "Bash(git stash push *)",
+      "Bash(git stash pop *)",
+      "Bash(git pull origin claude/*)",
+      "Bash(git push -u origin claude/*)",
+      "Bash(git push origin claude/*)",
+      "Bash(git -C /home/user/propuestas-fv *)",
+      "Bash(git -C /home/user/beyond-platform *)",
+      "Bash(git -C /home/user/parametrico-ec *)",
+      "Bash(npm test)",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(npm ci)",
+      "Bash(npm ls *)",
+      "Bash(node *)",
+      "Bash(python3 *)",
+      "Bash(bash scripts/*)",
+      "Bash(sh scripts/*)",
+      "Bash(timeout * npm run *)",
+      "Bash(timeout * npm test *)",
+      "Bash(timeout * node *)",
+      "Bash(CAPTURAS_DIR=* node *)",
+      "Bash(netlify status*)",
+      "Bash(netlify sites:list*)",
+      "Bash(netlify deploy --dir *)",
+      "Bash(netlify deploy --alias *)",
+      "mcp__supabase",
+      "mcp__github",
+      "Agent",
+      "Task",
+      "TaskCreate",
+      "TaskGet",
+      "TaskList",
+      "TaskOutput",
+      "TaskStop",
+      "TaskUpdate",
+      "Skill",
+      "TodoWrite",
+      "ToolSearch",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "ask": [
+      "Bash(python3 -c *)",
+      "Bash(python3 -)",
+      "Bash(python -c *)",
+      "Bash(node -e *)",
+      "Bash(node --eval *)",
+      "Bash(node -p *)",
+      "Bash(node --print *)",
+      "Bash(node --input-type=module -e *)",
+      "Bash(node --input-type=module -p *)",
+      "Bash(awk *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npx *)",
+      "Bash(psql *)",
+      "Bash(supabase *)",
+      "Bash(gh *)",
+      "Bash(docker *)",
+      "Bash(chmod *)",
+      "Bash(sed -i *)",
+      "Bash(rm *)",
+      "Bash(mv *)",
+      "Bash(git restore *)",
+      "Bash(git clean *)",
+      "Bash(git stash drop*)",
+      "Bash(git stash clear*)",
+      "Bash(git remote set-url *)",
+      "Bash(git remote add *)",
+      "Bash(git remote remove *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.production)",
+      "Read(./.env.development)",
+      "Read(//**/.env)",
+      "Read(//**/.env.local)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.pfx)",
+      "Read(./**/id_rsa)",
+      "Read(./**/id_ed25519)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.aws/**)",
+      "Read(~/.ssh/**)",
+      "Edit(./.env.local)",
+      "Edit(./.env.*.local)",
+      "Edit(./.env.production)",
+      "Edit(./.env.development)",
+      "Edit(./**/*.pem)",
+      "Edit(./**/*.p12)",
+      "Edit(./**/*.pfx)",
+      "Edit(./**/id_rsa)",
+      "Edit(./**/id_ed25519)",
+      "Write(//**/.env)",
+      "Write(//**/.env.local)",
+      "Bash(git push --force*)",
+      "Bash(git push --force-with-lease*)",
+      "Bash(git push -f*)",
+      "Bash(git push --mirror*)",
+      "Bash(git push --delete *)",
+      "Bash(git push origin :*)",
+      "Bash(git push origin main*)",
+      "Bash(git push origin master*)",
+      "Bash(git push * main*)",
+      "Bash(git push * master*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git clean -d*)",
+      "Bash(git filter-branch *)",
+      "Bash(git filter-repo *)",
+      "Bash(git update-ref *)",
+      "Bash(git branch -D main*)",
+      "Bash(git branch -D master*)",
+      "Bash(gh pr merge*)",
+      "Bash(netlify deploy --prod*)",
+      "Bash(netlify deploy -p*)",
+      "Bash(netlify deploy *--prod*)",
+      "Bash(netlify deploy *-p)",
+      "Bash(supabase db reset*)",
+      "Bash(supabase db push*)",
+      "Bash(supabase link*)",
+      "Bash(rm -rf*)",
+      "Bash(rm -fr*)",
+      "Bash(sudo *)",
+      "Bash(env)",
+      "Bash(printenv *)",
+      "mcp__github__merge_pull_request",
+      "mcp__github__push_files",
+      "mcp__github__create_or_update_file",
+      "mcp__github__delete_file",
+      "mcp__github__create_repository",
+      "mcp__github__fork_repository",
+      "mcp__github__actions_run_trigger",
+      "mcp__github__enable_pr_auto_merge"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/beyond_guard.py\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/ejecutar-guardia.sh\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-secretos.sh\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/ejecutar-guardia.sh\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-destructivo.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/ejecutar-guardia.sh\" \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guardia-commit.py\"",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/explain_permission.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/comprobar-guardias.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/verifica-por-ruta.sh",
+            "timeout": 90
+          }
+        ]
+      }
+    ]
+  }
+}

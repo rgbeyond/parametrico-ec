@@ -1,5 +1,105 @@
 [
   {
+    "v": "0.12.0",
+    "fecha": "2026-09-04",
+    "tipo": "menor",
+    "resumen": "El catalogo de conceptos del proyecto se puede descargar en CSV y como documento imprimible para guardar en PDF, desde la misma seccion donde se ve.",
+    "agregado": [
+      "Menu Exportar en la seccion Catalogo, con CSV y PDF. Vive junto a Guardar y Restablecer precios, dentro de la propia seccion del presupuesto: no hay pestaña nueva ni pantalla nueva.",
+      "CSV con encabezado del proyecto -nombre, ubicacion, fecha y hora de exportacion, version compilada, nivel de definicion y precision esperada-, una fila por renglon activo y los totales que la aplicacion ya calcula. UTF-8 con BOM y fin de linea CRLF para que Excel no rompa los acentos ni la ñ; comas, comillas y saltos de linea escapados segun el RFC 4180; y cantidades, precios e importes como numeros crudos, sin signo de pesos ni separador de miles, para poder sumarlos sin limpiarlos. Nombre de archivo estable: catalogo-<proyecto>-AAAA-MM-DD.csv.",
+      "Documento imprimible con la misma estrategia que ya usaba la propuesta: HTML propio con logotipo y tipografias incrustados, enviado al dialogo de impresion del navegador para Guardar como PDF. Sin biblioteca de PDF; una pesaria mas que todo el estimador. Pagina en tamaño Carta, repite el encabezado de la tabla en cada hoja y no corta un renglon a la mitad.",
+      "Columna Tratamiento en las dos salidas: Costo de obra, Pass-through o Garantia reembolsable. Sin ella la suma de la columna Importe no cuadra con el subtotal, porque el deposito en garantia viaja en la lista y no es costo de obra. Es la misma distincion que la aplicacion ya hace; la columna solo la hace legible en un archivo.",
+      "Modulo src/lib/exportar.js con el modelo intermedio, el CSV y el documento. No importa nada, asi que se puede probar en Node."
+    ],
+    "notas": [
+      "EL EXPORT NO CALCULA NADA. Recibe los mismos renglones que build() dejo y los mismos totales que devolvio totals() -los que la pantalla acaba de pintar- y solo les da forma de archivo. No hay segunda ruta de calculo ni consulta paralela: un export que recalculara acabaria, el dia que alguien toque una formula, entregando al cliente una cifra distinta a la que el proyectista reviso en pantalla.",
+      "Exporta los renglones ACTIVOS del proyecto -cantidad mayor que cero-, no lo que la tabla tenga filtrado en ese momento. La tabla pinta tambien los inactivos atenuados y admite filtro por categoria y busqueda; un archivo que respetara ese filtro se leeria como el BOM del proyecto siendo un subconjunto.",
+      "Los numeros se redondean como en pantalla: precios a dos decimales, importes al peso. El archivo trae el numero que el proyectista reviso, no una version con mas precision que la que vio.",
+      "ES UNA OPERACION DE LECTURA. Exportar no llama a touch(), ni a render(), ni a guardarEstado(): no marca el proyecto como sucio, asi que no puede disparar un guardado ni mover actualizado_en. Hay prueba de navegador que compara la huella completa del almacenamiento antes y despues de exportar en los dos formatos.",
+      "La visibilidad de costos no cambia y el export no agrega ninguna capacidad. Quien no puede leer los costos del catalogo no llega a tener un proyecto abierto: fn_conceptos_de levanta el error y la apertura falla, asi que no hay renglones en memoria que exportar. El archivo no puede mostrar un precio que la pantalla no habria mostrado.",
+      "Pruebas: 16 nuevas en Node sobre el modelo, el escapado del CSV y el documento; y 5 de navegador que comparan el archivo contra la pantalla renglon por renglon -codigo, concepto, unidad, cantidad, precio unitario, importe y sustento-, contrastan los totales contra los de la vista de Propuesta, revisan que el documento no lleve ni un control interactivo, y comprueban que exportar no escribe nada. Las de navegador viven en pruebas-navegador/ y corren con npm run test:ui: npm test sigue sin navegador ni credenciales, que es una decision del repositorio.",
+      "Este cambio no toca el motor de calculo, ni el catalogo, ni los precios, ni el esquema. No requiere migracion. Los ocho proyectos que hoy viven en el backend de produccion abren igual: lo unico que se agrega es un boton que lee lo que ya estaba en pantalla."
+    ]
+  },
+  {
+    "v": "0.11.1",
+    "fecha": "2026-09-02",
+    "tipo": "parche",
+    "resumen": "La guardia bajo Beyond usa la misma vara que la puerta de la plataforma, el OAuth deja de dejar tokens en el historial, y una pagina restaurada del bfcache vuelve a decidir.",
+    "corregido": [
+      "La guardia de /ec/ pedia solo sesion: una cuenta dada de baja o sin alta -que Beyond acababa de rechazar en su puerta- pasaba hasta la portada de proyectos, porque la RLS de lectura pide autenticacion, no perfil. Ahora exige sesion CON perfil activo, y quien rebota recibe el mensaje honesto de la plataforma en la raiz, no la tarjeta standalone de esta app. (Hallazgo adversarial de beyond-platform#7.)",
+      "El flujo OAuth implicito dejaba la URL con tokens como entrada del historial: el boton Atras tras entrar la reponia en la barra, refresh token incluido. El cliente usa ahora PKCE: codigo de un solo uso y limpieza con replaceState, sin entrada extra.",
+      "Una pagina restaurada desde el bfcache era la foto de antes del cierre de sesion; ahora recarga al restaurarse y la guardia vuelve a correr."
+    ],
+    "notas": [
+      "El doble replace('/') al cerrar sesion bajo Beyond (el propio salir y el manejador de SIGNED_OUT) es deliberado y quedo dicho en el codigo: las dos rutas deben poder cerrar solas."
+    ]
+  },
+  {
+    "v": "0.11.0",
+    "fecha": "2026-09-02",
+    "tipo": "menor",
+    "resumen": "Bajo Beyond Platform la puerta es de Beyond: sesion compartida, sin login propio, y el paquete funciona tambien montado en /ec/*.",
+    "agregado": [
+      "Montada por el proxy del shell en /ec/*, la aplicacion comparte origen y sesion de Supabase con Beyond Platform: quien ya entro por el login de la plataforma entra directo a sus proyectos, sin segunda puerta. Sin sesion (enlace profundo, sesion caducada) se devuelve a la raiz, donde vive el login de Beyond, con replace para que Atras no reviva la parada intermedia.",
+      "Cerrar sesion bajo Beyond vuelve al login de la plataforma, no a la portada propia: es la misma sesion.",
+      "Un enlace discreto de regreso a Beyond Platform encabeza la pantalla cuando la app corre bajo el shell; en el host propio no hay a donde volver y no aparece."
+    ],
+    "corregido": [
+      "El paquete usaba rutas absolutas (/assets/...) y bajo el proxy /ec/* pedia los archivos al host de Beyond, que no los tiene: pantalla en blanco. Vite compila ahora con base relativa y los mismos archivos funcionan en el host propio y bajo el shell."
+    ],
+    "notas": [
+      "En el host propio (standalone) nada cambia: portada, login con Google y modo local siguen igual. La decision de producto de unica puerta aplica a la presentacion DENTRO de Beyond; retirar o proteger el host standalone es una decision aparte registrada en beyond-platform#7."
+    ]
+  },
+  {
+    "v": "0.10.1",
+    "fecha": "2026-08-28",
+    "tipo": "parche",
+    "resumen": "Los conceptos propios de un proyecto dejan de perderse en silencio, y el mensaje de la base llega a la pantalla.",
+    "corregido": [
+      "`conceptosDelProyecto()` devolvía una lista vacía cuando la consulta fallaba. Pesa más de lo que parece: los conceptos propios sustituyen al precio del catálogo maestro, así que perderlos no dejaba al estimador sin partidas, lo dejaba cotizando las mismas partidas al precio general. Ahora lanza con causa propia. Una lista vacía sigue siendo legítima: un proyecto puede no tener conceptos propios.",
+      "El texto que devuelve la base se mostraba solo en la consola. `fn_conceptos_de` levanta un mensaje explícito cuando el perfil no tiene acceso a los costos, y el cliente lo sustituía por uno genérico. Ahora se muestra junto al de la aplicación.",
+      "La pista de error para un fallo de consulta ya no afirma que falte `fn_conceptos_de`: un 404 también puede ser la caché de esquema de PostgREST desactualizada."
+    ],
+    "agregado": [
+      "`origenCatalogo.sinAmbitos` cuenta las filas sobre las que no se pudo comprobar el ámbito. Sin ese contador, quitar la columna de la consulta apagaría la comprobación sin que nada avisara.",
+      "El traductor de columnas es uno solo para el catálogo maestro y para los conceptos del proyecto. Tener la lista de columnas junto a su traductor no sirve de nada si al lado hay un segundo traductor escrito a mano."
+    ],
+    "nota": "Sale de una revisión independiente del cambio anterior. El respaldo silencioso que retiró la v0.9.0 seguía vivo tres líneas más abajo, en la misma ruta de carga."
+  },
+  {
+    "v": "0.10.0",
+    "fecha": "2026-08-28",
+    "tipo": "menor",
+    "resumen": "El catálogo maestro se pide por ámbito: el estimador lee los conceptos de electrolineras, no la tabla entera de la base compartida.",
+    "agregado": [
+      "La lectura del catálogo maestro pasa por `fn_conceptos_de('ec')`, la función del esquema canónico que devuelve los conceptos activos cuyos ámbitos cruzan `ec` o `comun`. La separación la hace la base, no el cliente.",
+      "Comprobación del contrato: si llega un concepto que no es de `ec` ni de `comun`, el catálogo falla con causa `ambito` en vez de aceptarlo. No se vuelve a filtrar en el cliente, porque tener dos definiciones de lo mismo es cómo divergen.",
+      "Cuatro pruebas más: contra qué se pregunta, qué recibe el Paramétrico cuando la respuesta trae `ec`, `comun` y `fv`, qué pasa si se cuela uno solo `fv`, y que una respuesta sin la columna no se rechaza."
+    ],
+    "corregido": [
+      "La consulta leía todos los conceptos activos sin filtrar por ámbito. Funciona mientras la base compartida solo tenga los 188 conceptos base, pero el día que entre el catálogo fotovoltaico el estimador ofrecería módulos e inversores entre sus partidas de obra, sin dar ningún error."
+    ],
+    "nota": "Esto convierte a `fn_conceptos_de` en dependencia dura: una base que no la tenga hace fallar el catálogo de forma visible en vez de degradarse en silencio, que es la decisión de esta rama. Antes de desplegar contra un backend hay que comprobar que la función existe y tiene EXECUTE para `authenticated`."
+  },
+  {
+    "v": "0.9.0",
+    "fecha": "2026-08-28",
+    "tipo": "menor",
+    "resumen": "El catálogo compartido deja de fallar en silencio: si Supabase no responde o está vacío, la app lo dice en vez de disfrazarlo con el catálogo incluido.",
+    "agregado": [
+      "Primera prueba automatizada del repositorio. `npm test` ejercita los cuatro estados del catálogo maestro: sin nube, con Supabase respondiendo, con error y vacío.",
+      "La decisión de qué catálogo se usa vive en `src/lib/catalogo.js`, sin dependencias de Supabase, de la sesión ni del JSON incluido, para poder ejercitarla sin navegador.",
+      "`origenCatalogo` registra de dónde salieron los conceptos que están en pantalla: fuente, motivo, número de filas y hora."
+    ],
+    "corregido": [
+      "Con nube y sesión activas, un error de Supabase o una base sin conceptos devolvían el catálogo incluido en el paquete y la pantalla se veía idéntica. Una prueba de conexión contra el backend daba verde con la base vacía, con la RLS mal puesta o con las credenciales equivocadas. Ahora las dos situaciones lanzan un error con causa distinguible.",
+      "Al fallar la apertura de un proyecto, la excepción se perdía como rechazo de promesa no capturado: `portada.js` llama a `alAbrir` sin `await` y sin `catch` en cuatro sitios. Se atrapa en `abrir()` y se muestra."
+    ],
+    "nota": "El respaldo con el catálogo incluido se conserva para el modo sin cuenta: la herramienta tiene que seguir siendo usable sin Supabase. Lo que se retira es usarlo para tapar un fallo del backend cuando sí hay nube y sesión. Queda un segundo respaldo al archivo incluido dentro del estimador, hoy inalcanzable desde ese camino, anotado en su renglón y pendiente de decisión."
+  },
+  {
     "v": "0.8.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
@@ -43,7 +143,12 @@
     "v": "0.5.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
-    "commits": ["b45bedb", "054d258", "e8603be", "58c5562"],
+    "commits": [
+      "b45bedb",
+      "054d258",
+      "e8603be",
+      "58c5562"
+    ],
     "resumen": "Tarifa del suministrador capturada como dato del proyecto, y depósito en garantía calculado por tarifa en vez de por provisión.",
     "agregado": [
       "Demanda contratada como parámetro, con el piso que fija la tarifa GDMTH en su apartado 4: no menor al 60% de la carga conectada ni a 100 kW.",
@@ -66,7 +171,13 @@
     "v": "0.4.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
-    "commits": ["49b78ca", "3c58c1e", "27d77f5", "8cfd4b5", "8424368"],
+    "commits": [
+      "49b78ca",
+      "3c58c1e",
+      "27d77f5",
+      "8cfd4b5",
+      "8424368"
+    ],
     "resumen": "Ingeniería: balanceo dinámico de cargas, dimensionamiento contra la demanda de diseño y tensiones declaradas.",
     "agregado": [
       "Balanceo dinámico de cargas, con el porcentaje de potencia reservada declarado y su efecto sobre el dimensionamiento del transformador.",
@@ -94,7 +205,10 @@
     "v": "0.3.0",
     "fecha": "2026-08-12",
     "tipo": "menor",
-    "commits": ["bf07b9b", "55d0c47"],
+    "commits": [
+      "bf07b9b",
+      "55d0c47"
+    ],
     "resumen": "Base de datos operando: Supabase configurado, acceso con Google, perfiles con rol, políticas RLS y gobierno de precios.",
     "agregado": [
       "Cuatro roles: administrador, editor, comentarista y solo lectura.",
@@ -112,7 +226,9 @@
     "v": "0.2.0",
     "fecha": "2026-08-12",
     "tipo": "menor",
-    "commits": ["bf07b9b"],
+    "commits": [
+      "bf07b9b"
+    ],
     "resumen": "Modularización: portada de proyectos, sesión, repositorio de datos y contexto, con varios proyectos por organización.",
     "agregado": [
       "Portada de proyectos con alta, duplicado, archivado y búsqueda.",
@@ -131,7 +247,12 @@
     "v": "0.1.0",
     "fecha": "2026-08-12",
     "tipo": "inicial",
-    "commits": ["749adbb", "dc91c97", "6bc9cfd", "b47dc69"],
+    "commits": [
+      "749adbb",
+      "dc91c97",
+      "6bc9cfd",
+      "b47dc69"
+    ],
     "resumen": "Prototipo del estimador: cálculo paramétrico, catálogo de 188 conceptos y salida a propuesta, sin cuentas ni catálogo compartido.",
     "nota": "El prototipo llegó al repositorio por carga de archivos y no por commits incrementales, así que la fecha corresponde a su incorporación y no a su desarrollo."
   }
