@@ -175,6 +175,20 @@ pendiente**, pero hazlo con pruebas de por medio: ya se rompió varias veces.
 Al terminar cualquier cambio, corre `npm run build`. Si el build no pasa,
 Netlify tampoco.
 
+### Pruebas
+
+| Qué | Comando | Qué cubre |
+|---|---|---|
+| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible |
+| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada |
+
+Están separadas a propósito: `npm test` tiene que poder correr en cualquier
+parte, y lo que comprueban las de navegador —que el archivo coincide con la
+pantalla— no se puede comprobar sin una pantalla.
+
+**El motor —`app.js`, que es donde están las cifras— sigue sin pruebas.** No
+presentes «las pruebas pasan» como si cubrieran el cálculo.
+
 ---
 
 ## Versión y bitácora
