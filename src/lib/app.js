@@ -35,6 +35,7 @@ const POT_EVSE=[
 ];
 import CAT_GEN_RAW from '../data/catalogo.json';
 import { ctx, guardarEstado, agregarConcepto, promover, puede } from './contexto.js';
+import { modeloExport, aCSV, documentoHTML, nombreArchivo } from './exportar.js';
 /* El catálogo del proyecto abierto: maestro más los conceptos propios de esa
    estación. Sin sesión cae al archivo incluido, para poder trabajar en local. */
 const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_RAW).map(x=>({...x}));
@@ -969,18 +970,93 @@ async function activosIncrustados(){
 function fileName(){ return (cfg.nom||"propuesta").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase()+"-propuesta.html"; }
 /* El diálogo de impresión del sistema es lo único que produce un PDF real;
    el archivo .html descargado es el respaldo portable, no el PDF en sí. */
+/* EL DOCUMENTO TIENE QUE SEGUIR VIVO MIENTRAS CHROME LO IMPRIME.
+   ==============================================================
+   RG validó el hotfix contra sus proyectos reales y el PDF salió EN BLANCO:
+   la previsualización de impresión vacía y el archivo guardado vacío.
+
+   La causa es el ciclo de vida de este ayudante, no el contenido. `print()`
+   DEVUELVE EL CONTROL antes de que Chrome termine de consumir el documento: la
+   previsualización lo sigue leyendo después. La versión anterior borraba el
+   iframe al segundo (`setTimeout(..., 1000)`), así que a Chrome se le quitaba
+   el documento de debajo mientras lo estaba usando, y lo que quedaba era una
+   hoja en blanco.
+
+   Tres cambios, y ninguno toca el contenido del documento:
+
+   1. EL IFRAME SE RETIRA EN `afterprint`, no a los mil milisegundos. Es la
+      única señal que dice que el diálogo terminó —se haya guardado o
+      cancelado—. El temporizador se queda sólo como red de seguridad muy
+      tardía, para el navegador que no emita el evento; a un segundo era el
+      defecto, a dos minutos es limpieza.
+   2. SE ESPERA A QUE EL DOCUMENTO ESTÉ LISTO antes de imprimir: `load`, más
+      `document.fonts.ready` donde exista, más las imágenes decodificadas. El
+      logotipo y las tipografías van incrustados como data URI, y aun así
+      necesitan una vuelta del bucle de eventos para estar disponibles al
+      componer la página. Con un tope: una tipografía que no cargue no puede
+      dejar al usuario sin imprimir.
+   3. EL IFRAME DEJA DE MEDIR 0x0. Se va fuera de la pantalla, pero con el
+      tamaño de una hoja Carta: si Chrome necesita una composición previa para
+      paginar, un marco colapsado no se la da.
+
+   La promesa se resuelve en cuanto el diálogo ESTÁ ABIERTO, no cuando se
+   cierra: quien llama muestra su mensaje mientras el usuario está en el
+   diálogo, que es cuando sirve. La limpieza va por su cuenta. */
+function documentoListo(doc, tope=5000){
+  const listo=(async()=>{
+    try{ if(doc.fonts&&doc.fonts.ready) await doc.fonts.ready; }catch(e){}
+    const imgs=[...doc.images||[]];
+    await Promise.all(imgs.map(img=>{
+      if(img.complete) return img.decode?img.decode().catch(()=>{}):null;
+      return new Promise(r=>{ img.addEventListener("load",r,{once:true});
+        img.addEventListener("error",r,{once:true}); });
+    }));
+  })();
+  /* Un recurso que nunca resuelve no puede dejar el botón colgado: se imprime
+     igual pasado el tope, que es peor que perfecto y mucho mejor que nada. */
+  return Promise.race([listo,new Promise(r=>setTimeout(r,tope))]);
+}
 function abrirDialogoImpresion(html){
   return new Promise(resolve=>{
     const iframe=document.createElement("iframe");
-    iframe.style.position="fixed"; iframe.style.width="0"; iframe.style.height="0";
-    iframe.style.border="0"; iframe.style.right="0"; iframe.style.bottom="0";
-    iframe.addEventListener("load",()=>{
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      setTimeout(()=>{ iframe.remove(); resolve(); },1000);
-    },{once:true});
-    document.body.appendChild(iframe);
+    iframe.setAttribute("aria-hidden","true");
+    iframe.setAttribute("title","Documento para imprimir");
+    /* Fuera de la pantalla pero con dimensiones reales de hoja Carta. Nada de
+       `display:none` ni de 0x0: sin caja no hay composición, y sin composición
+       Chrome puede no tener qué paginar. */
+    iframe.style.cssText="position:fixed;left:-10000px;top:0;width:216mm;"
+      +"height:279mm;border:0;opacity:0;pointer-events:none";
+    let limpio=false, impreso=false, red=0;
+    const limpiar=()=>{ if(limpio) return; limpio=true;
+      clearTimeout(red); iframe.remove(); };
+    /* EL PRIMER `load` ES DE `about:blank`, Y ESE ERA EL QUE SE IMPRIMÍA.
+       Un iframe recién conectado emite un `load` por su documento vacío inicial,
+       ANTES de que el contenido de `srcdoc` esté puesto. Con `{once:true}` el
+       manejador se gastaba justo ahí: se imprimía el documento en blanco —el
+       síntoma exacto que reportó RG— y el oyente de `afterprint` quedaba
+       registrado en un documento que `srcdoc` reemplazaba un instante después,
+       así que la limpieza tampoco llegaba nunca.
+       Dos defensas: el contenido se pone ANTES de conectar el marco, y cada
+       `load` se comprueba. Un documento de `srcdoc` se identifica por su propia
+       URL, sin que este ayudante tenga que saber nada de lo que le mandan. */
+    iframe.addEventListener("load",async()=>{
+      const w=iframe.contentWindow;
+      if(impreso||!w) return;
+      let url=""; try{ url=w.location.href; }catch(e){ url=""; }
+      if(url==="about:blank") return;
+      impreso=true;
+      try{ await documentoListo(w.document); }catch(e){}
+      /* Se escucha en las dos ventanas: Chrome emite `afterprint` en la del
+         marco que imprimió, y otros navegadores lo emiten en la principal. */
+      w.addEventListener("afterprint",limpiar,{once:true});
+      window.addEventListener("afterprint",limpiar,{once:true});
+      red=setTimeout(limpiar,120000);
+      try{ w.focus(); w.print(); }
+      catch(e){ limpiar(); }
+      resolve();
+    });
     iframe.srcdoc=html;
+    document.body.appendChild(iframe);
   });
 }
 $("#b_dl").addEventListener("click",async e=>{
@@ -1002,6 +1078,58 @@ msg.innerHTML='<span style="color:var(--success)">Listo. En el diálogo de impre
 msg.innerHTML='<span style="color:var(--danger)">No se pudo generar el archivo: '+(err&&err.message||err)+'</span>';
 }
 b.disabled=false; b.textContent=rot;
+});
+/* EXPORTAR EL CATÁLOGO DEL PROYECTO (issue #4)
+   ============================================
+   Las dos salidas parten del MISMO modelo, y el modelo parte de `rows` y
+   `totals()`, que es exactamente lo que la tabla de arriba acaba de pintar. No
+   hay una segunda ruta de cálculo: si la pantalla y el archivo pudieran
+   discrepar, el archivo sería inservible para mandárselo a un cliente.
+
+   ES UNA OPERACIÓN DE LECTURA. No llama a `touch()`, ni a `render()`, ni a
+   `guardarEstado()`: exportar no marca el proyecto como sucio, así que no puede
+   disparar un guardado ni mover `actualizado_en`. Es la condición que RG puso
+   para los proyectos que ya existen. */
+function modeloActual(){
+  if(!rows||!rows.length) throw new Error("Todavía no hay catálogo calculado para este proyecto. Abre la sección del presupuesto y vuelve a intentarlo.");
+  return modeloExport({rows,t:totals(),cfg,catn:CATN,taxn:TAXN,uab,
+    versionTxt:VERSION_TXT,ahora:new Date()});
+}
+function descargar(nombre,contenido,tipo){
+  const blob=new Blob([contenido],{type:tipo});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+/* `textContent` y no `innerHTML`: aquí entran un nombre de archivo derivado del
+   nombre del proyecto y el mensaje de un error, o sea texto de origen ajeno. No
+   hace falta marcado para decir una línea. */
+const xMsg=(texto,mal)=>{ const el=$("#x_msg"); if(!el) return;
+  el.textContent=texto; el.style.color=mal?"var(--danger)":""; };
+$("#x_csv").addEventListener("click",()=>{
+  try{
+    const m=modeloActual();
+    const n=nombreArchivo(cfg.nom,new Date(),"csv");
+    /* `text/csv;charset=utf-8` y el BOM que ya trae el contenido: las dos cosas
+       hacen falta para que Excel no rompa los acentos ni la ñ. */
+    descargar(n,aCSV(m),"text/csv;charset=utf-8");
+    xMsg(`Descargado ${n} con ${m.meta.activos} renglones activos.`);
+  }catch(err){ xMsg(String(err&&err.message||err),true); }
+});
+$("#x_pdf").addEventListener("click",async e=>{
+  const b=e.target, rot=b.textContent;
+  b.disabled=true; b.textContent="Preparando…";
+  try{
+    const m=modeloActual();
+    /* Mismo camino que la propuesta: documento propio con logo y tipografías
+       incrustados, y el diálogo de impresión del navegador para «Guardar como
+       PDF». Sin biblioteca de PDF: pesaría más que todo el estimador. */
+    const inl=await activosIncrustados();
+    await abrirDialogoImpresion(documentoHTML(m,{fuentes:inl.fuentes,logo:inl.logo}));
+    xMsg("En el diálogo de impresión elige Guardar como PDF, tamaño Carta.");
+  }catch(err){ xMsg(String(err&&err.message||err),true); }
+  b.disabled=false; b.textContent=rot;
 });
 const KEY="beyond:est:proyecto-activo";
 let dirty=false;

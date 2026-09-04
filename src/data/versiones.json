@@ -1,5 +1,46 @@
 [
   {
+    "v": "0.8.2",
+    "fecha": "2026-09-04",
+    "tipo": "parche",
+    "resumen": "El PDF salia en blanco: se imprimia el documento vacio inicial del iframe, y el marco se retiraba mientras Chrome todavia lo estaba usando.",
+    "corregido": [
+      "SE IMPRIMIA UN DOCUMENTO VACIO. Un iframe recien conectado emite un evento load por su about:blank inicial, antes de que el contenido de srcdoc este puesto. El manejador estaba registrado con once:true, asi que se gastaba justo ahi: se mandaba a imprimir la hoja vacia. Ademas el oyente de afterprint quedaba registrado en un documento que srcdoc reemplazaba un instante despues, de modo que la limpieza tampoco llegaba nunca. Ahora el contenido se pone ANTES de conectar el marco y cada load se comprueba: un documento de srcdoc se reconoce por su propia URL, sin que el ayudante tenga que saber nada del contenido que le mandan.",
+      "EL MARCO SE BORRABA MIENTRAS CHROME LO USABA. print() devuelve el control antes de que la previsualizacion termine de consumir el documento, y el iframe se retiraba con un setTimeout de un segundo. Ahora se retira en afterprint, que es la senal de que el dialogo termino -se haya guardado o cancelado-; el temporizador se queda solo como red de seguridad a dos minutos.",
+      "NO SE ESPERABA A QUE EL DOCUMENTO ESTUVIERA LISTO. Antes de imprimir se espera load, document.fonts.ready donde exista y las imagenes decodificadas, con un tope de cinco segundos: una tipografia que no cargue no puede dejar a nadie sin imprimir.",
+      "EL IFRAME MEDIA 0x0. Ahora va fuera de la pantalla pero con el tamaño de una hoja Carta: sin caja no hay composicion, y sin composicion puede no haber nada que paginar."
+    ],
+    "notas": [
+      "El ayudante lo comparte la descarga de propuesta, que existia desde antes, asi que la correccion la arregla tambien a ella. Hay regresion para las dos salidas.",
+      "La prueba anterior sustituia print() por una funcion vacia y capturaba el srcdoc: demostraba que el HTML se construye y no podia ver nada de esto. La nueva imita lo que hace Chrome -print() devuelve, la previsualizacion sigue leyendo, y el dialogo se cierra despues- y comprueba en el momento de imprimir que el documento no es el about:blank, que sigue conectado dos segundos y medio despues, que el marco tiene dimensiones, y que se retira al emitirse afterprint. Contra la implementacion anterior falla, que es su proposito.",
+      "CSV sin cambios. Motor, datos, catalogo, precios, Supabase y estado de proyectos, sin cambios. Sigue siendo una operacion de lectura."
+    ]
+  },
+  {
+    "v": "0.8.1",
+    "fecha": "2026-09-04",
+    "tipo": "parche",
+    "resumen": "El catalogo de conceptos del proyecto se puede descargar en CSV y como documento imprimible para guardar en PDF, desde la misma seccion donde se ve.",
+    "agregado": [
+      "Menu Exportar en la pestaña Catalogo, junto a Guardar y Restablecer precios, con CSV y PDF. Sin pestaña nueva ni pantalla nueva.",
+      "CSV con encabezado del proyecto -nombre, ubicacion, fecha y hora, version compilada, nivel de definicion y precision esperada-, una fila por renglon activo y los totales que la aplicacion ya calcula. UTF-8 con BOM y fin de linea CRLF para que Excel no rompa acentos ni la ñ; comas, comillas y saltos escapados segun RFC 4180; cantidades, precios e importes como numeros crudos, sin signo de pesos ni separador de miles. Nombre estable: catalogo-<proyecto>-AAAA-MM-DD.csv.",
+      "Documento imprimible con la misma estrategia que ya usaba la propuesta: HTML propio con logotipo y tipografias incrustados, al dialogo de impresion del navegador para Guardar como PDF. Sin biblioteca de PDF. Carta, encabezado de tabla repetido por hoja, renglones sin cortar.",
+      "Columnas Tratamiento (Costo de obra / Pass-through / Garantia reembolsable) y Editado a mano. La primera hace que la suma de la columna Importe se pueda reconciliar con el subtotal; la segunda conserva en el archivo la marca que la pantalla pone en un renglon con monto editado.",
+      "src/lib/exportar.js con el modelo intermedio, el CSV y el documento. No importa nada, asi que se puede probar en Node.",
+      "Primeras pruebas automatizadas del repositorio: 20 en Node (npm test) y 8 de navegador (npm run test:ui).",
+      "scripts/baseline-proyectos.sql: baseline de solo lectura para comprobar, antes y despues de desplegar, que los proyectos existentes no cambiaron."
+    ],
+    "notas": [
+      "EL EXPORT NO CALCULA NADA. Recibe los mismos renglones que build() dejo y los mismos totales que devolvio totals() -los que la pantalla acaba de pintar- y solo les da forma de archivo. No hay segunda ruta de calculo ni consulta paralela.",
+      "Exporta los renglones ACTIVOS del proyecto (cantidad mayor que cero), no lo que la tabla tenga filtrado en ese momento.",
+      "Los numeros se redondean como en pantalla: precios a dos decimales, importes al peso.",
+      "ES UNA OPERACION DE LECTURA. No llama a touch(), ni a render(), ni a guardarEstado(): no marca el proyecto como sucio y no puede disparar un guardado ni mover actualizado_en. Hay prueba de navegador que compara la huella completa del almacenamiento antes y despues de exportar en los dos formatos.",
+      "Compatibilidad con proyectos anteriores probada con dos fixtures: un estado minimo sin las llaves que la aplicacion fue agregando, y un estado con una llave que esta version NO conoce. Los dos abren, cotizan y exportan; y la llave desconocida sigue intacta despues de exportar.",
+      "Esta version es un HOTFIX que sale de main 0.8.0 y contiene UNICAMENTE la exportacion. No trae la integracion con Beyond Platform ni ningun otro cambio de las ramas de desarrollo. El numero es 0.8.1 y no 0.9.0 porque 0.9 a 0.12 ya estan usados por la linea de integracion que vive en otras ramas: reutilizar uno crearia dos versiones distintas con el mismo numero.",
+      "Sin cambios de esquema, catalogo, precios ni backend. No requiere migracion."
+    ]
+  },
+  {
     "v": "0.8.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
@@ -43,7 +84,12 @@
     "v": "0.5.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
-    "commits": ["b45bedb", "054d258", "e8603be", "58c5562"],
+    "commits": [
+      "b45bedb",
+      "054d258",
+      "e8603be",
+      "58c5562"
+    ],
     "resumen": "Tarifa del suministrador capturada como dato del proyecto, y depósito en garantía calculado por tarifa en vez de por provisión.",
     "agregado": [
       "Demanda contratada como parámetro, con el piso que fija la tarifa GDMTH en su apartado 4: no menor al 60% de la carga conectada ni a 100 kW.",
@@ -66,7 +112,13 @@
     "v": "0.4.0",
     "fecha": "2026-08-13",
     "tipo": "menor",
-    "commits": ["49b78ca", "3c58c1e", "27d77f5", "8cfd4b5", "8424368"],
+    "commits": [
+      "49b78ca",
+      "3c58c1e",
+      "27d77f5",
+      "8cfd4b5",
+      "8424368"
+    ],
     "resumen": "Ingeniería: balanceo dinámico de cargas, dimensionamiento contra la demanda de diseño y tensiones declaradas.",
     "agregado": [
       "Balanceo dinámico de cargas, con el porcentaje de potencia reservada declarado y su efecto sobre el dimensionamiento del transformador.",
@@ -94,7 +146,10 @@
     "v": "0.3.0",
     "fecha": "2026-08-12",
     "tipo": "menor",
-    "commits": ["bf07b9b", "55d0c47"],
+    "commits": [
+      "bf07b9b",
+      "55d0c47"
+    ],
     "resumen": "Base de datos operando: Supabase configurado, acceso con Google, perfiles con rol, políticas RLS y gobierno de precios.",
     "agregado": [
       "Cuatro roles: administrador, editor, comentarista y solo lectura.",
@@ -112,7 +167,9 @@
     "v": "0.2.0",
     "fecha": "2026-08-12",
     "tipo": "menor",
-    "commits": ["bf07b9b"],
+    "commits": [
+      "bf07b9b"
+    ],
     "resumen": "Modularización: portada de proyectos, sesión, repositorio de datos y contexto, con varios proyectos por organización.",
     "agregado": [
       "Portada de proyectos con alta, duplicado, archivado y búsqueda.",
@@ -131,7 +188,12 @@
     "v": "0.1.0",
     "fecha": "2026-08-12",
     "tipo": "inicial",
-    "commits": ["749adbb", "dc91c97", "6bc9cfd", "b47dc69"],
+    "commits": [
+      "749adbb",
+      "dc91c97",
+      "6bc9cfd",
+      "b47dc69"
+    ],
     "resumen": "Prototipo del estimador: cálculo paramétrico, catálogo de 188 conceptos y salida a propuesta, sin cuentas ni catálogo compartido.",
     "nota": "El prototipo llegó al repositorio por carga de archivos y no por commits incrementales, así que la fecha corresponde a su incorporación y no a su desarrollo."
   }
