@@ -249,7 +249,13 @@ img{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 y elige Guardar como PDF, tamaño Carta. Este aviso no aparece en la impresión.</div>
 <div class="enc">
   <div>${logo
-    ? `<img src="${logo}" alt="Beyond" style="display:block;width:118px;height:40px;object-fit:contain">`
+    /* `logo` y `fuentes` son los únicos valores que no venían escapados. Hoy
+       los dos son de tiempo de compilación —data URI del logotipo y el bloque
+       de @font-face, leídos del propio paquete—, así que no hay entrada de
+       usuario en esa ruta. El atributo se escapa igual, que es gratis; la hoja
+       de estilo NO, porque escaparla la rompería. Lo señaló el reviewer de
+       seguridad como defensa en profundidad, y como tal queda. */
+    ? `<img src="${escH(logo)}" alt="Beyond" style="display:block;width:118px;height:40px;object-fit:contain">`
     : ""}
     <div class="eyebrow" style="margin-top:6px">BEYOND AE · INFRAESTRUCTURA DE CARGA</div>
     <h3 style="margin-top:8px">Catálogo de conceptos del proyecto</h3></div>
