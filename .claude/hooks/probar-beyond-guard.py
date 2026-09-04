@@ -58,6 +58,13 @@ CASOS = [
     ("EVASION mayusculas",         "Bash", {"command": f"{P.upper()} ORIGIN {M.upper()}"}, "deny"),
     ("EVASION PROD otro campo",    "mcp__supabase__execute_sql", {"project_id": PROD, "query": "delete from perfiles"}, "deny"),
     ("EVASION PROD via url",       "Bash", {"command": f"curl https://{PROD}.supabase.co/rest/v1/perfiles -X DELETE"}, "deny"),
+    # `-C` mete argumentos entre `git` y `push`. La politica de permisos
+    # preautoriza esa forma para trabajar los tres repositorios.
+    ("EVASION -C otro repo",       "Bash", {"command": f"git -C /home/user/propuestas-fv {P[4:]} origin {M}"}, "deny"),
+    ("EVASION -C con --force",     "Bash", {"command": f"git -C /home/user/propuestas-fv {P[4:]} --force origin claude/x"}, "deny"),
+    ("-C push a rama claude",      "Bash", {"command": f"git -C /home/user/propuestas-fv {P[4:]} -u origin claude/x"}, "pasa"),
+    ("-C push sin destino",        "Bash", {"command": f"git -C /home/user/propuestas-fv {P[4:]}"}, "ask"),
+    ("-C solo lectura",            "Bash", {"command": "git -C /home/user/propuestas-fv status --short"}, "pasa"),
 ]
 # --- caso aparte: la MISMA orden desde una rama protegida ---
 import os, tempfile

@@ -45,6 +45,21 @@ def out(d, r, u=None):
 
 CRITICO = 'BLOQUEADO — Riesgo CRÍTICO: podría modificar versión oficial/historial.'
 
+# `git -C /otra/ruta push origin main` ejecuta exactamente lo mismo que
+# `git push origin main`, pero entre `git` y `push` hay argumentos y NINGUN
+# patron de abajo lo veia: todos exigen `git` y `push` pegados. El hueco no era
+# teorico: la politica de permisos preautoriza `Bash(git -C /home/user/... *)`
+# para trabajar los tres repositorios sin preguntar, asi que este guardia es lo
+# unico que queda entre esa orden y main. Se normalizan las opciones globales
+# de git ANTES de comparar. `c` ya viene en minusculas, por eso `-c` cubre
+# tambien `-C`.
+OPCIONES_GIT = re.compile(
+    r'\bgit\s+((?:-c\s+\S+|--git-dir(?:=|\s+)\S+|--work-tree(?:=|\s+)\S+'
+    r'|--no-pager|--exec-path=\S+|--literal-pathspecs)\s+)+')
+c_literal = c
+c = OPCIONES_GIT.sub('git ', c)
+otro_repo = bool(re.search(r'\bgit\s+(-c|--git-dir|--work-tree)\b', c_literal))
+
 # `\+?` cubre el refspec forzado `+main` y `HEAD:+main`.
 for p in [r'git\s+push[^\n;&|]*(?:\s|:)\+?(?:main|master)(?:\s|$)',
           r'git\s+push[^\n;&|]*--force',
@@ -62,6 +77,13 @@ for p in [r'git\s+push[^\n;&|]*(?:\s|:)\+?(?:main|master)(?:\s|$)',
 # confirmacion, que es el lado seguro de la duda.
 if re.search(r'(^|[;&|]\s*)git\s+push\b', c) and not re.search(
         r'git\s+push[^\n;&|]*\s[\w./+-]+\s+[\w./+:-]+', c):
+    if otro_repo:
+        # El empuje apunta a OTRO repositorio y sin destino explicito lo decide
+        # la rama de ESE repositorio, que no es la que resuelve el bloque de
+        # abajo. Preguntar es el unico lado honesto de la duda.
+        out('ask', '`git push` sin destino explícito sobre otro repositorio: '
+                   'la rama de destino no es la de este proyecto.',
+            'CONFIRMACIÓN — no se pudo determinar el destino del empuje.')
     # Se resuelve contra CLAUDE_PROJECT_DIR y no contra el directorio heredado:
     # si el gancho corriera desde fuera del repositorio, `git rev-parse` falla y
     # toda orden `git push` acabaria pidiendo confirmacion sin motivo.
