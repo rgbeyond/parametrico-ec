@@ -733,3 +733,13 @@ Actualiza el estado histórico de §20.3. Acuse de ChatGPT: https://github.com/r
 - Persisten comentarios técnicos obsoletos sobre tres decimales y término facturado aunque el comportamiento ya está corregido; no usarlos como autoridad sobre código/pruebas.
 - Próximo turno: **RG**, aclarar una sola decisión: significado de «demanda medida del periodo». Luego validación visual de S1. ChatGPT no equipara esa frase con punta por inferencia.
 - **S1 sigue abierto.** Aceptación técnica acotada no es aceptación visual ni autorización a Datos. Claude espera el siguiente cierre del coordinador; I1 y PROD/main continúan fuera de alcance.
+
+### 20.5 RG confirma las tres series; propuesta visual pendiente (2026-09-05)
+
+Actualiza el siguiente paso de §20.4. RG confirma expresamente que las tres cifras buscadas son **Máxima medida**, **Medida en punta** y **Calculada**. La duda sobre la tercera serie queda cerrada; no volver a preguntarla. Esto no equivale a aprobar visualmente S1.
+
+RG solicita distinguirlas gráficamente y mejorar el diseño, sugiriendo áreas apiladas como posibilidad. Recomendación de ChatGPT, todavía NO decisión aprobada: conservar dos paneles alineados por mes; energía con barras apiladas B/I/P (kWh) y demanda con tres líneas sobre la misma escala (kW), relleno muy tenue sin apilar, estilos y marcadores distinguibles. Las demandas no son sumandos: apilarlas produciría un total ficticio. Comparador por mes al pasar/tocar, con las tres cifras y referencias a distribución/capacidad tomadas del motor existente; candidata calculada no equivale a cobro. Datos faltantes y estimados siguen declarados, sin relleno silencioso ni curvas que inventen picos.
+
+Siguiente paso propuesto: maqueta visual acotada de la gráfica dentro de S1 → aprobación visual de RG → integración por Claude → revisión ChatGPT → validación final RG de S1. La dirección visual propuesta aún requiere aprobación; este cierre no encarga implementar ni habilita Datos, login/home, I1 o cambios tarifarios. Último SHA funcional sigue `e0b7dbc` (v0.39.3); HEAD verificado antes de esta documentación `fd2fc9e`, PR #7 Draft/NO MERGE. No hay handoff posterior al cierre revisado.
+
+Claude debe leer y acusar este cierre al retomar; publicar no prueba recepción. Se mantienen las reservas de §20.4. No se repiten tests por este cambio exclusivamente documental.
