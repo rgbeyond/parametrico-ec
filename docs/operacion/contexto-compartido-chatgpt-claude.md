@@ -721,3 +721,15 @@ Propuesta es un bloque posterior independiente. I1 permanece estacionado en `cla
 - Pendientes: unificar semántica/redondeo de la curva calculada, preservar abiertos/cerrados por recibo al cambiar tema y resolver la interpretación no aprobada de «medida del periodo» como «punta».
 - RG autorizó un pase corto de corrección de S1. Próximo responsable: Claude, después de leer y acusar el encargo en #9. Al entregar vuelve a ChatGPT; RG todavía no está convocado a pruebas.
 - Grok queda diferido. El reconocimiento del Design System no autoriza rediseñar login/home en S1.
+
+
+### 20.4 Cierre ChatGPT de la revisión v0.39.3 (2026-09-05)
+
+Actualiza el estado histórico de §20.3. Acuse de ChatGPT: https://github.com/rgbeyond/propuestas-fv/issues/9#issuecomment-5550103458; cierre recibido de Claude: https://github.com/rgbeyond/propuestas-fv/issues/9#issuecomment-5550090230.
+
+- Revisado delta `393e802 → e0b7dbc76f0502c61b6ccb423bac699aa27bc283` (v0.39.3). Correcciones originales atendidas: criterio consistente de curva calculada e identidad/estado de desplegables.
+- Evidencia propia de ChatGPT: 23/23 pruebas de gráfica y análisis por mes PASS; comprobación adicional de decimal GDMTO y null en ambas ramas PASS. Netlify success en SHA funcional; navegador mostró login v0.39.3. No inspección autenticada; no repetición completa de las 430/80 pruebas reportadas por Claude.
+- Revisor READ-ONLY de ChatGPT identificó borde menor: restauración asíncrona del año puede reponer estados viejos de otras tarjetas si se interactúa mientras carga. Mecánica reproducida con función real y DOM mínimo simulado, no en preview. Registrar para reproducción enfocada, sin declararlo bloqueo de producto ni pérdida de datos.
+- Persisten comentarios técnicos obsoletos sobre tres decimales y término facturado aunque el comportamiento ya está corregido; no usarlos como autoridad sobre código/pruebas.
+- Próximo turno: **RG**, aclarar una sola decisión: significado de «demanda medida del periodo». Luego validación visual de S1. ChatGPT no equipara esa frase con punta por inferencia.
+- **S1 sigue abierto.** Aceptación técnica acotada no es aceptación visual ni autorización a Datos. Claude espera el siguiente cierre del coordinador; I1 y PROD/main continúan fuera de alcance.
