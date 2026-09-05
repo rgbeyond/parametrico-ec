@@ -1,13 +1,15 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-09-02 (control maestro, issue #8; corrección de #7)
+**Última actualización:** 2026-09-05 (cierre bilateral y correcciones de S1; ver §20)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
 > Este archivo existe para que una sesión nueva de Claude Code, ChatGPT u otro agente no dependa de memoria conversacional. Antes de continuar trabajo de Beyond, debe leerse junto con el issue activo y la evidencia más reciente.
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
+
+> **Estado vigente y protocolo de cierre bilateral: §20.** Las referencias anteriores de secuencia son históricas cuando contradigan esa sección.
 
 ---
 
@@ -544,3 +546,178 @@ control maestro; todo cambio de versión, su bitácora; y el cierre de
 cada iteración dice qué se cerró, dónde estamos, qué sigue según lo
 acordado, y las opciones con recomendación. Los tres documentos
 sobreviven a cambios de chat, rama, issue o prioridad.
+
+---
+
+## 19. Reauditoría GDMTH y bloque de decisiones (2026-09-05)
+
+Sesión de `propuestas-fv#9`, rama `claude/mvp-fv-bloque-a`. **Sólo documentación: no se
+tocó la app, ni los motores, ni PROD.**
+
+### 19.1 Qué leer, y en qué orden
+
+1. **`docs/analisis/gdmth-v260604-logica-canonica.md`** — canónico y vivo. Las 28 hojas
+   clasificadas, el flujo end-to-end, la matriz `GDMTH → financiero.py → roi.js/UI`, el
+   registro de decisiones (§17) y lo que no se negocia contra el libro (§16).
+2. `docs/analisis/cotizador-gdmth-v260604-auditoria.md` — antecedente del 2026-08-22.
+   **Evidencia, no verdad**: varias conclusiones suyas quedaron corregidas.
+3. Issue `propuestas-fv#9`, comentarios del 2026-09-05.
+
+SHA del cierre: **`8bdee25`**.
+
+### 19.2 La regla de jerarquía — lo más importante de esta sesión
+
+RG lo fijó explícitamente: **el propuestador GDMTH es REFERENCIA, no verdad absoluta.** Se
+usa para recuperar intención y casos, no para arbitrar.
+
+> **Cuando el libro y lo ya construido y validado difieran, MANDA LO CONSTRUIDO.** El libro
+> sólo gana si aporta evidencia nueva que resista la misma verificación.
+
+Motivo: reauditar un archivo tan denso empuja a tratarlo como especificación y a «volver» a
+él donde el producto ya había avanzado. **Eso es deriva y ya ocurrió en esta misma sesión.**
+La lista de lo que no se negocia está en la §16 de
+`propuestas-fv:docs/analisis/gdmth-v260604-logica-canonica.md`: motor CFE, recibos,
+dimensionamiento, costos, recuperación y producto.
+
+**Lo único que el libro aporta y sí hay que adoptar:** la fórmula exacta de penalización por
+factor de potencia de CFE, `3/5 × (90/FP − 1)`, verificada en 12 de 12 renglones. El motor
+del repositorio no la tiene: hoy toma el FP como importe observado.
+
+### 19.3 Decisiones cerradas — no volver a preguntarlas
+
+| # | Decisión | Estado |
+|---|---|---|
+| D0 | Incremento tarifario base **3.70%**; futuro por zona/división CFE | cerrada |
+| D1 | **Horizonte del modelo financiero = 30 años** (la app corría 25) | pendiente de aplicar |
+| D2 | **Markup único**; la segunda tarifa del libro (36.67%) no se reproduce | cerrada |
+| D3 | **Markup por omisión 33.3333% (1/3), editable por proyecto** | pendiente de aplicar |
+| D4 | **Reserva de reemplazo sobre COSTO**, con factor de equipo propio | pendiente de aplicar |
+| D5 | **Beneficio fiscal siempre**, sin condicionar al régimen | cerrada |
+| D6 | **Financiamiento, PPA y EaaS a un módulo aparte**; FV entrega el contrato | cerrada |
+| D7 | **FV conserva la Adquisición; publicarla en la propuesta es OPCIONAL** | pendiente de implementar |
+| R1 | **Stock de módulos de repuesto, 5–10**, al BoQ como CAPEX | abierta, no existe |
+| P1 | **Principio: la propuesta es comercial-técnica**, no al revés | vigente |
+
+### 19.4 Los matices que no pueden perderse al implementarlas
+
+- **D3.** La edición del markup por proyecto **ya existe y funciona**; sólo cambia el valor
+  por omisión. Y hay una regla en `precio.js` que hay que conservar: **quien guarda precios
+  guarda el resultado, no el default**, para que el precio de un proyecto no se mueva si el
+  default cambia en una versión futura.
+- **D4.** No es sólo la base. El libro aplica **el mismo +4%** a servicios (O&M) y a la
+  **compra de un inversor en 2041**; compuesto catorce años lo multiplica por 1.73. El
+  factor de equipo va **separado** y **su valor sigue sin fijarse**: no hay dato verificado
+  de precios de inversores a quince años y no se inventa.
+- **D5.** Aplicar el beneficio en el flujo y **citar el Art. 34-XIII en el documento** son
+  actos distintos. D5 autoriza el primero; la base legal sigue **NO VERIFICADA** y no se
+  cita a cliente. El monto se presenta como *recuperación fiscal potencial*.
+- **D6.** El módulo **no recalcula el ahorro: lo recibe.** Si lo recalcula reaparece la
+  bifurcación `roi.js` / `financiero.py`, ahora entre dos productos que el cliente ve el
+  mismo día. El contrato campo por campo está en §17.5 del documento canónico.
+- **D7.** **Siempre se calcula, opcionalmente se publica.** Un interruptor que apague el
+  *cálculo* deja a quien cotiza sin el número con el que decide si empujar financiamiento.
+  Y apagar la recuperación **no** apaga la trazabilidad: pendientes sin costear y clase del
+  estimado siguen viajando.
+- **R1.** El stock **no es capacidad instalada**: no entra al kWp, ni a la generación, ni al
+  denominador del LCOE. Sí al costo directo, al precio y al payback.
+- **Nomenclatura.** «contado», «CAPEX» y «adquisición total» son el mismo concepto con tres
+  nombres. Para el producto: **«Adquisición»**.
+
+### 19.5 Hallazgos de la reauditoría con consecuencia
+
+Verificados contra los valores vivos del Sheet (2026-08-26). **No hubo acceso al texto de
+las fórmulas** —la exportación de Drive falla por tamaño—; la auditoría del 2026-08-22 sí lo
+tuvo, y recuperar aquel volcado es la vía barata para cerrar lo que falta.
+
+1. **Con FV el libro lleva la capacidad facturable a CERO.** La tarifa la cobra contra
+   `min(demanda medida EN PUNTA, término calculado)` y **la punta del SIN es nocturna**: el
+   FV no genera un solo kWh ahí. Es el hallazgo más caro y es de negocio, no de software.
+   El motor de la app ya lo hace bien; no portar el atajo.
+2. **La inflación del motor no es 3.88% ni 3.9%: es 3.95%**, medida sobre 69 pares. Los dos
+   documentos anteriores leyeron la etiqueta en vez de la serie.
+3. **`data recibo` conserva a OTRO cliente** —ELAB PRODUCTOS DE BELLEZA— con número de
+   servicio y dirección completos. Fuga de datos de un tercero en un archivo que se
+   comparte.
+4. **Faltan MXN 35,000 de medidor + UVIE + UIIE** en una cotización de 394,091 (**8.9%**)
+   mientras la propuesta promete llave en mano.
+5. **`cotizacion general` está viva y difiere** de la que se manda en exactamente el renglón
+   de viáticos: MXN 8,889 (2.3%).
+6. **La ruta de microinversores está arquitectónicamente viva y numéricamente rota**: la
+   mano de obra sale al 99% del costo por un error de moneda y de base, y el sistema de 18.4
+   kWp se cotiza en MXN 30,277,718.
+7. **`motor/financiero.py` está degradado** frente al libro (subestima el mantenimiento
+   69%) y tiene **vivo el mismo bug de TIR** que `roi.js` ya documentó y arregló.
+8. **El margen por omisión del repositorio no es único**: JS 0.333, Python 0.27 — y
+   `apu.json` justifica su 0.27 citando al cotizador, **que corre 33.33%**. La cita es falsa.
+9. **`anteproyecto` y `carta poder` están cableadas al caso vivo** y producen documentos con
+   `#REF!` visibles y el correo mapeado a la dirección postal.
+10. **El linaje del código es una bifurcación, no una cadena.** `motor/financiero.py` no lo
+    importa ninguna pantalla y declara otra fuente («Analisis PPA»). Lo que el usuario ve es
+    `roi.js`, que es un port fiel y en tres puntos corregido: el caso dorado FMF reproduce
+    payback 2.50 exacto y VPN/LCOE dentro del 1%.
+
+### 19.6 Errores propios corregidos en la misma sesión
+
+Tres reviewers independientes —financiero, CFE/tarifario y FV/costos— atacaron las
+conclusiones y encontraron errores reales:
+
+- Afirmé que la columna `factor de carga` estaba **rota**. **Es falso**: está en por ciento
+  y reproduce al centésimo. Retractado.
+- Afirmé que el beneficio fiscal **nunca se duplica**. **Se duplica** con arranque en
+  febrero o marzo: 60% del CAPEX.
+- Derivé el calendario de mantenimiento de un agregado cuando **la tabla anual estaba en el
+  export**; tres calendarios alternativos ajustaban igual de bien, así que aquella
+  derivación no probaba nada. Ahora está probado año por año y al peso.
+
+**Lección de método, y aplica a ChatGPT igual que a Claude:** contra una hoja de cálculo,
+**la serie es la evidencia; la etiqueta es una opinión sobre la serie.**
+
+### 19.7 Pregunta abierta
+
+**Sólo una:** qué hacer con la ruta de microinversores — rescatarla (implica rehacer el
+cálculo, no portarlo), retirarla junto con el selector de `recu_inv`, o dejarla como está,
+que es la peor de las tres. **No bloquea** el bloque de definición ni la implementación de
+Recuperación.
+
+---
+
+## 20. Cierre bilateral de sesión y estado vigente (RG, 2026-09-05)
+
+Esta sección actualiza cualquier referencia histórica a NEXT o punto de retorno en secciones anteriores.
+
+### 20.1 Regla obligatoria para ChatGPT y Claude
+
+Toda sesión con trabajo material termina con un cierre publicado en el issue activo de GitHub. Cerrar sesión NO equivale a cerrar el bloque ni autorizar el siguiente.
+
+El cierre debe contener:
+- autor y fecha; repo, rama, SHA inicial y final;
+- qué cambió, qué se revisó y qué NO repetir;
+- evidencia separada: pruebas ejecutadas por quien entrega, pruebas reportadas por terceros, revisiones de subagentes y límites de verificación;
+- hallazgos resueltos y pendientes, sin presentar verde automático como validación humana;
+- bloque activo, punto de retorno, siguiente gate de RG y alcance autorizado;
+- responsable del siguiente turno: Claude / ChatGPT / RG;
+- enlaces a los documentos actualizados y al cierre anterior que se recibió.
+
+Quien recibe debe sincronizar la rama, leer el cierre del otro y registrar un acuse breve en el issue antes de trabajar: cierre/SHA leído, objetivo entendido y diferencias detectadas. Si hay nuevos commits o instrucciones posteriores, reconciliarlos antes de escribir. Un solo writer por rama/archivo; los subagentes revisan READ-ONLY y su coordinador consolida la evidencia.
+
+No afirmar que el otro agente fue notificado, leyó o arrancó sólo por publicar un comentario. GitHub es el canal persistente; el acuse demuestra recepción. Si no existe conexión que active la sesión de Claude, RG recibe únicamente el enlace y un texto breve para retomarla, no la carga de reconstruir el estado.
+
+ChatGPT deja su revisión y encargo; Claude entrega implementación y evidencia; ChatGPT verifica el delta y la preview; RG valida la experiencia; sólo entonces se autoriza otro bloque. No hay paso automático a Datos.
+
+### 20.2 Roadmap vigente
+
+Shell + Recibos → validación RG → Datos → validación RG → Dimensionamiento → validación RG → Escenarios → validación RG → Costos → validación RG → Recuperación → validación RG.
+
+Propuesta es un bloque posterior independiente. I1 permanece estacionado en `claude/i1-recuperacion-wip`, commit `b8001179a469a1d7ce3b32aa75e435863142dc40`: no continuar ni integrar hasta Recuperación.
+
+### 20.3 Estado al cierre de la revisión S1
+
+- Issue: `rgbeyond/propuestas-fv#9`; rama funcional: `claude/mvp-fv-bloque-a`.
+- Entrega revisada: v0.39.0, `5d5b4f5b429d6574cd00578547dbebb5e19266dc`, delta desde `8e7ac26`.
+- PR #7 sigue Draft/NO MERGE. Netlify reportó preview success para ese SHA.
+- S1 implementado pero NO cerrado ni validado por RG.
+- ChatGPT ejecutó las 12 pruebas nuevas de conceptos (PASS) y reprodujo inconsistencia de redondeo en la gráfica. Las 405 pruebas de motor y 78 de navegador son reportadas por Claude; ChatGPT no repitió toda la suite. La preview mostró login: inspección visual autenticada pendiente.
+- Revisor de diseño de ChatGPT: revisión estática READ-ONLY, no aprobación visual; detectó restauración incorrecta de desplegables al cambiar tema.
+- Pendientes: unificar semántica/redondeo de la curva calculada, preservar abiertos/cerrados por recibo al cambiar tema y resolver la interpretación no aprobada de «medida del periodo» como «punta».
+- RG autorizó un pase corto de corrección de S1. Próximo responsable: Claude, después de leer y acusar el encargo en #9. Al entregar vuelve a ChatGPT; RG todavía no está convocado a pruebas.
+- Grok queda diferido. El reconocimiento del Design System no autoriza rediseñar login/home en S1.
