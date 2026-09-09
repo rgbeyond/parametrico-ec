@@ -1,5 +1,31 @@
 [
   {
+    "v": "0.13.0",
+    "fecha": "2026-09-09",
+    "tipo": "menor",
+    "resumen": "Seccion Finanzas dentro del proyecto: OPEX, inversionistas y una vista de solo lectura para inversionista, alimentadas por el CAPEX que el proyecto ya calcula.",
+    "agregado": [
+      "Pestaña Finanzas con navegacion interna de cuatro pantallas: Resumen, OPEX, Inversionistas y Vista inversionista.",
+      "Resumen ejecutivo: inversion total del proyecto, OPEX mensual y anual, capital aportado, faltante o excedente de fondeo, numero de inversionistas activos, desglose de donde sale el CAPEX y reparto del gasto por categoria.",
+      "OPEX editable por proyecto: concepto, categoria, monto mensual y activo/inactivo, con alta y baja de renglones. Nueve categorias de referencia y ningun monto por omision. Un renglon inactivo se conserva y no suma.",
+      "Inversionistas: nombre, aportacion y activo/inactivo, con la participacion calculada sobre el capital aportado total y la brecha de fondeo contra el CAPEX.",
+      "Vista de inversionista de solo lectura, en tema claro, construida a partir de un snapshot con lista blanca de campos.",
+      "src/lib/finanzas/ con cuatro modulos puros -estado, opex, inversionistas, snapshot- mas la vista, todos probables en Node sin DOM. La interfaz vive en src/ui/finanzas.js; app.js solo recibe el estado y le pasa el CAPEX.",
+      "Boton de datos de demostracion para poder recorrer las cuatro pantallas en la vista previa. El estado que produce queda marcado y el aviso viaja dentro de la hoja de inversionista.",
+      "27 pruebas nuevas en Node y 12 de navegador."
+    ],
+    "notas": [
+      "EL CAPEX NO SE CAPTURA NI SE RECALCULA. Llega de totals(), el mismo resultado que pinta el presupuesto y que alimenta la exportacion. Hay prueba de navegador que compara la cifra de Finanzas contra el desglose de la seccion y contra el renglon de inversion total del CSV exportado, y otra que comprueba que en el Resumen no existe ningun campo donde escribirla.",
+      "UN PROYECTO SIN FINANZAS SIGUE SIN FINANZAS. estado.finanzas solo se escribe cuando alguien captura algo: abrir la seccion en un proyecto anterior no le crea la llave, no lo marca como sucio y no mueve su marca de tiempo. Hay prueba que abre un proyecto heredado, recorre las cuatro pantallas y compara la huella completa del almacenamiento.",
+      "La llave lleva su propia version, finanzas.v = 1, y lo que una version posterior escriba y esta no conozca se conserva en lugar de perderse.",
+      "La vista de inversionista se arma campo por campo desde un snapshot; nunca recibe el estado completo. No lleva precios unitarios, codigos de concepto, la base de cada numero, parametros de tarifa, comentarios, usuarios ni roles. Hay prueba que le pasa esa basura por la puerta de al lado y comprueba que no sale, y otra que verifica que la hoja no tiene un solo control editable en el DOM.",
+      "La participacion es la proporcion del capital aportado, no una tabla accionaria: la estructura societaria la define el acta constitutiva y el acuerdo de socios, que no viven en esta herramienta. Queda escrito en la propia hoja.",
+      "LO QUE ESTA VERSION NO CALCULA: retorno, TIR, VPN, deuda, impuestos, depreciacion, amortizacion, payback y distribucion de flujo. Tampoco facturacion, proveedores, contabilidad, conciliacion ni historico real de pagos. El OPEX anual es el mensual por doce, sin inflacion ni escalamiento.",
+      "Sin cambios de motor de costos, catalogo, precios, Supabase, esquema, Auth ni configuracion. No requiere migracion.",
+      "EL NUMERO ES 0.13.0 Y NO 0.9.0. Del 0.9.0 al 0.12.0 los ocupa la linea de integracion con Beyond Platform, que vive en otra rama y no esta en main; reutilizar uno crearia dos versiones distintas con el mismo numero y la bitacora dejaria de servir para reconciliar una propuesta impresa con el codigo que la produjo. 0.13.0 es el primer numero libre del repositorio. Que main no contenga las versiones intermedias es real y esta dicho aqui."
+    ]
+  },
+  {
     "v": "0.8.2",
     "fecha": "2026-09-04",
     "tipo": "parche",

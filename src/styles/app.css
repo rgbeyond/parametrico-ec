@@ -172,6 +172,23 @@ svg text{font-family:var(--font-sans)}
 .doc td{border-bottom:1px solid rgba(0,0,0,.1)} .doc tr:hover td{background:#F7F7F5}
 .doc .mark{color:#B4590C} .doc .accent{color:#B4590C;font-weight:600}
 
+/* Navegación interna de Finanzas. Es la segunda jerarquía de la aplicación:
+   se distingue de las pestañas principales por ser más pequeña y no llevar el
+   naranja de marca en el fondo, para que no compitan visualmente. */
+.subtabs{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap}
+.subtab{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);font-family:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r-pill);cursor:pointer;transition:120ms}
+.subtab:hover{background:var(--surface-3);color:var(--text-primary)}
+.subtab[aria-selected=true]{background:var(--surface-3);color:var(--accent);border-color:rgba(255,135,0,.55)}
+/* En las tablas del estimador los campos van alineados a la derecha porque son
+   cantidades. En Finanzas hay texto —el nombre del concepto y el del
+   inversionista—, y un texto alineado a la derecha se lee mal. */
+#p-fin td input[type=text]{text-align:left}
+#p-fin td{vertical-align:middle}
+/* La hoja de inversionista es tema claro dentro de una aplicación oscura: se
+   apoya en la clase .doc que ya existe para el documento de propuesta. */
+#fin-vista .doc{padding:32px 34px}
+@media(max-width:620px){#fin-vista .doc{padding:20px 18px}}
+
 /* Menú compacto de Exportar, en la sección del presupuesto. Un <details> con
    la lista colgando: sin JavaScript de estado, con teclado y sin depender de
    hover, que en un teléfono no existe. Los colores salen de los tokens. */

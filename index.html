@@ -33,6 +33,7 @@
 <button class="tab" role="tab" aria-selected="false" data-t="boq">Catálogo</button>
 <button class="tab" role="tab" aria-selected="false" data-t="gen">Base de datos</button>
 <button class="tab" role="tab" aria-selected="false" data-t="exp">Propuesta</button>
+<button class="tab" role="tab" aria-selected="false" data-t="fin">Finanzas</button>
 </div>
 <!-- CONFIGURACIÓN -->
 <section id="p-conf">
@@ -484,6 +485,103 @@
 </div>
 <div id="e_doc" class="hide"></div>
 <iframe id="e_frame" title="Previsualización de la propuesta" style="width:100%;min-height:1180px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);background:#fff"></iframe>
+</section>
+<!-- FINANZAS (P0, issue #7). El CAPEX de esta sección NO se captura ni se
+     recalcula: llega del mismo resultado que pinta el presupuesto. -->
+<section id="p-fin" class="hide">
+<div class="subtabs" role="tablist" id="finNav">
+<button class="subtab" role="tab" data-fin="res" aria-selected="true">Resumen</button>
+<button class="subtab" role="tab" data-fin="opex" aria-selected="false">OPEX</button>
+<button class="subtab" role="tab" data-fin="inv" aria-selected="false">Inversionistas</button>
+<button class="subtab" role="tab" data-fin="vista" aria-selected="false">Vista inversionista</button>
+</div>
+<div class="note warn hide" id="fin_demo" style="margin-bottom:14px"><b>Datos de demostración cargados.</b> Los montos de operación y las aportaciones son inventados para mostrar la pantalla; no salen de ningún proyecto real ni son valores por omisión del producto. <button class="btn ghost" id="fin_quita_demo" style="padding:4px 10px;font-size:12px;margin-left:8px">Quitar el aviso</button></div>
+
+<!-- RESUMEN -->
+<div id="fin-res">
+<div class="grid g3">
+<div class="card stat"><span class="eyebrow">Inversión total (CAPEX)</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_capex" style="color:var(--accent)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_capex_x"></span></div>
+<div class="card stat"><span class="eyebrow">OPEX mensual</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_opex_mes"></span><span class="unit">MXN/mes</span></div><span class="tiny muted" id="fin_opex_mes_x"></span></div>
+<div class="card stat"><span class="eyebrow">OPEX anual</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_opex_anio"></span><span class="unit">MXN/año</span></div><span class="tiny muted">Mensual por doce: no hay perfil por mes capturado</span></div>
+</div>
+<div class="grid g3" style="margin-top:14px">
+<div class="card stat"><span class="eyebrow">Capital aportado</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_aportado" style="font-size:30px"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_aportado_x"></span></div>
+<div class="card stat"><span class="eyebrow" id="fin_brecha_lb">Brecha de fondeo</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_brecha" style="font-size:30px"></span></div><span class="tiny muted" id="fin_brecha_x"></span></div>
+<div class="card stat"><span class="eyebrow">Inversionistas activos</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_ninv" style="font-size:30px"></span><span class="unit">participantes</span></div><span class="tiny muted" id="fin_ninv_x"></span></div>
+</div>
+<div class="grid g2" style="margin-top:14px;align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:12px">De dónde sale el CAPEX</div>
+<div id="fin_capex_desglose"></div>
+<div class="note" style="margin-top:14px">Estas cifras son las que ya calcula el presupuesto del proyecto. No se capturan aquí ni se vuelven a calcular: si cambian en Configuración o en el Catálogo, cambian aquí.</div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:12px">Reparto del gasto de operación</div>
+<div id="fin_opex_cats"></div>
+<hr>
+<label class="f" style="margin-bottom:0"><span class="lb">Notas y supuestos</span>
+<textarea id="fin_notas" rows="4" placeholder="Qué incluye y qué no el gasto de operación, de dónde salen las aportaciones, qué falta por confirmar." style="width:100%;background:var(--surface-1);border:1px solid var(--border-default);border-radius:var(--r-md);color:var(--text-primary);font-family:inherit;font-size:14px;padding:9px 11px;resize:vertical"></textarea></label>
+<span class="hint">Se muestran en la vista de inversionista.</span>
+</div>
+</div>
+</div>
+
+<!-- OPEX -->
+<div id="fin-opex" class="hide">
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Gasto de operación mensual</h3><div class="tiny muted" style="margin-top:4px">Captura por concepto. Un renglón inactivo se conserva y no suma: sirve para el gasto que todavía no arranca.</div></div>
+<div class="row">
+<button class="btn ghost" data-fin-demo>Cargar datos de demostración</button>
+<button class="btn" id="fin_add_opex">Agregar concepto</button>
+</div>
+</div>
+<div class="scroll">
+<table class="fit">
+<colgroup><col style="width:38%"><col style="width:20%"><col style="width:15%"><col style="width:15%"><col style="width:7%"><col style="width:5%"></colgroup>
+<thead><tr><th>Concepto</th><th>Categoría</th><th class="num">Monto mensual</th><th class="num">Anual</th><th style="text-align:center">Activo</th><th></th></tr></thead>
+<tbody id="fin_opex_body"></tbody>
+</table>
+</div>
+<div class="tiny muted hide" id="fin_opex_vacio" style="padding:18px 0">Sin conceptos capturados. Agrega el primero o carga los datos de demostración para ver cómo se comporta la pantalla.</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="derived"><span class="muted">OPEX mensual total</span><b id="fin_opex_tot_mes"></b></div>
+<div class="derived"><span class="muted">OPEX anual total</span><b id="fin_opex_tot_anio"></b></div>
+</div>
+<div class="note" style="margin-top:14px"><b>Alcance de esta pantalla.</b> Es una lista de supuestos de gasto y su suma. No hay facturación, proveedores, contabilidad, conciliación ni histórico real de pagos, y el anual es el mensual por doce, sin inflación ni escalamiento.</div>
+</div>
+</div>
+
+<!-- INVERSIONISTAS -->
+<div id="fin-inv" class="hide">
+<div class="grid g4" style="margin-bottom:14px">
+<div class="card stat"><span class="eyebrow">CAPEX requerido</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_req" style="font-size:26px"></span></div></div>
+<div class="card stat"><span class="eyebrow">Capital aportado</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_apo" style="font-size:26px"></span></div></div>
+<div class="card stat"><span class="eyebrow">Faltante / excedente</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_gap" style="font-size:26px"></span></div></div>
+<div class="card stat"><span class="eyebrow">Suma de participaciones</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_suma" style="font-size:26px"></span></div><span class="tiny muted">Sobre el capital aportado</span></div>
+</div>
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Inversionistas</h3><div class="tiny muted" style="margin-top:4px">La participación se calcula sola: aportación entre capital aportado total. No es una tabla accionaria.</div></div>
+<div class="row">
+<button class="btn ghost" data-fin-demo>Cargar datos de demostración</button>
+<button class="btn" id="fin_add_inv">Agregar inversionista</button>
+</div>
+</div>
+<div class="scroll">
+<table class="fit">
+<colgroup><col style="width:45%"><col style="width:20%"><col style="width:18%"><col style="width:9%"><col style="width:8%"></colgroup>
+<thead><tr><th>Nombre</th><th class="num">Aportación</th><th class="num">Participación</th><th style="text-align:center">Activo</th><th></th></tr></thead>
+<tbody id="fin_inv_body"></tbody>
+</table>
+</div>
+<div class="tiny muted hide" id="fin_inv_vacio" style="padding:18px 0">Sin inversionistas capturados.</div>
+<div class="note" style="margin-top:14px"><b>Lo que esta pantalla no dice.</b> No hay retorno, TIR, VPN, deuda, impuestos, depreciación ni distribución de flujo: esas cifras dependen de ingresos que el instrumento todavía no modela.</div>
+</div>
+</div>
+
+<!-- VISTA DE INVERSIONISTA: sólo lectura, se arma del snapshot -->
+<div id="fin-vista" class="hide"></div>
 </section>
 <div style="margin-top:24px" class="note">
 <b>Herramienta de estimación, no de contratación.</b> Las cantidades se derivan de las variables de sitio mediante reglas paramétricas, no de ingeniería de detalle. Cada renglón declara la base de su número; los marcados sin base son provisiones que deben cotizarse antes de comprometer precio. Ingeniería bajo NOM-001-SEDE-2012; interruptores principales y derivados se verifican contra 125% de la carga continua (Art. 625-21).

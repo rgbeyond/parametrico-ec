@@ -36,6 +36,11 @@ const POT_EVSE=[
 import CAT_GEN_RAW from '../data/catalogo.json';
 import { ctx, guardarEstado, agregarConcepto, promover, puede } from './contexto.js';
 import { modeloExport, aCSV, documentoHTML, nombreArchivo } from './exportar.js';
+/* Finanzas (issue #7). La lógica vive en módulos propios y probables sin DOM;
+   aquí sólo queda el enganche: pasarle el CAPEX que este archivo ya calculó y
+   recibir de vuelta el estado cuando el usuario captura algo. */
+import { montarFinanzas } from '../ui/finanzas.js';
+import { normalizarFinanzas, finanzasVacias } from './finanzas/estado.js';
 /* El catálogo del proyecto abierto: maestro más los conceptos propios de esa
    estación. Sin sesión cae al archivo incluido, para poder trabajar en local. */
 const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_RAW).map(x=>({...x}));
@@ -135,6 +140,10 @@ const rendAnual=g=>{const m=rendMeses(g); return m?m.reduce((a,b)=>a+b,0):(+g.fv
 function sum(rs,codes){return rs.filter(r=>codes.includes(r.c)).reduce((a,b)=>a+b.imp,0);}
 const M=()=>MODOS[cfg.modo];
 let rows=[],edits={};
+/* `null` mientras el proyecto no tenga finanzas capturadas. La distinción no es
+   cosmética: es lo que impide que abrir un proyecto anterior le escriba una
+   estructura que nadie pidió. Ver src/lib/finanzas/estado.js. */
+let finanzas=null;
 function catalog(){
 const g=cfg, n=nEvse(g), pot=potEvse(g), mo=M(), kva=+g.kva;
 const con=nCon(g), cam=nCam(g), tm2=techM2(g);
@@ -422,6 +431,10 @@ $("#scatter").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="displa
 function render(){
 build(); const t=totals(), mo=M(), n=nEvse(cfg), pot=potEvse(cfg), kva=+cfg.kva;
 const con=nCon(cfg), cam=nCam(cfg), tm2=techM2(cfg);
+/* Finanzas se pinta con el mismo `t` que el resto de la pantalla. Si alguna
+   vez se le pasara otro origen, el CAPEX de la sección financiera podría
+   discrepar del presupuesto, que es justo lo que el issue prohíbe. */
+finUI.pintar(datosFinanzas(t));
 $("#hProj").textContent=cfg.nom||"Sin nombre";
 $("#hMeta").textContent=[cfg.loc,mo.n,n+" equipos · "+pot.toLocaleString("es-MX")+" kW",kva.toLocaleString("es-MX")+" kVA"].filter(Boolean).join(" · ");
 $("#h_modo").textContent=mo.d;
@@ -897,7 +910,25 @@ touch(); render();
 $("#v_kvaLibre").addEventListener("input",e=>{
 cfg.kva=String(parseFloat(e.target.value)||0); touch(); render();
 });
-const TABS=["conf","alc","res","dist","prec","boq","gen","exp"];
+/* FINANZAS: el único enganche del monolito con la sección financiera.
+   El CAPEX se le PASA, no se le deja calcular: es `totals()`, el mismo
+   resultado que pinta el presupuesto y que alimenta la exportación. Y cuando
+   el usuario captura algo, lo que vuelve es el estado completo de finanzas,
+   que se marca sucio con el mecanismo de guardado normal del proyecto. */
+const finUI=montarFinanzas({alCambiar:f=>{ finanzas=f; touch(); render(); }});
+function datosFinanzas(t){
+  const d=[{rotulo:"Costo directo de obra y equipo",valor:t.tec}];
+  if(t.fee) d.push({rotulo:"Indirectos y administración de proyecto",valor:t.fee});
+  if(t.cont) d.push({rotulo:"Reserva de contingencia ("+cfg.cont+"%)",valor:t.cont});
+  d.push({rotulo:"Inversión total, más IVA",valor:t.total});
+  if(t.dep) d.push({rotulo:"Depósito en garantía (reembolsable, aparte)",valor:t.dep});
+  return {nombre:cfg.nom,ubicacion:cfg.loc,
+    capex:t.total,deposito:t.dep,
+    clase:t.cl?"Clase "+t.cl.c+" — "+t.cl.nom:"",
+    precision:t.cl?t.cl.lo+"% / +"+t.cl.hi+"%":"",
+    desglose:d,version:VERSION_TXT,finanzas};
+}
+const TABS=["conf","alc","res","dist","prec","boq","gen","exp","fin"];
 function showTab(t,scroll){
 $$(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.t===t));
 TABS.forEach(k=>$("#p-"+k).classList.toggle("hide",k!==t));
@@ -909,8 +940,11 @@ function goCat(cat){ bf.cat=cat; const el=$("#b_cat"); if(el)el.value=cat; rende
 setTimeout(()=>{const r=document.getElementById("cat-"+cat); if(r&&r.scrollIntoView)r.scrollIntoView({block:"start",behavior:"smooth"});},120); };
 window.addEventListener("proyecto:abierto",()=>{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
-if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
-else { edits={}; genEdits={}; genApproved={};
+if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{};
+  /* `null` si el proyecto no trae finanzas, y así se queda: abrirlo no se las
+     inventa ni lo marca como sucio. */
+  finanzas=normalizarFinanzas(e0.finanzas); }
+else { edits={}; genEdits={}; genApproved={}; finanzas=null;
   Object.assign(cfg,{grupos:[],kvaOtra:0,vmt:23,vbt:480,demCon:0,mem:0,cargoCap:0,cargoDist:0,cargoFijo:0,otrosKwh:0,enPunta:0,enInterm:0,enBase:0,
   fvPerfil:0,fvMeses:null,pctPunta:20,pctInterm:60,pctBase:20,bessDoD:80,bessEff:87,diasPunta:22,horasPico:6,
   esc1Ses:0,esc1Kwh:0,esc1Dmax:0,esc2Ses:0,esc2Kwh:0,esc2Dmax:0,esc3Ses:0,esc3Kwh:0,esc3Dmax:0,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
@@ -1139,8 +1173,13 @@ $$(".dirty").forEach(e=>{e.textContent="Cambios sin guardar…";e.style.color="v
 clearTimeout(autoT); autoT=setTimeout(()=>save(null,true),700);
 }
 function snapshot(){ const t=totals();
-return JSON.stringify({v:1,cfg,edits,genEdits,genApproved,
-  total:Math.round(t.total),directo:Math.round(t.tec),clase:t.cl.nom,idd:Number(t.idd.toFixed(3))}); }
+const e={v:1,cfg,edits,genEdits,genApproved,
+  total:Math.round(t.total),directo:Math.round(t.tec),clase:t.cl.nom,idd:Number(t.idd.toFixed(3))};
+/* La llave `finanzas` sólo entra cuando hay algo capturado. Un proyecto donde
+   alguien entró a mirar Finanzas y salió tiene que quedar byte por byte como
+   estaba: es la condición de compatibilidad del issue #7. */
+if(finanzas && !finanzasVacias(finanzas)) e.finanzas=finanzas;
+return JSON.stringify(e); }
 async function save(btn,auto){ const o=btn?btn.textContent:"";
 if(DB.modo==="sin almacenamiento"){ $$(".dirty").forEach(e=>{e.textContent="Sin almacenamiento: usa Copiar respaldo";e.style.color="var(--warning)";}); return; }
 try{ const snap=snapshot();
@@ -1158,6 +1197,7 @@ function restore(txt){
 try{ const d=JSON.parse(txt);
 if(!d||!d.cfg) throw new Error("El respaldo no tiene datos de proyecto.");
 Object.assign(cfg,d.cfg); edits=d.edits||{}; genEdits=d.genEdits||{}; genApproved=d.genApproved||{};
+finanzas=normalizarFinanzas(d.finanzas);
 fill(); touch(); render();
 return {ok:true,n:Object.keys(edits).length,a:Object.keys(genApproved).length};
 }catch(e){ return {ok:false,m:e.message}; }
@@ -1192,11 +1232,12 @@ window.addEventListener("unhandledrejection",ev=>boot("Promesa rechazada: "+(ev.
 (async()=>{ try{
 try{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
-if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{}; }
+if(e0&&e0.cfg){ Object.assign(cfg,e0.cfg); edits=e0.edits||{}; genEdits=e0.genEdits||{}; genApproved=e0.genApproved||{};
+  finanzas=normalizarFinanzas(e0.finanzas); }
 else if(ctx.proyecto){ cfg.nom=ctx.proyecto.nombre||""; cfg.loc=ctx.proyecto.ubicacion||""; }
 else { const r=await DB.get(KEY);
   if(r&&r.value){const d=JSON.parse(r.value);Object.assign(cfg,d.cfg||{});edits=d.edits||{};
-  genEdits=d.genEdits||{}; genApproved=d.genApproved||{};} }
+  genEdits=d.genEdits||{}; genApproved=d.genApproved||{}; finanzas=normalizarFinanzas(d.finanzas);} }
 }catch(e){}
 fill(); render(); showTab("conf",false);
   const _b=document.getElementById("bootfail"); if(_b) _b.remove();

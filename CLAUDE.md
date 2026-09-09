@@ -127,6 +127,28 @@ La verificación de quién puede escribir qué vive en la base de datos, en las
 políticas RLS y en las funciones `security definer`. Nunca mover esa
 validación al cliente: un navegador se puede alterar, una política no.
 
+**El CAPEX de Finanzas no se captura ni se recalcula.** La sección Finanzas
+recibe la inversión total de `totals()`, el mismo resultado que pinta el
+presupuesto y que alimenta la exportación. No hay campo donde escribirla y no
+hay una segunda ruta de cálculo: si la hubiera, un día la hoja de inversionista
+enseñaría una cifra distinta a la de la propuesta. Lo que la sección sí calcula
+—OPEX, participaciones, brecha de fondeo— vive en `src/lib/finanzas/`, en
+funciones puras sin DOM.
+
+**Lo financiero vive en `estado.finanzas`, con su propia versión, y sólo si
+alguien lo capturó.** Un proyecto que nunca tocó Finanzas no lleva esa llave, y
+abrir la sección no se la inventa: `normalizarFinanzas` devuelve `null` cuando
+no hay nada, y la llave sólo entra al estado guardado cuando deja de estar
+vacía. De eso depende que abrir un proyecto anterior no lo marque como sucio ni
+mueva su `actualizado_en`.
+
+**La vista de inversionista se arma de un snapshot con lista blanca**, campo por
+campo, nunca del estado completo. Ahí no pasan precios unitarios, códigos de
+concepto, la base de cada número, parámetros de tarifa, comentarios, usuarios ni
+roles. Un `{...estado}` en `snapshot.js` convertiría la frontera en decoración.
+La participación que muestra es la proporción del capital aportado y **no es una
+tabla accionaria**: la estructura societaria la define el acta constitutiva.
+
 **Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
 en esa estación hasta que un administrador lo promueve con
 `fn_promover_concepto`. Así una estación captura lo que necesita sin ensuciar
@@ -152,6 +174,8 @@ src/lib/app.js             núcleo del estimador
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
 src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
+src/lib/finanzas/          modelo financiero P0: estado, OPEX, inversionistas, snapshot y vista
+src/ui/finanzas.js         interfaz de la seccion Finanzas
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
 src/styles/               tokens de marca, fuentes y estilos
 supabase/                 esquema, políticas RLS y semilla
@@ -179,8 +203,8 @@ Netlify tampoco.
 
 | Qué | Comando | Qué cubre |
 |---|---|---|
-| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible |
-| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada |
+| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, participaciones, brecha de fondeo, compatibilidad del estado y la lista blanca del snapshot |
+| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada. `pruebas-navegador/ui_finanzas.test.mjs`: que el CAPEX de Finanzas sea el del presupuesto y el del archivo, y que abrir un proyecto anterior no le escriba nada |
 
 Están separadas a propósito: `npm test` tiene que poder correr en cualquier
 parte, y lo que comprueban las de navegador —que el archivo coincide con la
@@ -253,6 +277,15 @@ en modo local.
 
 ### Pendientes de producto
 
+- Finanzas está en P0: OPEX capturado a mano, inversionistas y una vista de
+  sólo lectura. No hay retorno, TIR, VPN, deuda, impuestos, depreciación ni
+  distribución de flujo, y tampoco facturación, proveedores, contabilidad ni
+  histórico real de pagos. El alcance siguiente se define después de la
+  validación de RG sobre esta preview; no ampliarlo por inercia.
+- Compartir la vista de inversionista hacia afuera. Hoy vive dentro de la
+  aplicación interna: no hay liga pública, ni cuentas externas, ni rol de
+  inversionista. El snapshot ya está diseñado para esa frontera, pero el
+  mecanismo de compartir se diseña aparte.
 - Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
   ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
   memoria de la sesión.

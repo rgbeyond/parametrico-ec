@@ -276,8 +276,13 @@ test("el menú Exportar vive en la sección del catálogo y se usa en móvil",
     const pagina = await conProyectoAbierto();
     // Está dentro de la sección del presupuesto, no en una pestaña nueva.
     assert.equal(await pagina.locator("#p-boq #x_menu").count(), 1);
-    assert.equal(await pagina.locator(".tab").count(), 8,
-      "no se agregó ninguna pestaña");
+    /* Exportar no agregó pestaña: vive dentro del presupuesto. Las nueve son
+       las ocho originales más Finanzas, que el issue #7 pidió explícitamente
+       como sección propia. Si este número sube sin un issue detrás, alguien
+       resolvió con una pestaña algo que cabía en una sección existente. */
+    assert.equal(await pagina.locator(".tab").count(), 9,
+      "sólo Finanzas se agregó como pestaña, y fue a petición del issue #7");
+    assert.equal(await pagina.locator('.tab[data-t="fin"]').count(), 1);
 
     await pagina.setViewportSize({ width: 390, height: 844 });
     const sum = pagina.locator("#x_menu > summary");
