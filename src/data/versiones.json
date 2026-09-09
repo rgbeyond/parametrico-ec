@@ -1,5 +1,64 @@
 [
   {
+    "v": "0.14.0",
+    "fecha": "2026-09-09",
+    "tipo": "menor",
+    "resumen": "El proyecto se divide en dos frentes, CAPEX y OPEX, y el frente de operacion gana control general, plantilla de gasto, costos variables y una proyeccion mensual con EBITDA.",
+    "agregado": [
+      "Dos frentes por encima de las pestañas: CAPEX -diseño y presupuesto- y OPEX -operacion y finanzas-. La seccion Finanzas deja de ser una pestaña suelta y pasa a ser el frente OPEX, con seis pantallas: Resumen, Control general, OPEX, Proyeccion, Inversionistas y Vista inversionista.",
+      "Control general: fecha de inicio de operacion, horizonte, IPC del proyecto, precio de venta y precio promocional con sus meses, incremento anual del precio, uptime, perdidas electricas, escenario seleccionado, sesiones de arranque, meses de rampa, crecimiento anual de sesiones, incrementos anuales de CFE y de MEM, ahorro esperado del MEM y mes de cambio de suministrador.",
+      "La tarifa del suministrador, la generacion fotovoltaica, el almacenamiento y los escenarios de consumo se capturan ahora en Control general. Son los MISMOS campos con las mismas llaves de cfg: se mudo donde se capturan, no se duplicaron.",
+      "Plantilla de OPEX con los trece conceptos del modelo financiero de referencia -encargado, supervisor, contador, guardias, publicidad, internet, agua, renta, predial, papeleria, despensa, seguros y fianzas, otros-. Sin un solo monto: la estructura es del negocio, los montos son de cada proyecto.",
+      "Incremento anual por concepto de OPEX, con tres modos: IPC del proyecto, tasa propia o sin incremento. La tasa efectiva se muestra en el propio renglon.",
+      "Costos variables sobre ventas, separados del OPEX fijo: un porcentaje de los ingresos, como la comision de la concesionaria y el fee de O&M.",
+      "src/lib/finanzas/proyeccion.js: motor puro que produce la serie mensual completa -sesiones, energia, ventas, costo de electricidad, costos variables, OPEX fijo, EBITDA y margen- y su agregado por año.",
+      "Pantalla de Proyeccion con selector de escenario y de año, doce meses en columnas y veintitres conceptos en renglones, mas la columna del año.",
+      "La vista de inversionista suma un resumen anual de la proyeccion: ventas, costo de electricidad, operacion, EBITDA y margen por año. La serie mensual no sale de la aplicacion.",
+      "32 pruebas nuevas en Node y 18 de navegador."
+    ],
+    "notas": [
+      "EL CAPEX NO SE CAPTURA NI SE RECALCULA. Sigue llegando de totals(), y la reorganizacion no lo movio: hay prueba de navegador que fija la inversion total del caso de referencia en 48,670,755 despues de mover pantallas de sitio, y que la compara contra el desglose de la seccion y contra el renglon de inversion total del CSV exportado.",
+      "LO QUE YA EXISTIA EN cfg NO SE COPIO. Tarifa, escenarios, generacion, almacenamiento, balanceo y suministrador siguen viviendo en cfg con sus llaves de siempre. Hay prueba que cuenta cada campo en toda la pagina y falla si aparece dos veces.",
+      "estado.finanzas sube a v2 y agrega ctrl, variables y la regla de incremento por renglon. Un finanzas v1 se actualiza al leerlo sin perder nada y sus renglones arrancan heredando el IPC. estado.v global NO cambia.",
+      "TODOS LOS SUPUESTOS ARRANCAN NEUTROS: IPC en cero, precio en cero, uptime en 100, ahorro del MEM en cero. Un valor plausible precargado se convierte en dato sin que nadie lo decida, y el material de referencia se contradice entre 10% y 15% para el ahorro del MEM.",
+      "EL ESCALAMIENTO ES POR ANIVERSARIO del inicio de operacion, no por año calendario: el año de operacion es floor(mes/12) y el factor es (1+tasa)^año. Con año calendario, una estacion que abre en septiembre recibiria el aumento completo en su cuarto mes.",
+      "EL COSTO DE ELECTRICIDAD LLEVA TRES PIEZAS: energia comprada por su costo unitario, cargos de capacidad y distribucion sobre la demanda facturable, y cargo fijo. La demanda facturable es la menor entre la maxima declarada del escenario y el termino calculado de la tarifa, que es la misma regla que ya usa el tablero de escenarios. Simplificacion declarada: la tarifa distingue la demanda de punta de la maxima mensual y este motor usa una sola para las dos.",
+      "EL BALANCEO NO RECORTA ENERGIA POR UN PORCENTAJE INVENTADO. Se aplica un techo fisico -demanda de diseño por 24 horas- y lo que quede fuera se reporta en su propio renglon. Casi siempre es cero, y eso es correcto: la reserva limita potencia simultanea, no energia diaria.",
+      "EL ALMACENAMIENTO NO DESPACHA EN LA SERIE. Llevarlo a una serie mensual exige un despacho horario que el issue pide no construir todavia. Consecuencia: donde hay BESS, el costo de electricidad proyectado es conservador.",
+      "LA GENERACION SOLO DESPLAZA LO QUE LA ESTACION CONSUME y el excedente se reporta en su propio renglon: no se acredita ni se vende, porque el excedente se paga a otro valor y eso no esta capturado. Mientras la generacion cubra todo el consumo, el termino calculado de la demanda cae a cero y con el los cargos por kW.",
+      "EL COSTO DEL MEM SE DERIVA DEL DE CFE con el ahorro declarado; no hay curva de mercado capturada.",
+      "MODO DEMOSTRACION TEMPORAL. El modelo de referencia se carga en una copia que vive solo en la pantalla: no entra al estado del proyecto y no se guarda. Convertirlo en datos del proyecto es un segundo paso con confirmacion, y lo que se guarda queda marcado. La version anterior escribia los datos demo directo en el proyecto, y eso estaba mal.",
+      "Sin cambios de motor de costos, catalogo, precios, Supabase, esquema, Auth ni configuracion. No requiere migracion.",
+      "LO QUE SIGUE SIN EXISTIR: TIR, VPN, payback, deuda, impuestos, depreciacion, amortizacion, distribucion de flujo, facturacion, proveedores, contabilidad, conciliacion, historico real de pagos, liga publica, cuentas externas y rol de inversionista."
+    ]
+  },
+  {
+    "v": "0.13.0",
+    "fecha": "2026-09-09",
+    "tipo": "menor",
+    "resumen": "Seccion Finanzas dentro del proyecto: OPEX, inversionistas y una vista de solo lectura para inversionista, alimentadas por el CAPEX que el proyecto ya calcula.",
+    "agregado": [
+      "Pestaña Finanzas con navegacion interna de cuatro pantallas: Resumen, OPEX, Inversionistas y Vista inversionista.",
+      "Resumen ejecutivo: inversion total del proyecto, OPEX mensual y anual, capital aportado, faltante o excedente de fondeo, numero de inversionistas activos, desglose de donde sale el CAPEX y reparto del gasto por categoria.",
+      "OPEX editable por proyecto: concepto, categoria, monto mensual y activo/inactivo, con alta y baja de renglones. Nueve categorias de referencia y ningun monto por omision. Un renglon inactivo se conserva y no suma.",
+      "Inversionistas: nombre, aportacion y activo/inactivo, con la participacion calculada sobre el capital aportado total y la brecha de fondeo contra el CAPEX.",
+      "Vista de inversionista de solo lectura, en tema claro, construida a partir de un snapshot con lista blanca de campos.",
+      "src/lib/finanzas/ con cuatro modulos puros -estado, opex, inversionistas, snapshot- mas la vista, todos probables en Node sin DOM. La interfaz vive en src/ui/finanzas.js; app.js solo recibe el estado y le pasa el CAPEX.",
+      "Boton de datos de demostracion para poder recorrer las cuatro pantallas en la vista previa. El estado que produce queda marcado y el aviso viaja dentro de la hoja de inversionista.",
+      "27 pruebas nuevas en Node y 12 de navegador."
+    ],
+    "notas": [
+      "EL CAPEX NO SE CAPTURA NI SE RECALCULA. Llega de totals(), el mismo resultado que pinta el presupuesto y que alimenta la exportacion. Hay prueba de navegador que compara la cifra de Finanzas contra el desglose de la seccion y contra el renglon de inversion total del CSV exportado, y otra que comprueba que en el Resumen no existe ningun campo donde escribirla.",
+      "UN PROYECTO SIN FINANZAS SIGUE SIN FINANZAS. estado.finanzas solo se escribe cuando alguien captura algo: abrir la seccion en un proyecto anterior no le crea la llave, no lo marca como sucio y no mueve su marca de tiempo. Hay prueba que abre un proyecto heredado, recorre las cuatro pantallas y compara la huella completa del almacenamiento.",
+      "La llave lleva su propia version, finanzas.v = 1, y lo que una version posterior escriba y esta no conozca se conserva en lugar de perderse.",
+      "La vista de inversionista se arma campo por campo desde un snapshot; nunca recibe el estado completo. No lleva precios unitarios, codigos de concepto, la base de cada numero, parametros de tarifa, comentarios, usuarios ni roles. Hay prueba que le pasa esa basura por la puerta de al lado y comprueba que no sale, y otra que verifica que la hoja no tiene un solo control editable en el DOM.",
+      "La participacion es la proporcion del capital aportado, no una tabla accionaria: la estructura societaria la define el acta constitutiva y el acuerdo de socios, que no viven en esta herramienta. Queda escrito en la propia hoja.",
+      "LO QUE ESTA VERSION NO CALCULA: retorno, TIR, VPN, deuda, impuestos, depreciacion, amortizacion, payback y distribucion de flujo. Tampoco facturacion, proveedores, contabilidad, conciliacion ni historico real de pagos. El OPEX anual es el mensual por doce, sin inflacion ni escalamiento.",
+      "Sin cambios de motor de costos, catalogo, precios, Supabase, esquema, Auth ni configuracion. No requiere migracion.",
+      "EL NUMERO ES 0.13.0 Y NO 0.9.0. Del 0.9.0 al 0.12.0 los ocupa la linea de integracion con Beyond Platform, que vive en otra rama y no esta en main; reutilizar uno crearia dos versiones distintas con el mismo numero y la bitacora dejaria de servir para reconciliar una propuesta impresa con el codigo que la produjo. 0.13.0 es el primer numero libre del repositorio. Que main no contenga las versiones intermedias es real y esta dicho aqui."
+    ]
+  },
+  {
     "v": "0.8.2",
     "fecha": "2026-09-04",
     "tipo": "parche",

@@ -127,6 +127,58 @@ La verificación de quién puede escribir qué vive en la base de datos, en las
 políticas RLS y en las funciones `security definer`. Nunca mover esa
 validación al cliente: un navegador se puede alterar, una política no.
 
+**El proyecto tiene dos frentes: CAPEX y OPEX.** CAPEX es lo que cuesta
+construir la estación —las ocho pestañas técnicas de siempre—; OPEX es cómo
+opera y qué deja. Lo financiero vive dentro de OPEX y no como una tercera
+pestaña suelta: con CAPEX, OPEX y Finanzas al mismo nivel nadie sabría dónde
+buscar el precio de venta del kWh.
+
+**La tarifa, la generación, el almacenamiento y los escenarios de consumo se
+capturan en OPEX**, aunque alimenten cifras de CAPEX. Se mudó dónde se
+capturan, no se duplicaron: son los mismos campos con las mismas llaves de
+`cfg`. Hay una prueba que cuenta cada uno en toda la página y falla si aparece
+dos veces. El transformador y el balanceo se quedaron en CAPEX porque son los
+que dimensionan la subestación; su efecto sobre la operación entra en la
+proyección como techo físico de energía diaria.
+
+**El CAPEX de OPEX no se captura ni se recalcula.** El frente de operación
+recibe la inversión total de `totals()`, el mismo resultado que pinta el
+presupuesto y que alimenta la exportación. No hay campo donde escribirla y no
+hay una segunda ruta de cálculo: si la hubiera, un día la hoja de inversionista
+enseñaría una cifra distinta a la de la propuesta. Lo que la sección sí calcula
+—OPEX, participaciones, brecha de fondeo y la proyección mensual— vive en
+`src/lib/finanzas/`, en funciones puras sin DOM.
+
+**El escalamiento anual ocurre en el aniversario del inicio de operación**, no
+en enero. El año de operación de un mes es `floor(mes / 12)` y el factor es
+`(1 + tasa)^año`: un escalón por aniversario, no capitalización mensual. Con año
+calendario, una estación que abre en septiembre recibiría el aumento completo en
+su cuarto mes de vida. Aplica al OPEX, al precio de venta y al costo de la
+energía.
+
+**Ninguna cifra de la proyección puede salir de un supuesto plausible
+precargado.** IPC, precio de venta, incrementos y ahorro del MEM arrancan en
+cero; el uptime en 100%. Un valor «razonable» por omisión se convierte en dato
+sin que nadie lo decida. El ahorro del MEM frente a CFE es el caso claro: el
+material de referencia se contradice entre 10% y 15%, así que es un campo.
+
+**Lo financiero vive en `estado.finanzas`, con su propia versión, y sólo si
+alguien lo capturó.** Un proyecto que nunca tocó Finanzas no lleva esa llave, y
+abrir la sección no se la inventa: `normalizarFinanzas` devuelve `null` cuando
+no hay nada, y la llave sólo entra al estado guardado cuando deja de estar
+vacía. De eso depende que abrir un proyecto anterior no lo marque como sucio ni
+mueva su `actualizado_en`. Va por la versión 2: `ctrl` con los supuestos de
+operación, `opex` con su regla de incremento por renglón, `variables` con los
+costos como porcentaje de ventas e `inversionistas`. Un `finanzas` v1 se
+actualiza al leerlo sin perder nada. `estado.v` global **no** cambia por esto.
+
+**La vista de inversionista se arma de un snapshot con lista blanca**, campo por
+campo, nunca del estado completo. Ahí no pasan precios unitarios, códigos de
+concepto, la base de cada número, parámetros de tarifa, comentarios, usuarios ni
+roles. Un `{...estado}` en `snapshot.js` convertiría la frontera en decoración.
+La participación que muestra es la proporción del capital aportado y **no es una
+tabla accionaria**: la estructura societaria la define el acta constitutiva.
+
 **Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
 en esa estación hasta que un administrador lo promueve con
 `fn_promover_concepto`. Así una estación captura lo que necesita sin ensuciar
@@ -152,6 +204,9 @@ src/lib/app.js             núcleo del estimador
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
 src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
+src/lib/finanzas/          modelo de operacion: estado, OPEX, plantilla, inversionistas,
+                           proyeccion mensual, snapshot y vista de inversionista
+src/ui/finanzas.js         interfaz del frente OPEX
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
 src/styles/               tokens de marca, fuentes y estilos
 supabase/                 esquema, políticas RLS y semilla
@@ -179,8 +234,8 @@ Netlify tampoco.
 
 | Qué | Comando | Qué cubre |
 |---|---|---|
-| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible |
-| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada |
+| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, escalamiento, participaciones, brecha de fondeo, la proyección mensual, la compatibilidad del estado y la lista blanca del snapshot |
+| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada. `pruebas-navegador/ui_finanzas.test.mjs`: que los dos frentes naveguen, que el CAPEX de OPEX sea el del presupuesto y el del archivo, y que ni abrir un proyecto anterior ni el modo demostración le escriban nada |
 
 Están separadas a propósito: `npm test` tiene que poder correr en cualquier
 parte, y lo que comprueban las de navegador —que el archivo coincide con la
@@ -253,6 +308,19 @@ en modo local.
 
 ### Pendientes de producto
 
+- El frente OPEX llega hasta EBITDA: ventas, costo de electricidad, costos
+  variables y OPEX fijo, mes a mes. No hay retorno, TIR, VPN, payback, deuda,
+  impuestos, depreciación ni distribución de flujo, y tampoco facturación,
+  proveedores, contabilidad ni histórico real de pagos. El alcance siguiente se
+  define después de la validación de RG; no ampliarlo por inercia.
+- El almacenamiento no despacha en la proyección mensual: haría falta un
+  modelo horario. Donde hay BESS, el costo de electricidad proyectado es
+  conservador. El excedente fotovoltaico se reporta pero no se acredita ni se
+  vende, porque se paga a otro valor y ese dato no está capturado.
+- Compartir la vista de inversionista hacia afuera. Hoy vive dentro de la
+  aplicación interna: no hay liga pública, ni cuentas externas, ni rol de
+  inversionista. El snapshot ya está diseñado para esa frontera, pero el
+  mecanismo de compartir se diseña aparte.
 - Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
   ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
   memoria de la sesión.

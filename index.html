@@ -24,7 +24,15 @@
 <div class="tiny dirty" style="color:var(--text-tertiary);margin-top:2px"></div>
 </div>
 </header>
-<div class="tabs" role="tablist">
+<!-- Dos frentes del proyecto. CAPEX es lo que cuesta construirla; OPEX es
+     como opera y que deja. La seccion financiera vive dentro de OPEX y no
+     como una tercera pestaña suelta: con CAPEX / OPEX / Finanzas al mismo
+     nivel, nadie sabria donde buscar el precio de venta del kWh. -->
+<div class="wsnav" role="tablist" id="wsNav">
+<button class="wstab" role="tab" data-ws="capex" aria-selected="true">CAPEX · Diseño y presupuesto</button>
+<button class="wstab" role="tab" data-ws="opex" aria-selected="false">OPEX · Operación y finanzas</button>
+</div>
+<div class="tabs" role="tablist" id="tabsCapex">
 <button class="tab" role="tab" aria-selected="true" data-t="conf">Configuración</button>
 <button class="tab" role="tab" aria-selected="false" data-t="alc">Alcance</button>
 <button class="tab" role="tab" aria-selected="false" data-t="res">Resumen</button>
@@ -91,96 +99,6 @@
 <div style="margin-top:10px"><span class="hint" id="h_demcon"></span></div>
 </div>
 
-<div class="card">
-<div class="row sp" style="margin-bottom:16px">
-<span class="eyebrow">Tarifa del suministrador</span>
-<label class="row tiny" style="gap:8px"><input type="checkbox" id="v_mem" style="width:auto"> Suministro calificado en el MEM</label>
-</div>
-<div class="grid g4" style="gap:12px">
-<label class="f" style="margin-bottom:0"><span class="lb">Suministrador</span><input type="text" id="v_sumin" placeholder="CFE Suministro Básico"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Categoría tarifaria</span><select id="v_tarifaCat"></select></label>
-<label class="f" style="margin-bottom:0"><span class="lb">División tarifaria</span><select id="v_tarifaDiv"></select></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Mes de la tarifa</span><input type="month" id="v_tarifaMes"></label>
-</div>
-<div class="grid g4" style="gap:12px;margin-top:12px">
-<label class="f" style="margin-bottom:0"><span class="lb">Capacidad ($/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="0.01"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Distribución ($/kW-mes)</span><input type="number" id="v_cargoDist" min="0" step="0.01"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Cargo fijo ($/mes)</span><input type="number" id="v_cargoFijo" min="0" step="0.01"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Otros cargos ($/kWh)</span><input type="number" id="v_otrosKwh" min="0" step="0.0001"><span class="hint">Transmisión, CENACE y servicios conexos</span></label>
-</div>
-<div class="grid g3" style="gap:12px;margin-top:12px">
-<label class="f" style="margin-bottom:0"><span class="lb">Energía punta ($/kWh)</span><input type="number" id="v_enPunta" min="0" step="0.0001"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Energía intermedia ($/kWh)</span><input type="number" id="v_enInterm" min="0" step="0.0001"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Energía base ($/kWh)</span><input type="number" id="v_enBase" min="0" step="0.0001"></label>
-</div>
-<div style="margin-top:12px"><span class="hint" id="h_tarifa"></span></div>
-<div style="margin-top:8px"><span class="hint" id="h_dep"></span></div>
-<div class="note" style="margin-top:14px">Los cargos se capturan como referencia documentada del proyecto: alimentan el depósito en garantía y el diferencial de arbitraje, no una factura estimada. La Comisión Reguladora de Energía los aprueba cada mes y difieren entre las 17 divisiones tarifarias, así que hay que declarar división y mes.</div>
-</div>
-
-<div class="card">
-<div class="eyebrow" style="margin-bottom:16px">Generación y almacenamiento</div>
-<div class="grid g4" style="gap:12px">
-<label class="f" style="margin-bottom:0"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Rendimiento (kWh/kWp-mes)</span><input type="number" id="v_fvKwhKwp" min="0" step="1"></label>
-<div id="fvBox" class="grid g2" style="gap:12px;grid-column:span 2">
-<label class="f" style="margin-bottom:0"><span class="lb">Costeo del fotovoltaico</span>
-<select id="v_fvModo"><option value="llave">Llave en mano por USD/Wp</option><option value="desglose">Desglose por componentes</option></select></label>
-<label class="f" id="fvWpBox" style="margin-bottom:0"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
-</div>
-</div>
-<div style="margin-top:10px"><span class="hint" id="h_fvrend"></span></div>
-<label class="row tiny" style="gap:8px;margin-top:12px"><input type="checkbox" id="v_fvPerfil" style="width:auto"> Tengo el perfil mensual de irradiancia del sitio</label>
-<div id="fvPerfilBox" class="hide" style="margin-top:12px">
-<div class="grid" id="fvMesesBox" style="grid-template-columns:repeat(6,1fr);gap:10px"></div>
-<div style="margin-top:10px"><span class="hint" id="h_fvperfil"></span></div>
-</div>
-<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
-<label class="f" style="margin-bottom:0"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">kWh por módulo</span><input type="number" id="v_besskwh" min="0" step="1"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Potencia por módulo (kW)</span><input type="number" id="v_besskw" min="0" step="5"></label>
-</div>
-</div>
-
-<div class="card">
-<div class="eyebrow" style="margin-bottom:16px">Escenarios de consumo</div>
-<div class="grid g3" style="gap:12px">
-<label class="f" style="margin-bottom:0"><span class="lb">Consumo en punta (%)</span><input type="number" id="v_pctPunta" min="0" max="100" step="1"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Consumo en intermedia (%)</span><input type="number" id="v_pctInterm" min="0" max="100" step="1"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Consumo en base (%)</span><input type="number" id="v_pctBase" min="0" max="100" step="1"></label>
-</div>
-<div style="margin-top:8px"><span class="hint" id="h_reparto"></span></div>
-<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
-<label class="f" style="margin-bottom:0"><span class="lb">Profundidad de descarga (%)</span><input type="number" id="v_bessDoD" min="10" max="100" step="5"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Eficiencia ida y vuelta (%)</span><input type="number" id="v_bessEff" min="50" max="100" step="1"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Días con punta al mes</span><input type="number" id="v_diasPunta" min="0" max="31" step="1"></label>
-<label class="f" style="margin-bottom:0"><span class="lb">Horas del pico a cubrir</span><input type="number" id="v_horasPico" min="0.5" max="24" step="0.5"><span class="hint">Cuánto tiempo al día la estación se mantiene por encima del objetivo de recorte</span></label>
-</div>
-<div class="scroll" style="max-height:none;margin-top:16px">
-<table>
-<thead><tr><th>Escenario</th><th class="num">Sesiones/día</th><th class="num">kWh/sesión</th><th class="num">Demanda máx. (kW)</th><th class="num">kWh/mes medido</th><th class="num">Calculada</th><th>Se factura por</th></tr></thead>
-<tbody>
-<tr><td><b>Pesimista</b></td>
-<td><input type="number" id="v_esc1Ses" min="0" step="1" class="money"></td>
-<td><input type="number" id="v_esc1Kwh" min="0" step="1" class="money"></td>
-<td><input type="number" id="v_esc1Dmax" min="0" step="10" class="money"></td>
-<td class="num" id="o_esc1Q">—</td><td class="num" id="o_esc1Calc">—</td><td id="o_esc1Cual">—</td></tr>
-<tr><td><b>Probable</b></td>
-<td><input type="number" id="v_esc2Ses" min="0" step="1" class="money"></td>
-<td><input type="number" id="v_esc2Kwh" min="0" step="1" class="money"></td>
-<td><input type="number" id="v_esc2Dmax" min="0" step="10" class="money"></td>
-<td class="num" id="o_esc2Q">—</td><td class="num" id="o_esc2Calc">—</td><td id="o_esc2Cual">—</td></tr>
-<tr><td><b>Optimista</b></td>
-<td><input type="number" id="v_esc3Ses" min="0" step="1" class="money"></td>
-<td><input type="number" id="v_esc3Kwh" min="0" step="1" class="money"></td>
-<td><input type="number" id="v_esc3Dmax" min="0" step="10" class="money"></td>
-<td class="num" id="o_esc3Q">—</td><td class="num" id="o_esc3Calc">—</td><td id="o_esc3Cual">—</td></tr>
-</tbody>
-</table>
-</div>
-<div style="margin-top:12px"><span class="hint" id="h_esc"></span></div>
-<div id="escVeredicto" class="stack" style="gap:8px;margin-top:12px"></div>
-</div>
 
 <div class="card">
 <div class="eyebrow" style="margin-bottom:16px">Variables de sitio</div>
@@ -484,6 +402,286 @@
 </div>
 <div id="e_doc" class="hide"></div>
 <iframe id="e_frame" title="Previsualización de la propuesta" style="width:100%;min-height:1180px;border:1px solid var(--border-subtle);border-radius:var(--r-lg);background:#fff"></iframe>
+</section>
+<!-- OPEX / OPERACIÓN (issue #7). Aquí vive lo que determina el costo de
+     operar la estación y lo que produce: los supuestos, la tarifa, la
+     generación, los escenarios de consumo, el gasto y el resultado.
+     El CAPEX de estas pantallas NO se captura ni se recalcula: llega del
+     mismo resultado que pinta el presupuesto. -->
+<section id="p-fin" class="hide">
+<div class="subtabs" role="tablist" id="finNav">
+<button class="subtab" role="tab" data-fin="res" aria-selected="true">Resumen</button>
+<button class="subtab" role="tab" data-fin="ctrl" aria-selected="false">Control general</button>
+<button class="subtab" role="tab" data-fin="opex" aria-selected="false">OPEX</button>
+<button class="subtab" role="tab" data-fin="proy" aria-selected="false">Proyección</button>
+<button class="subtab" role="tab" data-fin="inv" aria-selected="false">Inversionistas</button>
+<button class="subtab" role="tab" data-fin="vista" aria-selected="false">Vista inversionista</button>
+</div>
+<div class="note warn hide" id="fin_demo" style="margin-bottom:14px">
+<b>DATOS DE DEMOSTRACIÓN — NO CORRESPONDEN AL PROYECTO REAL.</b>
+<span id="fin_demo_txt">Estás en modo demostración: estas cifras viven sólo en esta pantalla y no se guardan en el proyecto.</span>
+<span class="row" style="gap:8px;margin-top:10px">
+<button class="btn ghost" id="fin_demo_off" style="padding:4px 10px;font-size:12px">Salir del modo demostración</button>
+<button class="btn ghost" id="fin_demo_guardar" style="padding:4px 10px;font-size:12px">Convertir en datos del proyecto</button>
+</span>
+</div>
+
+<!-- RESUMEN -->
+<div id="fin-res">
+<div class="grid g3">
+<div class="card stat"><span class="eyebrow">Inversión total (CAPEX)</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_capex" style="color:var(--accent)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_capex_x"></span></div>
+<div class="card stat"><span class="eyebrow">Ventas del año <span id="fin_anio_res"></span></span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_ventas"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_ventas_x"></span></div>
+<div class="card stat"><span class="eyebrow">EBITDA del año</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_ebitda"></span><span class="unit" id="fin_margen"></span></div><span class="tiny muted" id="fin_ebitda_x"></span></div>
+</div>
+<div class="grid g4" style="margin-top:14px">
+<div class="card stat"><span class="eyebrow">Costo de electricidad</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_costoluz" style="font-size:26px"></span></div><span class="tiny muted" id="fin_costoluz_x"></span></div>
+<div class="card stat"><span class="eyebrow">OPEX fijo del año</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_opexfijo" style="font-size:26px"></span></div><span class="tiny muted" id="fin_opex_mes_x"></span></div>
+<div class="card stat"><span class="eyebrow">Costos variables</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_var" style="font-size:26px"></span></div><span class="tiny muted" id="fin_var_x"></span></div>
+<div class="card stat"><span class="eyebrow">OPEX mensual</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_opex_mes" style="font-size:26px"></span></div><span class="tiny muted">Primer mes de operación, antes de escalamiento</span></div>
+</div>
+<div class="grid g3" style="margin-top:14px">
+<div class="card stat"><span class="eyebrow">Capital aportado</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_aportado" style="font-size:26px"></span></div><span class="tiny muted" id="fin_aportado_x"></span></div>
+<div class="card stat"><span class="eyebrow" id="fin_brecha_lb">Brecha de fondeo</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_brecha" style="font-size:26px"></span></div><span class="tiny muted" id="fin_brecha_x"></span></div>
+<div class="card stat"><span class="eyebrow">Inversionistas activos</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_ninv" style="font-size:26px"></span><span class="unit">participantes</span></div><span class="tiny muted" id="fin_ninv_x"></span></div>
+</div>
+<div class="grid g2" style="margin-top:14px;align-items:start">
+<div class="card">
+<div class="eyebrow" style="margin-bottom:12px">De dónde sale el CAPEX</div>
+<div id="fin_capex_desglose"></div>
+<div class="note" style="margin-top:14px">Estas cifras son las que ya calcula el presupuesto del proyecto. No se capturan aquí ni se vuelven a calcular: si cambian en CAPEX, cambian aquí.</div>
+</div>
+<div class="card">
+<div class="eyebrow" style="margin-bottom:12px">Reparto del gasto de operación</div>
+<div id="fin_opex_cats"></div>
+<hr>
+<label class="f" style="margin-bottom:0"><span class="lb">Notas y supuestos</span>
+<textarea id="fin_notas" rows="4" placeholder="Qué incluye y qué no el gasto de operación, de dónde salen las aportaciones, qué falta por confirmar." style="width:100%;background:var(--surface-1);border:1px solid var(--border-default);border-radius:var(--r-md);color:var(--text-primary);font-family:inherit;font-size:14px;padding:9px 11px;resize:vertical"></textarea></label>
+<span class="hint">Se muestran en la vista de inversionista.</span>
+</div>
+</div>
+</div>
+
+<!-- CONTROL GENERAL -->
+<div id="fin-ctrl" class="hide">
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Supuestos de operación</h3><div class="tiny muted" style="margin-top:4px">Todos arrancan en cero o en un valor neutro. Ninguno trae una cifra plausible precargada: un supuesto con valor por omisión se convierte en dato sin que nadie lo decida.</div></div>
+<button class="btn ghost" id="fin_demo_on">Cargar modelo de referencia</button>
+</div>
+<div class="grid g4" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Inicio de operación</span><input type="month" id="f_inicio"><span class="hint">Ancla de la proyección y de todo escalamiento</span></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Horizonte (años)</span><input type="number" id="f_horizonte" min="1" max="30" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">IPC del proyecto (% anual)</span><input type="number" id="f_ipc" min="0" step="0.1"><span class="hint">Lo heredan los conceptos de OPEX que no declaren tasa propia</span></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Escenario de consumo</span><select id="f_escenario"><option value="1">Pesimista</option><option value="2">Probable</option><option value="3">Optimista</option></select><span class="hint" id="f_h_esc"></span></label>
+</div>
+<div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Precio de venta ($/kWh)</span><input type="number" id="f_precioKwh" min="0" step="0.1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Precio promocional ($/kWh)</span><input type="number" id="f_precioPromo" min="0" step="0.1"><span class="hint">0 = sin promoción</span></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Meses de promoción</span><input type="number" id="f_mesesPromo" min="0" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Incremento anual del precio (%)</span><input type="number" id="f_incPrecio" min="0" step="0.1"></label>
+</div>
+<div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Uptime (%)</span><input type="number" id="f_uptime" min="0" max="100" step="0.5"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Pérdidas eléctricas AC (%)</span><input type="number" id="f_perdidas" min="0" max="90" step="0.1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Sesiones/día al arranque</span><input type="number" id="f_sesionesIni" min="0" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Meses de rampa</span><input type="number" id="f_rampaMeses" min="0" step="1"><span class="hint">Hasta llegar al objetivo del escenario</span></label>
+</div>
+<div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Crecimiento anual de sesiones (%)</span><input type="number" id="f_crecSesiones" min="0" step="0.5"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Incremento anual costo CFE (%)</span><input type="number" id="f_incCFE" min="0" step="0.1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Incremento anual costo MEM (%)</span><input type="number" id="f_incMEM" min="0" step="0.1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Ahorro MEM vs CFE (%)</span><input type="number" id="f_ahorroMem" min="0" max="90" step="0.5"><span class="hint">El material de referencia se contradice entre 10 y 15: aquí se declara</span></label>
+</div>
+<div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Cambio a MEM (mes)</span><input type="month" id="f_cambioMem"><span class="hint">Vacío = sin cambio previsto</span></label>
+<div style="grid-column:span 3"><span class="hint" id="f_h_sumin"></span></div>
+</div>
+<div class="note" style="margin-top:16px"><b>De dónde sale el costo de la energía.</b> <span id="f_h_costo"></span></div>
+</div>
+
+<div class="note" style="margin:14px 0">El balanceo dinámico y el transformador siguen capturándose en <b>CAPEX → Configuración</b>, porque son los que dimensionan la subestación. Su efecto sobre la operación —la demanda de diseño como techo físico de energía diaria— se aplica en la proyección.</div>
+
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<span class="eyebrow">Tarifa del suministrador</span>
+<label class="row tiny" style="gap:8px"><input type="checkbox" id="v_mem" style="width:auto"> Suministro calificado en el MEM</label>
+</div>
+<div class="grid g4" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Suministrador</span><input type="text" id="v_sumin" placeholder="CFE Suministro Básico"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Categoría tarifaria</span><select id="v_tarifaCat"></select></label>
+<label class="f" style="margin-bottom:0"><span class="lb">División tarifaria</span><select id="v_tarifaDiv"></select></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Mes de la tarifa</span><input type="month" id="v_tarifaMes"></label>
+</div>
+<div class="grid g4" style="gap:12px;margin-top:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Capacidad ($/kW-mes)</span><input type="number" id="v_cargoCap" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Distribución ($/kW-mes)</span><input type="number" id="v_cargoDist" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Cargo fijo ($/mes)</span><input type="number" id="v_cargoFijo" min="0" step="0.01"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Otros cargos ($/kWh)</span><input type="number" id="v_otrosKwh" min="0" step="0.0001"><span class="hint">Transmisión, CENACE y servicios conexos</span></label>
+</div>
+<div class="grid g3" style="gap:12px;margin-top:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Energía punta ($/kWh)</span><input type="number" id="v_enPunta" min="0" step="0.0001"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Energía intermedia ($/kWh)</span><input type="number" id="v_enInterm" min="0" step="0.0001"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Energía base ($/kWh)</span><input type="number" id="v_enBase" min="0" step="0.0001"></label>
+</div>
+<div style="margin-top:12px"><span class="hint" id="h_tarifa"></span></div>
+<div style="margin-top:8px"><span class="hint" id="h_dep"></span></div>
+<div class="note" style="margin-top:14px">Los cargos se capturan como referencia documentada del proyecto: alimentan el depósito en garantía y el diferencial de arbitraje, no una factura estimada. La Comisión Reguladora de Energía los aprueba cada mes y difieren entre las 17 divisiones tarifarias, así que hay que declarar división y mes.</div>
+</div>
+
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Generación y almacenamiento</div>
+<div class="grid g4" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Fotovoltaico (kWp)</span><input type="number" id="v_kwp" min="0" step="5"><span class="hint">0 = sin sistema fotovoltaico</span></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Rendimiento (kWh/kWp-mes)</span><input type="number" id="v_fvKwhKwp" min="0" step="1"></label>
+<div id="fvBox" class="grid g2" style="gap:12px;grid-column:span 2">
+<label class="f" style="margin-bottom:0"><span class="lb">Costeo del fotovoltaico</span>
+<select id="v_fvModo"><option value="llave">Llave en mano por USD/Wp</option><option value="desglose">Desglose por componentes</option></select></label>
+<label class="f" id="fvWpBox" style="margin-bottom:0"><span class="lb">Costo llave en mano (USD/Wp)</span><input type="number" id="v_fvUsdWp" min="0" step="0.01"><span class="hint" id="h_fv"></span></label>
+</div>
+</div>
+<div style="margin-top:10px"><span class="hint" id="h_fvrend"></span></div>
+<label class="row tiny" style="gap:8px;margin-top:12px"><input type="checkbox" id="v_fvPerfil" style="width:auto"> Tengo el perfil mensual de irradiancia del sitio</label>
+<div id="fvPerfilBox" class="hide" style="margin-top:12px">
+<div class="grid" id="fvMesesBox" style="grid-template-columns:repeat(6,1fr);gap:10px"></div>
+<div style="margin-top:10px"><span class="hint" id="h_fvperfil"></span></div>
+</div>
+<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Módulos BESS</span><input type="number" id="v_bess" min="0" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">kWh por módulo</span><input type="number" id="v_besskwh" min="0" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Potencia por módulo (kW)</span><input type="number" id="v_besskw" min="0" step="5"></label>
+</div>
+</div>
+
+<div class="card">
+<div class="eyebrow" style="margin-bottom:16px">Escenarios de consumo</div>
+<div class="grid g3" style="gap:12px">
+<label class="f" style="margin-bottom:0"><span class="lb">Consumo en punta (%)</span><input type="number" id="v_pctPunta" min="0" max="100" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Consumo en intermedia (%)</span><input type="number" id="v_pctInterm" min="0" max="100" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Consumo en base (%)</span><input type="number" id="v_pctBase" min="0" max="100" step="1"></label>
+</div>
+<div style="margin-top:8px"><span class="hint" id="h_reparto"></span></div>
+<div class="grid g3" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
+<label class="f" style="margin-bottom:0"><span class="lb">Profundidad de descarga (%)</span><input type="number" id="v_bessDoD" min="10" max="100" step="5"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Eficiencia ida y vuelta (%)</span><input type="number" id="v_bessEff" min="50" max="100" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Días con punta al mes</span><input type="number" id="v_diasPunta" min="0" max="31" step="1"></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Horas del pico a cubrir</span><input type="number" id="v_horasPico" min="0.5" max="24" step="0.5"><span class="hint">Cuánto tiempo al día la estación se mantiene por encima del objetivo de recorte</span></label>
+</div>
+<div class="scroll" style="max-height:none;margin-top:16px">
+<table>
+<thead><tr><th>Escenario</th><th class="num">Sesiones/día</th><th class="num">kWh/sesión</th><th class="num">Demanda máx. (kW)</th><th class="num">kWh/mes medido</th><th class="num">Calculada</th><th>Se factura por</th></tr></thead>
+<tbody>
+<tr><td><b>Pesimista</b></td>
+<td><input type="number" id="v_esc1Ses" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc1Kwh" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc1Dmax" min="0" step="10" class="money"></td>
+<td class="num" id="o_esc1Q">—</td><td class="num" id="o_esc1Calc">—</td><td id="o_esc1Cual">—</td></tr>
+<tr><td><b>Probable</b></td>
+<td><input type="number" id="v_esc2Ses" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc2Kwh" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc2Dmax" min="0" step="10" class="money"></td>
+<td class="num" id="o_esc2Q">—</td><td class="num" id="o_esc2Calc">—</td><td id="o_esc2Cual">—</td></tr>
+<tr><td><b>Optimista</b></td>
+<td><input type="number" id="v_esc3Ses" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc3Kwh" min="0" step="1" class="money"></td>
+<td><input type="number" id="v_esc3Dmax" min="0" step="10" class="money"></td>
+<td class="num" id="o_esc3Q">—</td><td class="num" id="o_esc3Calc">—</td><td id="o_esc3Cual">—</td></tr>
+</tbody>
+</table>
+</div>
+<div style="margin-top:12px"><span class="hint" id="h_esc"></span></div>
+<div id="escVeredicto" class="stack" style="gap:8px;margin-top:12px"></div>
+</div>
+
+</div>
+
+<!-- OPEX -->
+<div id="fin-opex" class="hide">
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Gasto de operación mensual</h3><div class="tiny muted" style="margin-top:4px">Monto del primer mes de operación. Cada concepto declara cómo crece cada año. Un renglón inactivo se conserva y no suma.</div></div>
+<div class="row">
+<button class="btn ghost" id="fin_plantilla">Usar plantilla OPEX</button>
+<button class="btn" id="fin_add_opex">Agregar concepto</button>
+</div>
+</div>
+<div class="scroll">
+<table class="fit">
+<colgroup><col style="width:30%"><col style="width:17%"><col style="width:13%"><col style="width:15%"><col style="width:10%"><col style="width:9%"><col style="width:6%"></colgroup>
+<thead><tr><th>Concepto</th><th>Categoría</th><th class="num">Monto mensual</th><th>Incremento anual</th><th class="num">Tasa</th><th style="text-align:center">Activo</th><th></th></tr></thead>
+<tbody id="fin_opex_body"></tbody>
+</table>
+</div>
+<div class="tiny muted hide" id="fin_opex_vacio" style="padding:18px 0">Sin conceptos capturados. Usa la plantilla del modelo de referencia o agrega el primero a mano.</div>
+<div class="grid g3" style="margin-top:14px">
+<div class="derived"><span class="muted">OPEX mensual total</span><b id="fin_opex_tot_mes"></b></div>
+<div class="derived"><span class="muted">OPEX anual, año 1</span><b id="fin_opex_tot_anio"></b></div>
+<div class="derived"><span class="muted">IPC del proyecto</span><b id="fin_opex_ipc"></b></div>
+</div>
+<div class="note" style="margin-top:14px"><b>Alcance de esta pantalla.</b> Es una lista de supuestos de gasto y su suma. No hay facturación, proveedores, contabilidad, conciliación ni histórico real de pagos. El escalamiento se aplica en el <b>aniversario del inicio de operación</b>, no en enero.</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Costos variables sobre ventas</h3><div class="tiny muted" style="margin-top:4px">Porcentaje de los ingresos, no monto mensual: escalan con el negocio. Aquí va la comisión de la concesionaria y, si aplica, el fee de O&amp;M.</div></div>
+<button class="btn" id="fin_add_var">Agregar costo variable</button>
+</div>
+<div class="scroll">
+<table class="fit">
+<colgroup><col style="width:60%"><col style="width:20%"><col style="width:12%"><col style="width:8%"></colgroup>
+<thead><tr><th>Concepto</th><th class="num">% de ventas</th><th style="text-align:center">Activo</th><th></th></tr></thead>
+<tbody id="fin_var_body"></tbody>
+</table>
+</div>
+<div class="tiny muted hide" id="fin_var_vacio" style="padding:18px 0">Sin costos variables capturados.</div>
+<div class="derived" style="margin-top:14px"><span class="muted">Total sobre ventas</span><b id="fin_var_tot"></b></div>
+</div>
+</div>
+
+<!-- PROYECCIÓN -->
+<div id="fin-proy" class="hide">
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Proyección mensual</h3><div class="tiny muted" style="margin-top:4px">Se calcula de los supuestos, el escenario seleccionado, la tarifa capturada y el OPEX. No hay cifras escritas en esta pantalla.</div></div>
+<div class="row">
+<label class="row tiny" style="gap:6px">Escenario <select id="f_proy_esc" style="width:auto"><option value="1">Pesimista</option><option value="2">Probable</option><option value="3">Optimista</option></select></label>
+<label class="row tiny" style="gap:6px">Año <select id="f_proy_anio" style="width:auto"></select></label>
+</div>
+</div>
+<div class="note warn hide" id="fin_proy_falta" style="margin-bottom:14px"></div>
+<div class="scroll" style="max-height:none">
+<table id="fin_proy_tabla" class="proy"></table>
+</div>
+<div class="note" style="margin-top:14px" id="fin_proy_nota"></div>
+</div>
+</div>
+
+<!-- INVERSIONISTAS -->
+<div id="fin-inv" class="hide">
+<div class="grid g4" style="margin-bottom:14px">
+<div class="card stat"><span class="eyebrow">CAPEX requerido</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_req" style="font-size:26px"></span></div></div>
+<div class="card stat"><span class="eyebrow">Capital aportado</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_apo" style="font-size:26px"></span></div></div>
+<div class="card stat"><span class="eyebrow">Faltante / excedente</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_gap" style="font-size:26px"></span></div></div>
+<div class="card stat"><span class="eyebrow">Suma de participaciones</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_inv_suma" style="font-size:26px"></span></div><span class="tiny muted">Sobre el capital aportado</span></div>
+</div>
+<div class="card">
+<div class="row sp" style="margin-bottom:16px">
+<div><h3>Inversionistas</h3><div class="tiny muted" style="margin-top:4px">La participación se calcula sola: aportación entre capital aportado total. No es una tabla accionaria.</div></div>
+<button class="btn" id="fin_add_inv">Agregar inversionista</button>
+</div>
+<div class="scroll">
+<table class="fit">
+<colgroup><col style="width:45%"><col style="width:20%"><col style="width:18%"><col style="width:9%"><col style="width:8%"></colgroup>
+<thead><tr><th>Nombre</th><th class="num">Aportación</th><th class="num">Participación</th><th style="text-align:center">Activo</th><th></th></tr></thead>
+<tbody id="fin_inv_body"></tbody>
+</table>
+</div>
+<div class="tiny muted hide" id="fin_inv_vacio" style="padding:18px 0">Sin inversionistas capturados.</div>
+<div class="note" style="margin-top:14px"><b>Lo que esta pantalla no dice.</b> No hay retorno, TIR, VPN, deuda, impuestos, depreciación ni distribución de flujo: esas cifras dependen de un modelo que todavía no existe.</div>
+</div>
+</div>
+
+<!-- VISTA DE INVERSIONISTA: sólo lectura, se arma del snapshot -->
+<div id="fin-vista" class="hide"></div>
 </section>
 <div style="margin-top:24px" class="note">
 <b>Herramienta de estimación, no de contratación.</b> Las cantidades se derivan de las variables de sitio mediante reglas paramétricas, no de ingeniería de detalle. Cada renglón declara la base de su número; los marcados sin base son provisiones que deben cotizarse antes de comprometer precio. Ingeniería bajo NOM-001-SEDE-2012; interruptores principales y derivados se verifican contra 125% de la carga continua (Art. 625-21).

@@ -276,8 +276,15 @@ test("el menú Exportar vive en la sección del catálogo y se usa en móvil",
     const pagina = await conProyectoAbierto();
     // Está dentro de la sección del presupuesto, no en una pestaña nueva.
     assert.equal(await pagina.locator("#p-boq #x_menu").count(), 1);
-    assert.equal(await pagina.locator(".tab").count(), 8,
-      "no se agregó ninguna pestaña");
+    /* Exportar no agregó pestaña: vive dentro del presupuesto. Las ocho son
+       las originales del estimador. La sección de operación y finanzas no
+       está aquí: vive en el workspace OPEX, con su propia navegación. */
+    assert.equal(await pagina.locator("#tabsCapex .tab").count(), 8,
+      "el frente CAPEX conserva sus ocho pestañas");
+    assert.equal(await pagina.locator('.tab[data-t="fin"]').count(), 0,
+      "Finanzas dejó de ser una pestaña suelta");
+    assert.equal(await pagina.locator("#wsNav .wstab").count(), 2,
+      "y arriba están los dos frentes: CAPEX y OPEX");
 
     await pagina.setViewportSize({ width: 390, height: 844 });
     const sum = pagina.locator("#x_menu > summary");
