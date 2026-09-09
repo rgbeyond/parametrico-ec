@@ -381,7 +381,19 @@
 <div class="card" style="padding-bottom:14px">
 <div class="row sp" style="margin-bottom:16px">
 <div><h3>Catálogo de conceptos del proyecto</h3><div class="tiny muted" style="margin-top:4px">Cantidad y precio unitario son editables. Las cantidades se derivan de las variables de sitio; al editarlas se rompe el vínculo con la variable.</div></div>
-<div class="row"><button class="btn ghost" id="b_save">Guardar</button><button class="btn ghost" id="b_reset">Restablecer precios</button></div>
+<div class="row">
+<!-- Exportar vive aquí, en la sección del presupuesto, porque lo que exporta es
+     esta tabla. Es un <details> y no un menú con JavaScript: abre con teclado,
+     cierra con Escape y en un teléfono no depende de un evento de hover. -->
+<details class="menu" id="x_menu">
+<summary class="btn ghost" title="Descargar el catálogo de conceptos de este proyecto">Exportar</summary>
+<div class="menu-op">
+<button class="btn ghost" id="x_csv">CSV</button>
+<button class="btn ghost" id="x_pdf">PDF</button>
+<div class="xs muted" id="x_msg" style="max-width:230px"></div>
+</div>
+</details>
+<button class="btn ghost" id="b_save">Guardar</button><button class="btn ghost" id="b_reset">Restablecer precios</button></div>
 </div>
 <div class="filters">
 <input type="text" id="b_q" placeholder="Buscar concepto o código">

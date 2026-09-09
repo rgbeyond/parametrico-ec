@@ -8,3 +8,5 @@ dist
 .vite
 .netlify
 .claude/settings.local.json
+dist-nube
+__pycache__
