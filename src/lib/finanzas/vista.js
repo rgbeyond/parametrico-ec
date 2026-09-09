@@ -33,6 +33,33 @@ const cifra = (rotulo, valor, pie = "", color = "") => `
     ${pie ? `<div style="font-size:11px;color:#5A5A57;margin-top:4px">${esc(pie)}</div>` : ""}
   </div>`;
 
+/* Proyección de operación, por AÑO. La serie mensual se queda del lado
+   interno: quien pone capital necesita la trayectoria, no ciento veinte
+   renglones con sesiones, demanda facturable y costo unitario de energía. */
+function operacionHTML(s) {
+  const anios = s.operacion || [];
+  if (!anios.length) return "";
+  return `<div style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(0,0,0,.1)">
+    <div class="eyebrow">Proyección de operación</div>
+    <div style="overflow-x:auto"><table style="margin-top:10px;min-width:520px">
+      <thead><tr><th>Año</th><th class="num">Ventas</th>
+        <th class="num">Costo de electricidad</th><th class="num">Operación</th>
+        <th class="num">EBITDA</th><th class="num">Margen</th></tr></thead>
+      <tbody>${anios.map((a) => `<tr>
+        <td>${esc(a.anio)}</td>
+        <td class="num">${pesos(a.ventas)}</td>
+        <td class="num">${pesos(a.costoEnergia)}</td>
+        <td class="num">${pesos(a.opex)}</td>
+        <td class="num" style="font-weight:600">${pesos(a.ebitda)}</td>
+        <td class="num">${pct(a.margen)}</td></tr>`).join("")}
+      </tbody></table></div>
+    <div style="font-size:11px;color:#5A5A57;margin-top:8px">
+      EBITDA antes de intereses, impuestos y depreciación, sobre supuestos de
+      operación capturados para este proyecto. No hay ingresos históricos: es
+      una proyección, no un resultado.</div>
+  </div>`;
+}
+
 export function vistaInversionistaHTML(snap) {
   if (!snap) return "";
   const s = snap;
@@ -126,6 +153,8 @@ export function vistaInversionistaHTML(snap) {
         ${cats}
       </div>
     </div>
+
+    ${operacionHTML(s)}
 
     ${s.notas ? `<div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(0,0,0,.1)">
       <div class="eyebrow">Notas y supuestos</div>

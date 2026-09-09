@@ -41,6 +41,7 @@ import { modeloExport, aCSV, documentoHTML, nombreArchivo } from './exportar.js'
    recibir de vuelta el estado cuando el usuario captura algo. */
 import { montarFinanzas } from '../ui/finanzas.js';
 import { normalizarFinanzas, finanzasVacias } from './finanzas/estado.js';
+import { costoCFEDeTarifa } from './finanzas/proyeccion.js';
 /* El catálogo del proyecto abierto: maestro más los conceptos propios de esa
    estación. Sin sesión cae al archivo incluido, para poder trabajar en local. */
 const CAT_GEN=(ctx.conceptos && ctx.conceptos.length ? ctx.conceptos : CAT_GEN_RAW).map(x=>({...x}));
@@ -916,19 +917,57 @@ cfg.kva=String(parseFloat(e.target.value)||0); touch(); render();
    el usuario captura algo, lo que vuelve es el estado completo de finanzas,
    que se marca sucio con el mecanismo de guardado normal del proyecto. */
 const finUI=montarFinanzas({alCambiar:f=>{ finanzas=f; touch(); render(); }});
+/* Todo lo que la sección OPEX necesita del motor, calculado UNA vez y pasado
+   como argumento. Ninguna de estas cifras se recalcula del otro lado: el
+   CAPEX es `totals()`, los escenarios y la tarifa son `cfg`, y la generación
+   sale del mismo rendimiento que usa el tablero de escenarios. */
 function datosFinanzas(t){
   const d=[{rotulo:"Costo directo de obra y equipo",valor:t.tec}];
   if(t.fee) d.push({rotulo:"Indirectos y administración de proyecto",valor:t.fee});
   if(t.cont) d.push({rotulo:"Reserva de contingencia ("+cfg.cont+"%)",valor:t.cont});
   d.push({rotulo:"Inversión total, más IVA",valor:t.total});
   if(t.dep) d.push({rotulo:"Depósito en garantía (reembolsable, aparte)",valor:t.dep});
+  const kwp=+cfg.kwp||0, perfil=rendMeses(cfg);
   return {nombre:cfg.nom,ubicacion:cfg.loc,
     capex:t.total,deposito:t.dep,
     clase:t.cl?"Clase "+t.cl.c+" — "+t.cl.nom:"",
     precision:t.cl?t.cl.lo+"% / +"+t.cl.hi+"%":"",
-    desglose:d,version:VERSION_TXT,finanzas};
+    desglose:d,version:VERSION_TXT,finanzas,
+    /* Los tres escenarios tal como están capturados en Configuración. Son
+       ALTERNATIVAS, no años consecutivos. */
+    escenarios:[1,2,3].map(i=>({
+      i, nombre:["Pesimista","Probable","Optimista"][i-1],
+      sesiones:+cfg["esc"+i+"Ses"]||0, kwhSesion:+cfg["esc"+i+"Kwh"]||0,
+      dmax:+cfg["esc"+i+"Dmax"]||0})),
+    tarifa:{
+      costoCFE:costoCFEDeTarifa(cfg),
+      cargoCap:+cfg.cargoCap||0, cargoDist:+cfg.cargoDist||0,
+      cargoFijo:+cfg.cargoFijo||0,
+      fc:FC_TARIFA[cfg.tarifaCat]||0.57,
+      categoria:cfg.tarifaCat||"", division:(cfg.tarifaDiv||"").trim(),
+      mesTarifa:(cfg.tarifaMes||"").trim(),
+      reparto:{punta:+cfg.pctPunta||0,interm:+cfg.pctInterm||0,base:+cfg.pctBase||0}},
+    memInicial:!!cfg.mem,
+    /* kWh al mes que produce el arreglo: doce cifras si hay perfil declarado,
+       una sola si se usa el promedio anual. */
+    generacion:perfil?perfil.map(x=>kwp*x):kwp*(+cfg.fvKwhKwp||0),
+    potDiseno:potDis(cfg),
+    balanceo:!!cfg.balanceo, balanceoPct:+cfg.balanceoPct||0};
 }
-const TABS=["conf","alc","res","dist","prec","boq","gen","exp","fin"];
+const TABS=["conf","alc","res","dist","prec","boq","gen","exp"];
+/* Los dos frentes. `capex` enseña la barra de pestañas técnicas; `opex`
+   enseña la sección de operación con su propia navegación interna. */
+let workspace="capex";
+function mostrarWorkspace(ws,scroll){
+  workspace=ws==="opex"?"opex":"capex";
+  $$("#wsNav [data-ws]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.ws===workspace)));
+  $("#tabsCapex").classList.toggle("hide",workspace!=="capex");
+  $("#p-fin").classList.toggle("hide",workspace!=="opex");
+  if(workspace==="opex") TABS.forEach(k=>$("#p-"+k).classList.add("hide"));
+  else { const sel=$$(".tab").find(x=>x.getAttribute("aria-selected")==="true");
+    showTab(sel?sel.dataset.t:"conf",false); }
+  if(scroll!==false) window.scrollTo({top:0,behavior:"smooth"});
+}
 function showTab(t,scroll){
 $$(".tab").forEach(x=>x.setAttribute("aria-selected",x.dataset.t===t));
 TABS.forEach(k=>$("#p-"+k).classList.toggle("hide",k!==t));
@@ -936,7 +975,11 @@ document.querySelector(".wrap").classList.toggle("wide",t==="boq"||t==="gen");
 if(scroll!==false) window.scrollTo({top:0,behavior:"smooth"});
 }
 $$(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.t)));
-function goCat(cat){ bf.cat=cat; const el=$("#b_cat"); if(el)el.value=cat; render(); showTab("boq");
+$$("#wsNav [data-ws]").forEach(b=>b.addEventListener("click",()=>mostrarWorkspace(b.dataset.ws)));
+/* Los mapas de la pestaña Distribución llevan al catálogo, que vive en CAPEX:
+   si el usuario estuviera en OPEX habría que devolverlo, o el clic no haría
+   nada visible. */
+function goCat(cat){ bf.cat=cat; const el=$("#b_cat"); if(el)el.value=cat; render(); mostrarWorkspace("capex",false); showTab("boq");
 setTimeout(()=>{const r=document.getElementById("cat-"+cat); if(r&&r.scrollIntoView)r.scrollIntoView({block:"start",behavior:"smooth"});},120); };
 window.addEventListener("proyecto:abierto",()=>{
 const e0=ctx.proyecto?ctx.proyecto.estado:null;
@@ -949,7 +992,7 @@ else { edits={}; genEdits={}; genApproved={}; finanzas=null;
   fvPerfil:0,fvMeses:null,pctPunta:20,pctInterm:60,pctBase:20,bessDoD:80,bessEff:87,diasPunta:22,horasPico:6,
   esc1Ses:0,esc1Kwh:0,esc1Dmax:0,esc2Ses:0,esc2Kwh:0,esc2Dmax:0,esc3Ses:0,esc3Kwh:0,esc3Dmax:0,balanceo:0,kwp:0,bess:0,mbt:0,mmt:0,dem:0,piso:0,techNueva:0,tech:0,sde:0});
   cfg.nom=ctx.proyecto?.nombre||""; cfg.loc=ctx.proyecto?.ubicacion||""; }
-fill(); render(); showTab("conf",false);
+fill(); render(); showTab("conf",false); mostrarWorkspace("capex",false);
 });
 const _bv=document.getElementById("b_volver");
 if(_bv) _bv.addEventListener("click",()=>{ if(window.volverAPortada) window.volverAPortada(); });
@@ -1239,7 +1282,7 @@ else { const r=await DB.get(KEY);
   if(r&&r.value){const d=JSON.parse(r.value);Object.assign(cfg,d.cfg||{});edits=d.edits||{};
   genEdits=d.genEdits||{}; genApproved=d.genApproved||{}; finanzas=normalizarFinanzas(d.finanzas);} }
 }catch(e){}
-fill(); render(); showTab("conf",false);
+fill(); render(); showTab("conf",false); mostrarWorkspace("capex",false);
   const _b=document.getElementById("bootfail"); if(_b) _b.remove();
   } catch(err){ boot((err&&err.message||err)+". Vuelve a abrir el archivo; si persiste, avísame con este mensaje."); }
 })();

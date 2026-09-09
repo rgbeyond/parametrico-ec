@@ -41,7 +41,7 @@
 /* Las llaves de primer nivel que el snapshot puede tener. La prueba compara
    contra esta lista: si alguien agrega un campo sin declararlo aquí, falla. */
 export const CAMPOS_SNAPSHOT = ["proyecto", "capex", "opex", "fondeo",
-  "inversionistas", "notas", "meta"];
+  "inversionistas", "operacion", "notas", "meta"];
 
 const num = (v) => (Number.isFinite(+v) ? +v : 0);
 const txt = (v) => (v == null ? "" : String(v));
@@ -52,6 +52,10 @@ export function snapshotInversionista({
   opex = { mensual: 0, anual: 0, porCategoria: [] },
   fondeo = { aportado: 0, faltante: 0, excedente: 0, cobertura: 0 },
   participantes = [],
+  /* Resumen ANUAL de la proyección, ya agregado. Aquí no entra la serie
+     mensual completa: un inversionista necesita la trayectoria por año, no
+     ciento veinte renglones con el detalle operativo del proyecto. */
+  operacion = [],
   notas = "",
   version = "", fecha = new Date(), demo = false,
 } = {}) {
@@ -87,6 +91,17 @@ export function snapshotInversionista({
       nombre: txt(p.nombre) || "Sin nombre",
       aportacion: Math.round(num(p.aportacion)),
       participacion: num(p.participacion),
+    })),
+    /* Cinco cifras por año y ninguna más. Sin sesiones, sin kWh, sin costo
+       unitario de energía, sin demanda facturable: el detalle operativo es
+       interno y no le cambia la decisión a quien pone el capital. */
+    operacion: (operacion || []).map((a) => ({
+      anio: Math.round(num(a.anio)),
+      ventas: Math.round(num(a.ventas)),
+      costoEnergia: Math.round(num(a.costoElectricidad ?? a.costoEnergia)),
+      opex: Math.round(num(a.opexFijo) + num(a.costoVariable)),
+      ebitda: Math.round(num(a.ebitda)),
+      margen: num(a.margen),
     })),
     notas: txt(notas),
     meta: {

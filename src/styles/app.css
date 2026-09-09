@@ -172,6 +172,28 @@ svg text{font-family:var(--font-sans)}
 .doc td{border-bottom:1px solid rgba(0,0,0,.1)} .doc tr:hover td{background:#F7F7F5}
 .doc .mark{color:#B4590C} .doc .accent{color:#B4590C;font-weight:600}
 
+/* Los dos frentes del proyecto. Es la jerarquía de más arriba —por encima de
+   las pestañas— porque separa dos preguntas distintas: cuánto cuesta construir
+   la estación y qué deja operarla. */
+.wsnav{display:flex;gap:8px;margin-bottom:14px}
+.wstab{flex:1 1 0;min-width:0;background:var(--surface-1);border:1px solid var(--border-default);color:var(--text-secondary);font-family:inherit;font-size:14px;font-weight:600;padding:13px 16px;border-radius:var(--r-lg);cursor:pointer;transition:120ms}
+.wstab:hover{background:var(--surface-3);color:var(--text-primary)}
+.wstab[aria-selected=true]{background:var(--accent);color:var(--text-on-accent);border-color:var(--accent)}
+@media(max-width:620px){.wsnav{flex-direction:column}}
+
+/* Proyección: los meses son columnas y los conceptos renglones, como en el
+   modelo de referencia. La primera columna se queda fija al desplazar de lado,
+   porque una cifra sin su concepto no se puede leer. */
+table.proy{min-width:1180px;font-size:12px}
+table.proy th,table.proy td{white-space:nowrap;padding:6px 10px}
+table.proy thead th{text-align:right}
+table.proy thead th:first-child{text-align:left;left:0;z-index:3}
+table.proy tbody th{position:sticky;left:0;top:auto;background:var(--surface-2);text-align:left;text-transform:none;letter-spacing:0;font-size:12px;font-weight:500;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle);z-index:1}
+table.proy td{text-align:right;font-variant-numeric:tabular-nums}
+table.proy tr.sep th,table.proy tr.sep td{border-top:1px solid var(--border-default)}
+table.proy tr.fuerte th,table.proy tr.fuerte td{font-weight:700;color:var(--text-primary)}
+table.proy td.anual,table.proy th.anual{background:var(--surface-1);font-weight:600}
+
 /* Navegación interna de Finanzas. Es la segunda jerarquía de la aplicación:
    se distingue de las pestañas principales por ser más pequeña y no llevar el
    naranja de marca en el fondo, para que no compitan visualmente. */
