@@ -34,7 +34,7 @@ const POT_EVSE=[
 {kw:240,pu:900000, tax:"supuesto",  r:"Se toma la referencia alta de las dos internas disponibles ($900,000 frente a $575,505) porque incluye instalación, garantía y riesgo de suministro. La diferencia entre ambas es material: es la primera cotización a solicitar."}
 ];
 import CAT_GEN_RAW from '../data/catalogo.json';
-import { ctx, guardarEstado, agregarConcepto, promover, puede } from './contexto.js';
+import { ctx, guardarEstado, agregarConcepto, promover, puede, sesion } from './contexto.js';
 import { modeloExport, aCSV, documentoHTML, nombreArchivo } from './exportar.js';
 /* Finanzas (issue #7). La lógica vive en módulos propios y probables sin DOM;
    aquí sólo queda el enganche: pasarle el CAPEX que este archivo ya calculó y
@@ -79,30 +79,13 @@ const mxs=n=>{const a=Math.abs(n);if(a>=1e6)return (n/1e6).toFixed(2).replace(/\
    pierde precisión que importa al comparar periodos horarios. */
 const mkwh=n=>"$"+(+n||0).toLocaleString("es-MX",{minimumFractionDigits:4,maximumFractionDigits:4});
 POT_EVSE.forEach(p=>PU_EVSE[p.kw]=p);
-const grp=g=>(g.grupos||[]).filter(x=>x.q>0);
-const nEvse=g=>grp(g).reduce((a,b)=>a+ +b.q,0);
-const potEvse=g=>grp(g).reduce((a,b)=>a+ +b.kw* +b.q,0);
-const nCon=g=>grp(g).reduce((a,b)=>a+ +b.con* +b.q,0);
+/* Las derivaciones de la configuración viven en un módulo aparte porque el
+   portal de inversionistas también las necesita y este archivo se monta solo
+   al importarse. Duplicarlas habría creado dos reglas que divergen. */
+import { grp, nEvse, potEvse, nCon, potDis, pisoDemCon, demCon } from './derivadas.js';
 const circEq=g=>grp(g).reduce((a,b)=>a+ +b.q*(+b.kw/120),0);
 const nCam=g=>{const p=nCon(g); if(p<=0)return 0; return Math.min(10,Math.max(2,Math.round(2+(p-4)*8/26)));};
 const techM2=g=>g.techNueva?(g.tech>0?g.tech:nCon(g)*15):0;
-/* Demanda de diseño: la potencia que la estación puede tomar de la red al
-   mismo tiempo. Con balanceo dinámico se reserva un porcentaje de la carga
-   instalada que el sistema de gestión recorta en el pico, o que cubre el
-   almacenamiento, así que la acometida y el transformador se dimensionan
-   contra la diferencia y no contra la suma de placas. Tiene consecuencia
-   operativa: en el pico los vehículos cargan más lento. */
-const potDis=g=>g.balanceo?potEvse(g)*(1-(+g.balanceoPct||0)/100):potEvse(g);
-/* Demanda contratada ante el suministrador, en kW. La tarifa GDMTH la deja a
-   voluntad del usuario pero le fija un piso (apartado 4): no menor al 60% de la
-   carga total conectada ni menor a 100 kW. Aquí la carga conectada se toma como
-   la potencia de los equipos de carga, que es la que domina en una
-   electrolinera; si el sitio tiene otras cargas conectadas el piso real es
-   mayor y hay que capturarlo a mano. Importa porque el depósito en garantía se
-   calcula sobre esta cifra, no sobre la capacidad del transformador, y por eso
-   un proyecto por fases puede contratar menos y reducir el depósito. */
-const pisoDemCon=g=>Math.max(100,potEvse(g)*0.60);
-const demCon=g=>(+g.demCon>0?+g.demCon:pisoDemCon(g));
 /* Conversión de kW a kVA y margen de sobredimensionamiento del transformador.
    FP_DIM 0.80 es criterio de dimensionamiento de Beyond, no el factor de
    potencia real del equipo: los cargadores de corriente directa con
@@ -938,6 +921,11 @@ function datosFinanzas(t){
        verificación de verdad vive en la base; esto sólo evita ofrecer un
        botón que iba a fallar. */
     puedeEditar:!!puede.editar,
+    /* El identificador del proyecto abierto, para construir la liga del
+       portal. Vacío sin sesión en la nube: el portal lee de Supabase, así que
+       en modo local la liga llevaría a una pantalla de acceso requerido.
+       Ofrecer un enlace que no puede funcionar es peor que no ofrecerlo. */
+    proyectoId:(ctx.proyecto&&sesion.perfil)?ctx.proyecto.id:"",
     /* Los tres escenarios tal como están capturados en Configuración. Son
        ALTERNATIVAS, no años consecutivos. */
     escenarios:[1,2,3].map(i=>({

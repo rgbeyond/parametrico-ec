@@ -433,6 +433,15 @@ export function montarFinanzas({ alCambiar }) {
         || p.publicado)}${p.etiqueta ? ` · ${esc(p.etiqueta)}` : ""}</option>`).join("");
     $("#fin_pub_sel").value = pubSel || "";
     $("#fin_pub_borrar").classList.toggle("hide", !sel);
+    /* La liga del portal se arma con el identificador del proyecto abierto, y
+       con la versión que se está viendo si es una publicada. Sin proyecto en
+       la nube no hay liga que ofrecer. */
+    const portal = $("#fin_portal");
+    portal.classList.toggle("hide", !datos.proyectoId);
+    if (datos.proyectoId) {
+      portal.href = `/portal-inversionista.html?proyecto=${encodeURIComponent(datos.proyectoId)}`
+        + (sel ? `&version=${encodeURIComponent(sel.id)}` : "");
+    }
     $("#fin_pub_btn").disabled = enDemo || datos.puedeEditar === false;
 
     const cambios = hayCambiosSinPublicar(vivo, pubs);

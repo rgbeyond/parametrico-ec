@@ -1,5 +1,30 @@
 [
   {
+    "v": "0.16.0",
+    "fecha": "2026-09-24",
+    "tipo": "menor",
+    "resumen": "Portal de inversionistas como pagina aparte: una liga por proyecto que lee de Supabase con la sesion interna y enseña unicamente el modelo curado.",
+    "agregado": [
+      "portal-inversionista.html: pagina standalone, con su propia entrada de compilacion. No carga el estimador ni su shell, asi que abrirla no paga el costo de arrancar la herramienta interna.",
+      "src/lib/portal/modelo.js: modeloPortal(proyecto, publicacion) construye campo por campo la lista blanca de lo que el portal puede enseñar.",
+      "src/lib/portal/vista.js: el marcado, sin un solo control editable, con cuatro secciones -Resumen, Proyecto, Proyeccion, Inversionistas-.",
+      "src/lib/derivadas.js: las derivaciones de cfg -equipos, puntos, potencia, demanda de diseño, piso de demanda contratada- salen de app.js a un modulo compartido. app.js y el portal importan el mismo.",
+      "leerProyectoPortal(id) en datos.js: un solo proyecto, por identificador, con las columnas nombradas.",
+      "Enlace Abrir portal de inversionistas en OPEX - Vista inversionista, que arma la liga con el proyecto abierto y con la version publicada que se este viendo.",
+      "22 pruebas nuevas en Node y 9 de navegador."
+    ],
+    "notas": [
+      "NO ES UNA FRONTERA DE SEGURIDAD Y NO SE PRESENTA COMO TAL. Lee con la sesion del usuario que ya entro al Parametrico, que es un interno y que ya tenia derecho a ver ese proyecto. Lo que la pagina aporta no es aislamiento sino CURADURIA: aunque reciba el proyecto completo, solo pinta lo que modeloPortal deja pasar. El aislamiento real -rol de invitado, RLS, identidad de la plataforma- sigue bloqueado en beyond-platform#10. La pagina lo dice en una banda visible desde el primer instante.",
+      "SIN SESION NO SE PIDE UN SOLO DATO. Primero se resuelve la sesion; solo si hay perfil se consulta. Si no, se enseña Acceso requerido con una salida al login. Hay prueba de navegador que intercepta la red y comprueba cero peticiones de datos.",
+      "SOLO LECTURA. Un select y nada mas: sin insert, update, delete ni RPC. Hay prueba que revisa que no salga ningun POST, PUT, PATCH o DELETE de la pagina.",
+      "EL CAPEX NO SE RECALCULA. Sale de estado.total y estado.directo, que es lo que la propia aplicacion guardo al cerrar el proyecto. Si esas llaves no estan, la inversion se reporta como PENDIENTE y no como cero: un cero se lee como resultado y ahi seria un hueco.",
+      "DOS ESTADOS. Sin publicacion financiera se enseñan proyecto, inversion y resumen tecnico, y las pestañas de Proyeccion e Inversionistas no se ofrecen: una pestaña que abre en blanco es peor que una pestaña que no esta. Con publicacion se enseña la version congelada tal cual, sin recalcularla.",
+      "LA LISTA BLANCA SE PRUEBA EN NEGATIVO. La prueba mete dentro del proyecto precios unitarios, ediciones, catalogo, comentarios, usuarios y la clave interna, y comprueba que no aparecen ni en el modelo ni en el marcado.",
+      "LAS DERIVACIONES TECNICAS YA NO ESTAN DUPLICADAS. Estaban dentro de app.js, que se monta solo al importarse; el portal habria tenido que copiarlas. Ahora las dos pantallas importan el mismo modulo, asi que dicen lo mismo por construccion. La prueba que fija el CAPEX del caso de referencia en 48,670,755 es la red de seguridad de esa extraccion.",
+      "Sin cambios de Auth, RLS, dominio, roles, esquema, catalogo, precios ni PROD. Sin migracion. Sin cuentas externas ni liga publica: la liga solo funciona para quien ya tiene sesion del Parametrico."
+    ]
+  },
+  {
     "v": "0.15.0",
     "fecha": "2026-09-24",
     "tipo": "menor",

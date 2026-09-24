@@ -207,6 +207,28 @@ cosmético: el dato ya viajó al navegador. El acceso de terceros necesita rol
 propio, asignación proyecto↔invitado, RLS y una decisión de Auth, y se coordina
 en `rgbeyond/beyond-platform` antes de tocar nada aquí.
 
+**El portal de inversionistas cura, no aísla.** `portal-inversionista.html` es
+una página aparte que lee un proyecto por identificador con la sesión del
+usuario que ya entró —un interno que ya tenía derecho a ver ese proyecto—. Lo
+que aporta es que, aunque reciba el proyecto completo, sólo pinta lo que
+`modeloPortal()` deja pasar. **No es una frontera de seguridad y la propia
+página lo dice en una banda visible.** El aislamiento real —rol de invitado,
+RLS, identidad de la plataforma— sigue bloqueado en `beyond-platform#10`.
+
+Tres reglas del portal: sin sesión **no se pide un solo dato** —primero se
+resuelve la sesión, y sólo si hay perfil se consulta—; es **sólo lectura**, un
+`select` con columnas nombradas y ningún `insert`, `update`, `delete` ni RPC; y
+**el CAPEX no se recalcula**, sale de `estado.total`. Si esa llave no está, la
+inversión se reporta como **pendiente, nunca como cero**: un cero se lee como
+resultado y ahí sería un hueco. Lo mismo con la proyección: sin publicación
+financiera, las secciones de Proyección e Inversionistas no se ofrecen.
+
+**Las derivaciones de `cfg` viven en `src/lib/derivadas.js`**, no dentro de
+`app.js`. Equipos, puntos, potencia instalada, demanda de diseño y piso de
+demanda contratada las importan el estimador y el portal, así que las dos
+pantallas dicen lo mismo por construcción. Ahí no se calcula ni un peso: el
+CAPEX sigue saliendo de `totals()` y nadie más lo reconstruye.
+
 **Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
 en esa estación hasta que un administrador lo promueve con
 `fn_promover_concepto`. Así una estación captura lo que necesita sin ensuciar
@@ -222,7 +244,9 @@ habría sido reescribirla. Si algún día se migra, que sea por partes.
 
 ```
 index.html                 marcado completo de la aplicación
+portal-inversionista.html  portal de inversionistas: página aparte, con su propia entrada
 src/main.js                orquestación: sesión, portada, carga diferida del estimador
+src/portal.js              entrada del portal: sesión, lectura por id y pintado
 src/ui/portada.js          pantalla de proyectos
 src/ui/usuarios.js         administración de roles
 src/lib/sesion.js          sesión con Google, roles, objeto `puede`
@@ -232,6 +256,8 @@ src/lib/app.js             núcleo del estimador
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
 src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
+src/lib/derivadas.js       derivaciones de cfg compartidas por el estimador y el portal
+src/lib/portal/           modelo curado y vista del portal de inversionistas
 src/lib/finanzas/          modelo de operacion: estado, OPEX, plantilla, inversionistas,
                            proyeccion mensual, snapshot, publicacion y vista
 src/ui/finanzas.js         interfaz del frente OPEX
@@ -262,8 +288,8 @@ Netlify tampoco.
 
 | Qué | Comando | Qué cubre |
 |---|---|---|
-| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, escalamiento, participaciones, brecha de fondeo, la proyección mensual, la compatibilidad del estado y la lista blanca del snapshot. `pruebas/publicacion.test.mjs`: que publicar congele y que lo publicado no filtre datos internos |
-| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada. `pruebas-navegador/ui_finanzas.test.mjs`: que los dos frentes naveguen, que el CAPEX de OPEX sea el del presupuesto y el del archivo, y que ni abrir un proyecto anterior ni el modo demostración le escriban nada |
+| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, escalamiento, participaciones, brecha de fondeo, la proyección mensual, la compatibilidad del estado y la lista blanca del snapshot. `pruebas/publicacion.test.mjs`: que publicar congele y que lo publicado no filtre datos internos. `pruebas/portal.test.mjs`: la lista blanca del portal, probada en negativo con datos internos sembrados en el proyecto |
+| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada. `pruebas-navegador/ui_portal.test.mjs`: que sin sesión el portal no pida un solo dato y que nunca escriba. `pruebas-navegador/ui_finanzas.test.mjs`: que los dos frentes naveguen, que el CAPEX de OPEX sea el del presupuesto y el del archivo, y que ni abrir un proyecto anterior ni el modo demostración le escriban nada |
 
 Están separadas a propósito: `npm test` tiene que poder correr en cualquier
 parte, y lo que comprueban las de navegador —que el archivo coincide con la
@@ -345,14 +371,14 @@ en modo local.
   modelo horario. Donde hay BESS, el costo de electricidad proyectado es
   conservador. El excedente fotovoltaico se reporta pero no se acredita ni se
   vende, porque se paga a otro valor y ese dato no está capturado.
-- **Portal de invitados.** Decidido con RG: lo sirve Beyond Platform contra su
-  propio inicio de sesión, y el Paramétrico sólo publica la hoja. La pieza de
-  este lado ya existe —publicación congelada con su contrato—; falta mover las
-  publicaciones a su propia tabla, el rol de invitado, la asignación
-  proyecto↔invitado y las RLS. Todo eso se coordina antes en
-  `rgbeyond/beyond-platform` (ver `beyond-platform#7`, Auth sin normalizar):
-  construir un portal sobre un Auth que se va a reemplazar es trabajo que se
-  tira dos veces.
+- **Portal de invitados.** Existe la superficie (`portal-inversionista.html`) y
+  existe la publicación congelada, pero **todavía no hay acceso de terceros**:
+  la liga sólo funciona para quien ya tiene sesión del Paramétrico. Falta mover
+  las publicaciones a su propia tabla, el rol de invitado, la asignación
+  proyecto↔invitado y las RLS de sólo-publicaciones. Todo eso está bloqueado en
+  `rgbeyond/beyond-platform#10`, donde se decide cómo identifica la plataforma a
+  un invitado: construir el portal definitivo sobre un Auth que se va a
+  reemplazar es trabajo que se tira dos veces.
 - Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
   ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
   memoria de la sesión.
