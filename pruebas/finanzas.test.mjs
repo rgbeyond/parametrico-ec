@@ -349,7 +349,7 @@ test("entrar a Control general y no capturar nada no cuenta como captura", () =>
   assert.equal(finanzasVacias({ ...finanzasNueva(), ctrl: ctrlNuevo({ precioKwh: 8 }) }), false);
 });
 
-test("un finanzas v1 se actualiza a v2 sin perder nada", () => {
+test("un finanzas v1 se actualiza a la versión vigente sin perder nada", () => {
   const v1 = {
     v: 1,
     opex: [{ id: "a", concepto: "Renta", categoria: "Renta / predial", monto: 45000 }],
@@ -358,7 +358,9 @@ test("un finanzas v1 se actualiza a v2 sin perder nada", () => {
     campoDeUnaVersionPosterior: { x: 1 },
   };
   const f = normalizarFinanzas(v1);
-  assert.equal(f.v, 2);
+  /* Contra la constante y no contra un número escrito a mano: así subir de
+     versión no obliga a editar la prueba, que es cuando se cuelan olvidos. */
+  assert.equal(f.v, VERSION_FINANZAS);
   assert.equal(f.opex[0].monto, 45000);
   assert.deepEqual(f.opex[0].inc, { modo: "ipc", tasa: 0 },
     "un renglon v1 sin regla de incremento arranca heredando el IPC");

@@ -1,5 +1,30 @@
 [
   {
+    "v": "0.15.0",
+    "fecha": "2026-09-24",
+    "tipo": "menor",
+    "resumen": "La hoja del inversionista se puede publicar: una version congelada, con fecha, etiqueta y version del instrumento, que no se mueve aunque el proyecto cambie. Es el cimiento del portal de invitados.",
+    "agregado": [
+      "Barra de publicacion en OPEX - Vista inversionista, con selector de version, etiqueta y boton de publicar. Vive FUERA de la hoja: la hoja sigue sin un solo control dentro.",
+      "src/lib/finanzas/publicacion.js: modulo puro que crea, normaliza y ordena las publicaciones, detecta si lo que se ve en vivo difiere de lo ultimo publicado y produce el objeto autocontenido que otro sistema podria servir.",
+      "Aviso permanente de en que se esta parado: version en vivo, version congelada, o hay cambios sin publicar respecto de la ultima publicacion.",
+      "Eliminar una version publicada, con confirmacion.",
+      "estado.finanzas sube a v3 con la coleccion publicaciones.",
+      "22 pruebas nuevas en Node y 6 de navegador."
+    ],
+    "notas": [
+      "PARA QUE SIRVE. La vista de inversionista se recalcula en cada render: si el proyectista mueve un precio, la hoja cambia debajo. Eso esta bien para trabajar y mal para enseñar. Publicar congela el snapshot completo -no una referencia al proyecto-, asi que a quien se le enseño un EBITDA el martes puede volver el viernes y ver ESE EBITDA.",
+      "ES EL CIMIENTO DEL PORTAL DE INVITADOS, NO UN ADORNO. Hoy la curaduria ocurre en el navegador a partir del estado completo del proyecto, y eso solo es seguro cuando quien mira ya tenia derecho a ver todo. Para un invitado la frontera tiene que estar antes de que el dato salga de la base, y eso exige un objeto publicable y autocontenido. Este es ese objeto.",
+      "TODAVIA NO HAY FRONTERA DE LECTURA. Las publicaciones viven dentro de estado.finanzas porque esta iteracion no hace migracion: quien puede abrir el proyecto puede verlas. El dia que exista el portal, la lista se muda a su propia tabla y la frontera pasa a la base. Por eso cada publicacion lleva su propio numero de contrato: lo que se mueve es donde esta guardada y quien la puede leer, no su forma.",
+      "CONTRATO 1. Versiona la forma del objeto publicado, no la del estado del proyecto. Es el numero que otro sistema leera para saber interpretar lo que recibe. Una publicacion hecha por una version posterior se conserva intacta y la interfaz avisa que no sabe pintarla, en vez de mentir sobre su contenido.",
+      "LA HORA DEL RENDER NO ES UN CAMBIO. meta.fecha se rellena en cada pintado, asi que la comparacion entre lo vivo y lo publicado la excluye; si no, la pantalla diria que hay cambios sin publicar un milisegundo despues de publicar.",
+      "EN MODO DEMOSTRACION NO SE PUEDE PUBLICAR. Publicar cifras inventadas como version oficial del proyecto es justo el error que ese modo existe para evitar.",
+      "Un rol de consulta ve las versiones publicadas pero no publica. La verificacion de verdad vive en la base; la interfaz solo evita ofrecer un boton que iba a fallar.",
+      "Sin cambios de Auth, RLS, dominio, roles, esquema, motor de costos, catalogo, precios ni PROD. No requiere migracion.",
+      "LO QUE ESTA VERSION NO HACE: no hay cuentas externas, ni liga publica, ni rol de invitado, ni asignacion proyecto-invitado. Segun lo acordado con RG, el portal lo servira Beyond Platform contra su propio inicio de sesion; este cambio produce lo que ese portal consumiria."
+    ]
+  },
+  {
     "v": "0.14.0",
     "fecha": "2026-09-09",
     "tipo": "menor",

@@ -43,6 +43,8 @@ import { vistaInversionistaHTML } from "../lib/finanzas/vista.js";
 import { finanzasDemo, ESCENARIO_DEMO } from "../lib/finanzas/demo.js";
 import { proyectar, agregar, aniosDeSerie, resumenPorAnio,
   MESES_NOMBRE } from "../lib/finanzas/proyeccion.js";
+import { crearPublicacion, ordenadas, ultimaPublicacion, contratoConocido,
+  hayCambiosSinPublicar } from "../lib/finanzas/publicacion.js";
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -119,6 +121,10 @@ export function montarFinanzas({ alCambiar }) {
   let firmaInv = null;
   let panel = "res";
   let anioSel = null;
+  /* `null` = la hoja en vivo, que se recalcula. Un id = una versión
+     congelada, que ya no se mueve aunque el proyecto cambie. */
+  let pubSel = null;
+  let pubMsg = "";
 
   const vigente = () => demo || actual
     || { ctrl: finanzasNueva().ctrl, opex: [], variables: [], inversionistas: [], notas: "" };
@@ -145,6 +151,9 @@ export function montarFinanzas({ alCambiar }) {
     $$("#finNav [data-fin]").forEach((b) => b.setAttribute("aria-selected",
       String(b.dataset.fin === panel)));
     PANELES.forEach((p) => $("#fin-" + p).classList.toggle("hide", p !== panel));
+    /* La barra de publicación acompaña a la hoja, pero vive fuera de ella:
+       la hoja no puede tener controles dentro. */
+    $("#fin-pub").classList.toggle("hide", panel !== "vista");
   }
 
   // --- modo demostración --------------------------------------------------
@@ -166,6 +175,61 @@ export function montarFinanzas({ alCambiar }) {
     demo = null;
     actual = copia;
     alCambiar(copia);
+  });
+
+  // --- publicación de la hoja ---------------------------------------------
+  /* El último snapshot en vivo que se pintó. Publicar congela EXACTAMENTE lo
+     que se está viendo, no una recomposición hecha en otro momento. */
+  let snapVivo = null;
+
+  $("#fin_pub_sel").addEventListener("input", (e) => {
+    pubSel = e.target.value || null;
+    pubMsg = "";
+    if (ultimo) pintar(ultimo);
+  });
+
+  $("#fin_pub_btn").addEventListener("click", () => {
+    const f = vigente();
+    if (demo) {
+      pubMsg = "No se publica en modo demostración: esas cifras son inventadas. "
+        + "Sal del modo demostración o conviértelas en datos del proyecto.";
+      if (ultimo) pintar(ultimo);
+      return;
+    }
+    if (ultimo && ultimo.puedeEditar === false) {
+      pubMsg = "Tu rol es de consulta: puedes ver las versiones publicadas, "
+        + "pero no publicar una nueva.";
+      if (ultimo) pintar(ultimo);
+      return;
+    }
+    if (!snapVivo) return;
+    const pub = crearPublicacion({
+      snapshot: snapVivo,
+      etiqueta: $("#fin_pub_etq").value,
+      version: ultimo ? ultimo.version : "",
+      escenario: f.ctrl?.escenario,
+      fecha: new Date(),
+    });
+    editar((x) => { x.publicaciones = [pub, ...(x.publicaciones || [])]; });
+    pubSel = pub.id;
+    $("#fin_pub_etq").value = "";
+    pubMsg = "Versión publicada. Queda congelada: el proyecto puede seguir "
+      + "cambiando sin que esta hoja se mueva.";
+    if (ultimo) pintar(ultimo);
+  });
+
+  $("#fin_pub_borrar").addEventListener("click", () => {
+    if (!pubSel) return;
+    const ok = window.confirm("Vas a eliminar esta versión publicada. Si ya se "
+      + "enseñó, dejará de haber registro de qué cifras se enseñaron. ¿Continuar?");
+    if (!ok) return;
+    const id = pubSel;
+    pubSel = null;
+    editar((x) => {
+      x.publicaciones = (x.publicaciones || []).filter((p) => p.id !== id);
+    });
+    pubMsg = "Versión eliminada.";
+    if (ultimo) pintar(ultimo);
   });
 
   // --- altas --------------------------------------------------------------
@@ -358,6 +422,70 @@ export function montarFinanzas({ alCambiar }) {
     return g;
   }
 
+  /* La hoja: en vivo o una versión congelada, y la barra que las gobierna. */
+  function pintaPublicacion(datos, f, vivo, enDemo) {
+    const pubs = ordenadas(f.publicaciones || []);
+    if (pubSel && !pubs.some((p) => p.id === pubSel)) pubSel = null;
+    const sel = pubs.find((p) => p.id === pubSel) || null;
+
+    $("#fin_pub_sel").innerHTML = `<option value="">En vivo</option>`
+      + pubs.map((p) => `<option value="${esc(p.id)}">${esc(p.publicadoTxt
+        || p.publicado)}${p.etiqueta ? ` · ${esc(p.etiqueta)}` : ""}</option>`).join("");
+    $("#fin_pub_sel").value = pubSel || "";
+    $("#fin_pub_borrar").classList.toggle("hide", !sel);
+    $("#fin_pub_btn").disabled = enDemo || datos.puedeEditar === false;
+
+    const cambios = hayCambiosSinPublicar(vivo, pubs);
+    const ultima = ultimaPublicacion(pubs);
+    texto("#fin_pub_estado", sel
+      ? `Viendo una versión congelada del ${sel.publicadoTxt || sel.publicado}`
+      : (pubs.length
+        ? `Vista en vivo · ${pubs.length} ${pubs.length === 1
+          ? "versión publicada" : "versiones publicadas"}`
+        : "Vista en vivo · sin versiones publicadas"));
+
+    const msg = $("#fin_pub_msg");
+    msg.textContent = pubMsg;
+    msg.style.color = pubMsg ? "var(--text-secondary)" : "";
+
+    /* El aviso que evita el error caro: enseñar la hoja en vivo creyendo que
+       es la que se mandó, o al revés. */
+    let nota;
+    if (sel) {
+      nota = `<b>Versión congelada.</b> Estas cifras son las que se publicaron
+        el ${esc(sel.publicadoTxt || sel.publicado)}${sel.etiqueta
+    ? ` con la etiqueta «${esc(sel.etiqueta)}»` : ""}, con
+        ${esc(sel.version || "una versión anterior del instrumento")}. No
+        cambian aunque el proyecto haya cambiado desde entonces.`;
+      if (!contratoConocido(sel)) {
+        nota = `<b>Esta versión se publicó con un formato posterior</b>
+          (contrato ${esc(sel.contrato)}). Se conserva intacta, pero esta
+          versión del instrumento no sabe pintarla completa: ábrela con una
+          versión más reciente.`;
+      }
+    } else if (enDemo) {
+      nota = `<b>Modo demostración.</b> La hoja se está pintando con cifras
+        inventadas y por eso no se puede publicar.`;
+    } else if (cambios) {
+      nota = `<b>Hay cambios sin publicar.</b> Lo que ves en vivo ya no
+        coincide con la última versión publicada
+        (${esc(ultima.publicadoTxt || ultima.publicado)}). Quien tenga la hoja
+        publicada está viendo otras cifras.`;
+    } else if (ultima) {
+      nota = `Lo que ves en vivo coincide con la última versión publicada.`;
+    } else {
+      nota = `<b>Todavía no se publica ninguna versión.</b> Publicar congela la
+        hoja tal como está: sirve para poder volver a enseñar exactamente lo
+        mismo, y es lo que un portal de invitados serviría el día que exista.
+        Mientras tanto vive dentro del proyecto, así que todavía no hay
+        frontera de lectura: quien puede abrir el proyecto puede verla.`;
+    }
+    $("#fin_pub_nota").innerHTML = nota;
+
+    const hoja = sel && contratoConocido(sel) ? sel.snapshot : (sel ? null : vivo);
+    $("#fin-vista").innerHTML = hoja ? vistaInversionistaHTML(hoja) : "";
+  }
+
   // --- pintado ------------------------------------------------------------
   function pintar(datos) {
     ultimo = datos;
@@ -532,7 +660,7 @@ export function montarFinanzas({ alCambiar }) {
 
     // Vista de inversionista: del snapshot, nunca del estado completo.
     if (panel === "vista") {
-      const snap = snapshotInversionista({
+      snapVivo = snapshotInversionista({
         nombre: datos.nombre, ubicacion: datos.ubicacion,
         capexTotal: datos.capex, deposito: datos.deposito,
         clase: datos.clase, precision: datos.precision,
@@ -542,7 +670,7 @@ export function montarFinanzas({ alCambiar }) {
         version: datos.version, fecha: new Date(),
         demo: enDemo || !!f.demo,
       });
-      $("#fin-vista").innerHTML = vistaInversionistaHTML(snap);
+      pintaPublicacion(datos, f, snapVivo, enDemo);
     }
   }
 

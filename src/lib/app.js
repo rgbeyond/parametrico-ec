@@ -933,6 +933,11 @@ function datosFinanzas(t){
     clase:t.cl?"Clase "+t.cl.c+" — "+t.cl.nom:"",
     precision:t.cl?t.cl.lo+"% / +"+t.cl.hi+"%":"",
     desglose:d,version:VERSION_TXT,finanzas,
+    /* La interfaz de OPEX necesita saber si este usuario puede escribir: un
+       rol de consulta ve las versiones publicadas pero no publica. La
+       verificación de verdad vive en la base; esto sólo evita ofrecer un
+       botón que iba a fallar. */
+    puedeEditar:!!puede.editar,
     /* Los tres escenarios tal como están capturados en Configuración. Son
        ALTERNATIVAS, no años consecutivos. */
     escenarios:[1,2,3].map(i=>({

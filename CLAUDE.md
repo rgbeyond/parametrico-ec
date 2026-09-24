@@ -167,10 +167,10 @@ alguien lo capturó.** Un proyecto que nunca tocó Finanzas no lleva esa llave, 
 abrir la sección no se la inventa: `normalizarFinanzas` devuelve `null` cuando
 no hay nada, y la llave sólo entra al estado guardado cuando deja de estar
 vacía. De eso depende que abrir un proyecto anterior no lo marque como sucio ni
-mueva su `actualizado_en`. Va por la versión 2: `ctrl` con los supuestos de
+mueva su `actualizado_en`. Va por la versión 3: `ctrl` con los supuestos de
 operación, `opex` con su regla de incremento por renglón, `variables` con los
-costos como porcentaje de ventas e `inversionistas`. Un `finanzas` v1 se
-actualiza al leerlo sin perder nada. `estado.v` global **no** cambia por esto.
+costos como porcentaje de ventas, `inversionistas` y `publicaciones`. Un
+`finanzas` v1 o v2 se actualiza al leerlo sin perder nada. `estado.v` global **no** cambia por esto.
 
 **La vista de inversionista se arma de un snapshot con lista blanca**, campo por
 campo, nunca del estado completo. Ahí no pasan precios unitarios, códigos de
@@ -178,6 +178,34 @@ concepto, la base de cada número, parámetros de tarifa, comentarios, usuarios 
 roles. Un `{...estado}` en `snapshot.js` convertiría la frontera en decoración.
 La participación que muestra es la proporción del capital aportado y **no es una
 tabla accionaria**: la estructura societaria la define el acta constitutiva.
+
+**La hoja del inversionista se publica, y publicar congela.** La vista en vivo
+se recalcula en cada render: sirve para trabajar y no para enseñar. Una
+publicación guarda el snapshot **completo**, no una referencia al proyecto, con
+su fecha, su etiqueta y la versión del instrumento que la produjo. A quien se le
+enseñó un EBITDA el martes tiene que poder ver ese mismo EBITDA el viernes.
+
+Cada publicación lleva su propio número de **contrato** (`publicacion.js`), que
+versiona la forma del objeto publicado y no la del estado del proyecto: es lo
+que otro sistema leerá para saber interpretarlo. Una publicación hecha por una
+versión posterior se conserva intacta y la interfaz avisa que no sabe pintarla,
+en lugar de mentir sobre su contenido.
+
+**Hoy las publicaciones viven en `estado.finanzas.publicaciones`, así que
+todavía no hay frontera de lectura**: quien puede abrir el proyecto puede
+verlas. Es deliberado y temporal —esta iteración no hace migración—. El día que
+exista el portal de invitados, esa lista se muda a su propia tabla y la frontera
+pasa a la base de datos; el contenido no cambia. Hasta entonces, **no** se puede
+afirmar que un invitado sólo ve lo publicado.
+
+**Un `lector` no es un invitado.** Con las políticas actuales, cualquier usuario
+autenticado lee todos los proyectos, el catálogo maestro con precios unitarios,
+el historial de precios y los comentarios internos (`02_politicas.sql:34,41,71,74`),
+y `fn_alta_perfil` sólo admite correos del dominio. Darle una cuenta de sólo
+lectura a un inversionista le daría todo eso. Esconder botones con `puede.*` es
+cosmético: el dato ya viajó al navegador. El acceso de terceros necesita rol
+propio, asignación proyecto↔invitado, RLS y una decisión de Auth, y se coordina
+en `rgbeyond/beyond-platform` antes de tocar nada aquí.
 
 **Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
 en esa estación hasta que un administrador lo promueve con
@@ -205,7 +233,7 @@ src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
 src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
 src/lib/finanzas/          modelo de operacion: estado, OPEX, plantilla, inversionistas,
-                           proyeccion mensual, snapshot y vista de inversionista
+                           proyeccion mensual, snapshot, publicacion y vista
 src/ui/finanzas.js         interfaz del frente OPEX
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
 src/styles/               tokens de marca, fuentes y estilos
@@ -234,7 +262,7 @@ Netlify tampoco.
 
 | Qué | Comando | Qué cubre |
 |---|---|---|
-| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, escalamiento, participaciones, brecha de fondeo, la proyección mensual, la compatibilidad del estado y la lista blanca del snapshot |
+| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, escalamiento, participaciones, brecha de fondeo, la proyección mensual, la compatibilidad del estado y la lista blanca del snapshot. `pruebas/publicacion.test.mjs`: que publicar congele y que lo publicado no filtre datos internos |
 | Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada. `pruebas-navegador/ui_finanzas.test.mjs`: que los dos frentes naveguen, que el CAPEX de OPEX sea el del presupuesto y el del archivo, y que ni abrir un proyecto anterior ni el modo demostración le escriban nada |
 
 Están separadas a propósito: `npm test` tiene que poder correr en cualquier
@@ -317,10 +345,14 @@ en modo local.
   modelo horario. Donde hay BESS, el costo de electricidad proyectado es
   conservador. El excedente fotovoltaico se reporta pero no se acredita ni se
   vende, porque se paga a otro valor y ese dato no está capturado.
-- Compartir la vista de inversionista hacia afuera. Hoy vive dentro de la
-  aplicación interna: no hay liga pública, ni cuentas externas, ni rol de
-  inversionista. El snapshot ya está diseñado para esa frontera, pero el
-  mecanismo de compartir se diseña aparte.
+- **Portal de invitados.** Decidido con RG: lo sirve Beyond Platform contra su
+  propio inicio de sesión, y el Paramétrico sólo publica la hoja. La pieza de
+  este lado ya existe —publicación congelada con su contrato—; falta mover las
+  publicaciones a su propia tabla, el rol de invitado, la asignación
+  proyecto↔invitado y las RLS. Todo eso se coordina antes en
+  `rgbeyond/beyond-platform` (ver `beyond-platform#7`, Auth sin normalizar):
+  construir un portal sobre un Auth que se va a reemplazar es trabajo que se
+  tira dos veces.
 - Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
   ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
   memoria de la sesión.

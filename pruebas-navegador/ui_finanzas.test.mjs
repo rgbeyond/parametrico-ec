@@ -30,6 +30,9 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, extname } from "node:path";
 import { chromium } from "playwright";
+/* La versión del estado financiero se importa, no se escribe a mano: subir de
+   versión no debe obligar a editar estas pruebas. */
+import { VERSION_FINANZAS } from "../src/lib/finanzas/estado.js";
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 const DIST = join(aqui, "..", "dist");
@@ -519,7 +522,7 @@ test("el modo demostración no toca el proyecto, y convertirlo pide confirmació
     await pagina.waitForTimeout(1800);
     const p = await proyectoGuardado(pagina);
     assert.ok(p.estado.finanzas, "al confirmar, los datos pasan al proyecto");
-    assert.equal(p.estado.finanzas.v, 2);
+    assert.equal(p.estado.finanzas.v, VERSION_FINANZAS);
     assert.equal(p.estado.finanzas.demo, true,
       "y siguen marcados como inventados");
     assert.equal(p.estado.cfg.nom, "Estación heredada — sin finanzas",
@@ -540,8 +543,152 @@ test("la plantilla de OPEX sólo escribe cuando el usuario la pide", async (t) =
   await pagina.waitForTimeout(1800);
   const p = await proyectoGuardado(pagina);
   assert.equal(p.estado.finanzas.opex.length, 13);
-  assert.equal(p.estado.finanzas.v, 2, "con su propia versión");
+  assert.equal(p.estado.finanzas.v, VERSION_FINANZAS, "con su propia versión");
   assert.ok(p.estado.finanzas.opex.every((r) => r.monto === 0),
     "y sin un solo monto inventado");
+  await pagina.close();
+});
+
+/* --- PUBLICACIÓN DE LA HOJA ----------------------------------------------
+   El cimiento del portal de invitados: publicar congela una versión de la
+   hoja para poder volver a enseñar exactamente lo mismo. Lo que estas pruebas
+   fijan es que la versión publicada NO se mueva cuando el proyecto cambia, y
+   que la hoja siga sin controles ni datos internos. */
+
+/* Captura lo mínimo para que la hoja tenga cifras: fecha de inicio, precio de
+   venta y un escenario con sesiones. Todo se captura en la pantalla, que es
+   como lo haría el proyectista. */
+const conHojaConCifras = async (pagina) => {
+  await irAOpex(pagina, "ctrl");
+  await pagina.locator("#f_inicio").fill("2027-01");
+  await pagina.locator("#f_precioKwh").fill("8.5");
+  await pagina.locator("#v_esc2Ses").fill("20");
+  await pagina.locator("#v_esc2Kwh").fill("45");
+  await pagina.waitForTimeout(300);
+};
+
+/* La tabla anual de la hoja, que es donde se ven las cifras de operación. */
+const filasHoja = async (pagina) => (await pagina.locator("#fin-hoja table")
+  .last().locator("tbody tr").allTextContents()).map((s) => s.replace(/\s+/g, " ").trim());
+
+test("los controles de publicación viven fuera de la hoja", async (t) => {
+  if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+  const pagina = await conProyectoAbierto();
+  await irAOpex(pagina, "vista");
+  assert.equal(await pagina.locator("#fin-pub").isVisible(), true);
+  assert.ok(await pagina.locator("#fin-pub button").count() > 0,
+    "la barra sí tiene controles");
+  assert.equal(await pagina.locator(
+    "#fin-vista input, #fin-vista select, #fin-vista textarea, #fin-vista button").count(), 0,
+  "y la hoja sigue sin uno solo");
+  // Al cambiar de pantalla, la barra se va con la hoja.
+  await irAOpex(pagina, "res");
+  assert.equal(await pagina.locator("#fin-pub").isVisible(), false);
+  await pagina.close();
+});
+
+test("publicar congela la hoja: el proyecto cambia y la versión publicada no",
+  async (t) => {
+    if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+    const pagina = await conProyectoAbierto();
+    await conHojaConCifras(pagina);
+    await irAOpex(pagina, "vista");
+
+    await pagina.locator("#fin_pub_etq").fill("Comité de septiembre");
+    await pagina.locator("#fin_pub_btn").click();
+    await pagina.waitForTimeout(400);
+    const congelada = await filasHoja(pagina);
+    assert.ok(congelada.length > 0, "la hoja publicada tiene que traer cifras");
+
+    // Se mueve el precio de venta: la hoja en vivo cambia.
+    await irAOpex(pagina, "ctrl");
+    await pagina.locator("#f_precioKwh").fill("9.5");
+    await pagina.waitForTimeout(300);
+    await irAOpex(pagina, "vista");
+    await pagina.locator("#fin_pub_sel").selectOption("");
+    await pagina.waitForTimeout(300);
+    const enVivo = await filasHoja(pagina);
+    assert.notDeepEqual(enVivo, congelada,
+      "subir el precio tiene que mover la hoja en vivo");
+    assert.ok((await pagina.locator("#fin_pub_nota").innerText())
+      .includes("cambios sin publicar"),
+    "y la pantalla tiene que avisar que lo publicado ya no coincide");
+
+    // Y la versión publicada sigue igual que cuando se publicó.
+    const opciones = await pagina.locator("#fin_pub_sel option")
+      .evaluateAll((els) => els.map((e) => e.value).filter(Boolean));
+    await pagina.locator("#fin_pub_sel").selectOption(opciones[0]);
+    await pagina.waitForTimeout(300);
+    assert.deepEqual(await filasHoja(pagina), congelada,
+      "la versión publicada no puede moverse porque el proyecto se movió");
+    assert.ok((await pagina.locator("#fin_pub_nota").innerText())
+      .includes("Versión congelada"));
+    await pagina.close();
+  });
+
+test("la publicación queda guardada en el proyecto, con su contrato", async (t) => {
+  if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+  const pagina = await conProyectoHeredado();
+  await conHojaConCifras(pagina);
+  await irAOpex(pagina, "vista");
+  await pagina.locator("#fin_pub_btn").click();
+  await pagina.waitForTimeout(1800);
+
+  const p = await proyectoGuardado(pagina);
+  assert.equal(p.estado.finanzas.v, VERSION_FINANZAS);
+  assert.equal(p.estado.finanzas.publicaciones.length, 1);
+  const pubGuardada = p.estado.finanzas.publicaciones[0];
+  assert.equal(pubGuardada.contrato, 1, "con el número de contrato que otro sistema leerá");
+  assert.ok(pubGuardada.publicado, "y su fecha");
+  assert.ok(pubGuardada.snapshot.capex.total > 0, "y la hoja completa dentro");
+  // El resto del proyecto sigue intacto.
+  assert.equal(p.estado.cfg.nom, "Estación heredada — sin finanzas");
+  await pagina.close();
+});
+
+test("lo publicado no lleva datos internos del proyecto", async (t) => {
+  if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+  const pagina = await conProyectoHeredado();
+  await conHojaConCifras(pagina);
+  await irAOpex(pagina, "vista");
+  await pagina.locator("#fin_pub_btn").click();
+  await pagina.waitForTimeout(1800);
+
+  /* Se revisa el objeto GUARDADO, no la pantalla: esto es lo que un portal
+     serviría a alguien de fuera el día que exista. */
+  const p = await proyectoGuardado(pagina);
+  const texto = JSON.stringify(p.estado.finanzas.publicaciones[0]);
+  for (const rastro of ["MT-015", "CFE-005", "EVSE-", "Provisión de",
+    "Base del número", "allowance", "cargoCap", "tarifaDiv", "genApproved"]) {
+    assert.ok(!texto.includes(rastro), `la publicación filtró «${rastro}»`);
+  }
+  await pagina.close();
+});
+
+test("en modo demostración no se puede publicar", async (t) => {
+  if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+  /* Publicar cifras inventadas como si fueran una versión oficial del
+     proyecto es exactamente el error que el modo demostración existe para
+     evitar. */
+  const pagina = await conProyectoAbierto();
+  await conDemo(pagina);
+  await irAOpex(pagina, "vista");
+  assert.equal(await pagina.locator("#fin_pub_btn").isDisabled(), true);
+  assert.ok((await pagina.locator("#fin_pub_nota").innerText())
+    .includes("Modo demostración"));
+  await pagina.close();
+});
+
+test("abrir la hoja no publica nada por su cuenta", async (t) => {
+  if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
+  const pagina = await conProyectoHeredado();
+  await pagina.waitForTimeout(1200);
+  const antes = await huella(pagina);
+  await irAOpex(pagina, "vista");
+  await pagina.waitForTimeout(1500);
+  assert.equal(await huella(pagina), antes,
+    "entrar a la hoja no puede escribirle una publicación al proyecto");
+  assert.ok((await pagina.locator("#fin_pub_nota").innerText())
+    .includes("Todavía no se publica"));
   await pagina.close();
 });

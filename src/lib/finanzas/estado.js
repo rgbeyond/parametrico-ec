@@ -45,17 +45,23 @@
    vez de reemplazar. Un `finanzas` escrito por una versión posterior no pierde
    sus campos por abrirse aquí.
 
-   VERSIÓN 2
+   VERSIONES
    ---------
-   La v1 tenía `opex`, `inversionistas` y `notas`. La v2 agrega `ctrl` —los
-   supuestos de operación—, `variables` —costos como porcentaje de ventas— y
-   una regla de incremento anual por cada renglón de OPEX. Un `finanzas` v1 se
-   actualiza al leerlo, sin perder nada: los renglones que no traían regla de
-   incremento quedan en «IPC del proyecto», que es lo que el issue pide como
-   arranque. `estado.v` global NO cambia por esto.
+   - **v1**: `opex`, `inversionistas` y `notas`.
+   - **v2**: agrega `ctrl` —los supuestos de operación—, `variables` —costos
+     como porcentaje de ventas— y una regla de incremento anual por renglón de
+     OPEX. Los renglones v1 sin regla quedan en «IPC del proyecto».
+   - **v3**: agrega `publicaciones`, la lista de versiones congeladas de la
+     hoja de inversionista. Ver `publicacion.js`: es el cimiento del portal de
+     invitados, y vive aquí sólo mientras no exista su propia tabla.
+
+   Cada actualización es de lectura y no pierde nada. `estado.v` global NO
+   cambia por ninguna de ellas.
 */
 
-export const VERSION_FINANZAS = 2;
+import { normalizarPublicaciones } from "./publicacion.js";
+
+export const VERSION_FINANZAS = 3;
 
 /* Identificadores de renglón. Sirven para dos cosas: para que la interfaz
    pueda reconstruir la tabla sólo cuando cambia el conjunto de renglones —y no
@@ -117,6 +123,7 @@ export function finanzasNueva(parcial = {}) {
     opex: [],
     variables: [],
     inversionistas: [],
+    publicaciones: [],
     notas: "",
   };
 }
@@ -182,6 +189,7 @@ export function normalizarFinanzas(raw) {
     opex: lista(raw.opex).map((r) => ({ ...r, ...renglonOpexNuevo(r) })),
     variables: lista(raw.variables).map((r) => ({ ...r, ...variableNuevo(r) })),
     inversionistas: lista(raw.inversionistas).map((r) => ({ ...r, ...inversionistaNuevo(r) })),
+    publicaciones: normalizarPublicaciones(raw.publicaciones),
     notas: typeof raw.notas === "string" ? raw.notas : "",
   };
 }
@@ -194,6 +202,7 @@ export function finanzasVacias(f) {
   if ((f.opex || []).length) return false;
   if ((f.variables || []).length) return false;
   if ((f.inversionistas || []).length) return false;
+  if ((f.publicaciones || []).length) return false;
   if (String(f.notas || "").trim()) return false;
   return !ctrlCapturado(f.ctrl);
 }
