@@ -31,12 +31,13 @@ import './styles/fonts.css';
 import './styles/portal.css';
 import logoUrl from './assets/logos/beyond-orange.png';
 import { VERSION_TXT } from './lib/version.js';
-import { iniciarSesion, sesion } from './lib/sesion.js';
+import { iniciarSesion, entrar, sesion } from './lib/sesion.js';
 import { hayNube } from './lib/supabase.js';
 import { leerProyectoPortal } from './lib/datos.js';
 import { normalizarPublicaciones } from './lib/finanzas/publicacion.js';
 import { modeloPortal, elegirPublicacion, versionesDisponibles } from './lib/portal/modelo.js';
 import { portalHTML, seccionesVisibles } from './lib/portal/vista.js';
+import { guardarRetorno, rutaActual } from './lib/retorno.js';
 
 document.documentElement.style.setProperty('--logo', `url("${logoUrl}")`);
 
@@ -53,8 +54,48 @@ function pantalla(titulo, texto, accion) {
     <div class="marca" role="img" aria-label="Beyond"></div>
     <h2>${esc(titulo)}</h2>
     <p>${esc(texto)}</p>
-    ${accion ? `<a href="${esc(accion.href)}">${esc(accion.texto)}</a>` : ''}
+    ${accion ? (accion.href
+    ? `<a href="${esc(accion.href)}">${esc(accion.texto)}</a>`
+    : `<button type="button" id="portal_accion">${esc(accion.texto)}</button>`) : ''}
+    <div class="aviso-estado" id="portal_msg" hidden></div>
   </div>`;
+  if (accion && accion.alPulsar) {
+    zona.querySelector('#portal_accion').addEventListener('click', accion.alPulsar);
+  }
+}
+
+const mensajeEstado = (texto) => {
+  const el = zona.querySelector('#portal_msg');
+  if (!el) return;
+  el.textContent = texto;
+  el.hidden = !texto;
+};
+
+/* La pantalla de acceso. No manda al usuario a la aplicación interna: lanza el
+   mismo inicio de sesión desde aquí, y antes de irse deja anotada la ruta a la
+   que hay que volver. Quien abre una liga de un portal no tiene por qué
+   enterarse de que detrás hay una herramienta administrativa. */
+function pantallaAcceso() {
+  guardarRetorno(rutaActual(window.location), window.sessionStorage);
+  pantalla('Inicia sesión para acceder a este portal',
+    'Usa tu cuenta de Beyond. Al terminar volverás directamente a esta página.',
+    {
+      texto: 'Ingresar al portal',
+      alPulsar: async (e) => {
+        const b = e.target;
+        b.disabled = true;
+        const rotulo = b.textContent;
+        b.textContent = 'Abriendo…';
+        try {
+          await entrar();
+        } catch (err) {
+          b.disabled = false;
+          b.textContent = rotulo;
+          mensajeEstado(err && err.message ? err.message
+            : 'No se pudo iniciar el acceso.');
+        }
+      },
+    });
 }
 
 /* La navegación y el selector de versión son los únicos controles de la
@@ -115,10 +156,7 @@ function pintar(proyecto, publicaciones, idVersion) {
   /* 1. La sesión primero. Sin ella no se pide un solo dato. */
   await iniciarSesion();
   if (!hayNube || !sesion.perfil) {
-    pantalla('Acceso requerido',
-      'Esta vista necesita una sesión activa del Paramétrico. Entra con tu '
-      + 'cuenta y vuelve a abrir la liga.',
-      { href: '/', texto: 'Ir al acceso' });
+    pantallaAcceso();
     return;
   }
 

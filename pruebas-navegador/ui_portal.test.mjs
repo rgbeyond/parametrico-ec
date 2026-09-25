@@ -109,15 +109,17 @@ test("el aviso de demostración está desde el primer instante", async (t) => {
 
 /* --- SIN SESIÓN NO SE PIDE UN SOLO DATO ----------------------------------- */
 
-test("sin sesión: pantalla de acceso requerido y cero peticiones de datos",
+test("sin sesión: pantalla de acceso y cero peticiones de datos",
   async (t) => {
     if (sinNavegador) return t.skip(`sin Chromium: ${sinNavegador}`);
     const { pagina, peticiones } = await conEspiaDeRed(PORTAL);
     const texto = await pagina.locator(".estado").innerText();
-    assert.ok(texto.includes("Acceso requerido"), texto);
-    assert.ok(texto.includes("sesión"));
-    // Hay una salida clara hacia el acceso actual.
-    assert.equal(await pagina.locator('.estado a[href="/"]').count(), 1);
+    assert.ok(texto.includes("Inicia sesión para acceder a este portal"), texto);
+    /* La acción entra directo al acceso desde aquí. Quien abre la liga de un
+       portal no tiene por qué enterarse de que detrás hay una herramienta
+       administrativa, ni navegar a ella a mano. */
+    assert.equal(await pagina.locator("#portal_accion").count(), 1);
+    assert.equal(await pagina.locator('.estado a[href="/"]').count(), 0);
 
     assert.deepEqual(deDatos(peticiones), [],
       "sin sesión no puede salir una sola petición de datos");

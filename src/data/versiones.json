@@ -1,5 +1,29 @@
 [
   {
+    "v": "0.16.1",
+    "fecha": "2026-09-25",
+    "tipo": "parche",
+    "resumen": "Quien abre la liga del portal sin sesion vuelve a esa misma liga despues de autenticarse, en lugar de acabar en la aplicacion interna sin el proyecto.",
+    "corregido": [
+      "El portal sin sesion mandaba a la raiz y OAuth devolvia tambien a la raiz, asi que la ruta original -y con ella el identificador del proyecto- se perdia. Validado por RG contra la Deploy Preview de Ecatepec.",
+      "La pantalla de acceso ya no manda a la herramienta interna: lanza el inicio de sesion desde el propio portal. Quien abre una liga de portal no tiene por que enterarse de que detras hay una aplicacion administrativa."
+    ],
+    "agregado": [
+      "src/lib/retorno.js: guarda la ruta pendiente en sessionStorage bajo parametrico:returnTo y la valida contra una lista blanca de rutas locales -hoy solo /portal-inversionista.html-.",
+      "src/main.js consume la ruta pendiente en cuanto hay sesion valida y ANTES de montar la portada, asi que la aplicacion interna ni se dibuja.",
+      "scripts/build-prueba.mjs: compilacion aparte, contra un doble local, que permite ejercitar por primera vez el camino CON sesion en pruebas de navegador sin tocar ninguna base real.",
+      "18 pruebas nuevas en Node y 10 de navegador."
+    ],
+    "notas": [
+      "EL RETORNO NO ES UN REDIRECT ABIERTO. Se rechaza todo lo que no sea una ruta local declarada: origenes externos, //otro-dominio, javascript:, data:, contrabarras, caracteres de control y cualquier ruta que no este en la lista blanca. La mitad de las pruebas del modulo son negativas.",
+      "LA LLAVE SE CONSUME UNA SOLA VEZ, y se borra SIEMPRE antes de redirigir, incluso cuando lo guardado es invalido: una llave envenenada que sobreviviera quedaria esperando al siguiente arranque. De ahi depende tambien que no haya bucle entre la raiz y el portal.",
+      "El consumo exige perfil. Sin sesion valida la ruta pendiente se queda esperando y el usuario no se mueve: si la raiz redirigiera sin sesion, el portal volveria a mandar a la raiz y el usuario quedaria rebotando.",
+      "El fragmento de la URL se descarta al guardar la ruta. Ahi es donde Supabase deja el token al volver de OAuth y no tiene por que viajar a ninguna parte.",
+      "OAuth sigue usando redirectTo con el origen, sin cambios de configuracion en Supabase ni de dominios autorizados.",
+      "Sin escrituras, sin RLS, sin DDL, sin migraciones, sin Auth nuevo y sin tocar el motor financiero."
+    ]
+  },
+  {
     "v": "0.16.0",
     "fecha": "2026-09-24",
     "tipo": "menor",

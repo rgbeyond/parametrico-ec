@@ -3,9 +3,10 @@ import './styles/tokens.css';
 import './styles/app.css';
 import logoUrl from './assets/logos/beyond-orange.png';
 import { VERSION_TXT } from './lib/version.js';
-import { iniciarSesion, alCambiarSesion } from './lib/sesion.js';
+import { iniciarSesion, alCambiarSesion, sesion } from './lib/sesion.js';
 import { montarPortada } from './ui/portada.js';
 import { abrirProyecto } from './lib/contexto.js';
+import { tomarRetorno } from './lib/retorno.js';
 
 /* app.js fija esta misma variable cuando se carga, pero eso pasa hasta que
    se abre un proyecto. La portada la necesita desde el primer render. */
@@ -56,6 +57,21 @@ let portada = null;
 
 (async () => {
   await iniciarSesion();
+
+  /* RETORNO AL PORTAL DESPUÉS DE INICIAR SESIÓN.
+     Va aquí, después de resolver la sesión y ANTES de montar la portada: quien
+     abrió la liga de un portal y tuvo que entrar no debe ver de paso la
+     aplicación interna. Se consume una sola vez y sólo acepta rutas locales de
+     la lista blanca; ver `src/lib/retorno.js`.
+
+     La condición de sesión válida es lo que evita el bucle: sin perfil no se
+     consume nada, así que la ruta sigue esperando al siguiente intento en vez
+     de rebotar entre la raíz y el portal. */
+  if (sesion.perfil) {
+    const destino = tomarRetorno(window.sessionStorage);
+    if (destino) { window.location.replace(destino); return; }
+  }
+
   portada = montarPortada(zonaPortada, { alAbrir: abrir });
   alCambiarSesion(async () => { await iniciarSesion(); portada.refrescar(); });
 })();

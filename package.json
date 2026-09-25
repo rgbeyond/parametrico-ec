@@ -1,7 +1,7 @@
 {
   "name": "parametrico-ec",
   "private": true,
-  "version": "0.16.0",
+  "version": "0.16.1",
   "type": "module",
   "description": "Estimador parametrico de electrolineras — Beyond AE",
   "scripts": {
@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "seed": "node scripts/generar-seed.mjs",
     "test": "node --test pruebas/*.test.mjs",
-    "test:ui": "npm run build && node --test pruebas-navegador/*.test.mjs"
+    "test:ui": "npm run build && npm run build:prueba && node --test pruebas-navegador/*.test.mjs",
+    "build:prueba": "node scripts/build-prueba.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"

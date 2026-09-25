@@ -10,3 +10,4 @@ dist
 .claude/settings.local.json
 dist-nube
 __pycache__
+dist-prueba

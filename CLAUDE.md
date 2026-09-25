@@ -223,6 +223,18 @@ inversión se reporta como **pendiente, nunca como cero**: un cero se lee como
 resultado y ahí sería un hueco. Lo mismo con la proyección: sin publicación
 financiera, las secciones de Proyección e Inversionistas no se ofrecen.
 
+**Volver de OAuth es una lista blanca, no un redirect genérico.** El portal sin
+sesión anota su propia ruta en `sessionStorage` bajo `parametrico:returnTo` y
+lanza el acceso desde ahí; `main.js` la consume en cuanto hay sesión válida y
+**antes** de montar la portada. `src/lib/retorno.js` sólo acepta rutas locales
+declaradas en `RUTAS_PERMITIDAS` —hoy únicamente `/portal-inversionista.html`—:
+un «vuelve a donde estabas» que acepte cualquier destino es un redirect abierto
+y sirve para mandar a alguien a un sitio ajeno desde una liga que parece
+nuestra. La llave se borra **siempre** antes de redirigir, incluso si lo
+guardado es inválido, y el consumo exige perfil: sin esas dos reglas hay bucle
+entre la raíz y el portal. El fragmento se descarta, que es donde Supabase deja
+el token.
+
 **Las derivaciones de `cfg` viven en `src/lib/derivadas.js`**, no dentro de
 `app.js`. Equipos, puntos, potencia instalada, demanda de diseño y piso de
 demanda contratada las importan el estimador y el portal, así que las dos
@@ -257,6 +269,7 @@ src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
 src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
 src/lib/derivadas.js       derivaciones de cfg compartidas por el estimador y el portal
+src/lib/retorno.js         ruta pendiente tras iniciar sesion, con lista blanca
 src/lib/portal/           modelo curado y vista del portal de inversionistas
 src/lib/finanzas/          modelo de operacion: estado, OPEX, plantilla, inversionistas,
                            proyeccion mensual, snapshot, publicacion y vista
