@@ -437,6 +437,7 @@
 <div class="card stat"><span class="eyebrow">Costo de electricidad</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_costoluz" style="font-size:26px"></span></div><span class="tiny muted" id="fin_costoluz_x"></span></div>
 <div class="card stat"><span class="eyebrow">OPEX fijo del año</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_opexfijo" style="font-size:26px"></span></div><span class="tiny muted" id="fin_opex_mes_x"></span></div>
 <div class="card stat"><span class="eyebrow">Costos variables</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_var" style="font-size:26px"></span></div><span class="tiny muted" id="fin_var_x"></span></div>
+<div class="card stat"><span class="eyebrow">Franquicia</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_franquicia" style="font-size:26px"></span></div><span class="tiny muted" id="fin_franquicia_x"></span></div>
 <div class="card stat"><span class="eyebrow">OPEX mensual</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_opex_mes" style="font-size:26px"></span></div><span class="tiny muted">Primer mes de operación, antes de escalamiento</span></div>
 </div>
 <div class="grid g3" style="margin-top:14px">
@@ -494,7 +495,9 @@
 </div>
 <div class="grid g4" style="gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle)">
 <label class="f" style="margin-bottom:0"><span class="lb">Cambio a MEM (mes)</span><input type="month" id="f_cambioMem"><span class="hint">Vacío = sin cambio previsto</span></label>
-<div style="grid-column:span 3"><span class="hint" id="f_h_sumin"></span></div>
+<label class="f" style="margin-bottom:0"><span class="lb">Franquicia</span><span class="row tiny" style="gap:8px"><input type="checkbox" id="f_franquiciaActiva" style="width:auto"> Aplicar sobre ventas brutas</span></label>
+<label class="f" style="margin-bottom:0"><span class="lb">Franquicia (%)</span><input type="number" id="f_franquiciaPct" min="0" max="100" step="0.5"><span class="hint">Valor inicial 15%; editable</span></label>
+<div><span class="hint" id="f_h_sumin"></span></div>
 </div>
 <div class="note" style="margin-top:16px"><b>De dónde sale el costo de la energía.</b> <span id="f_h_costo"></span></div>
 </div>
@@ -601,6 +604,7 @@
 <div><h3>Gasto de operación mensual</h3><div class="tiny muted" style="margin-top:4px">Monto del primer mes de operación. Cada concepto declara cómo crece cada año. Un renglón inactivo se conserva y no suma.</div></div>
 <div class="row">
 <button class="btn ghost" id="fin_plantilla">Usar plantilla OPEX</button>
+<button class="btn ghost" id="fin_opex_csv">Descargar OPEX Año 1</button>
 <button class="btn" id="fin_add_opex">Agregar concepto</button>
 </div>
 </div>
@@ -617,6 +621,7 @@
 <div class="derived"><span class="muted">OPEX anual, año 1</span><b id="fin_opex_tot_anio"></b></div>
 <div class="derived"><span class="muted">IPC del proyecto</span><b id="fin_opex_ipc"></b></div>
 </div>
+<div class="tiny muted" id="fin_opex_export_msg" style="margin-top:10px"></div>
 <div class="note" style="margin-top:14px"><b>Alcance de esta pantalla.</b> Es una lista de supuestos de gasto y su suma. No hay facturación, proveedores, contabilidad, conciliación ni histórico real de pagos. El escalamiento se aplica en el <b>aniversario del inicio de operación</b>, no en enero.</div>
 </div>
 
@@ -645,6 +650,7 @@
 <div class="row">
 <label class="row tiny" style="gap:6px">Escenario <select id="f_proy_esc" style="width:auto"><option value="1">Pesimista</option><option value="2">Probable</option><option value="3">Optimista</option></select></label>
 <label class="row tiny" style="gap:6px">Año <select id="f_proy_anio" style="width:auto"></select></label>
+<button class="btn ghost" id="fin_pdf_escenarios">Descargar PDF — 3 escenarios</button>
 </div>
 </div>
 <div class="note warn hide" id="fin_proy_falta" style="margin-bottom:14px"></div>
@@ -652,6 +658,7 @@
 <table id="fin_proy_tabla" class="proy"></table>
 </div>
 <div class="note" style="margin-top:14px" id="fin_proy_nota"></div>
+<div class="tiny muted" id="fin_proy_export_msg" style="margin-top:10px"></div>
 </div>
 </div>
 
@@ -695,6 +702,7 @@
 <label class="row tiny" style="gap:6px">Versión
 <select id="fin_pub_sel" style="width:auto"></select></label>
 <input type="text" id="fin_pub_etq" placeholder="Etiqueta: comité, ronda A…" style="width:auto;min-width:190px;padding:7px 10px;font-size:13px">
+<button class="btn ghost" id="fin_pdf_inversionista">Descargar PDF</button>
 <button class="btn" id="fin_pub_btn">Publicar esta versión</button>
 <button class="btn ghost hide" id="fin_pub_borrar" title="Eliminar la versión publicada que estás viendo">Eliminar</button>
 <a class="btn ghost hide" id="fin_portal" target="_blank" rel="noopener" title="Abrir la superficie de demostración del portal, en una pestaña nueva">Abrir portal de inversionistas</a>

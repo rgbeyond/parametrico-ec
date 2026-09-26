@@ -1,5 +1,22 @@
 [
   {
+    "v": "0.17.0",
+    "fecha": "2026-09-25",
+    "tipo": "menor",
+    "resumen": "DEV financiero: franquicia configurable sobre ventas brutas, descarga OPEX Año 1 y PDFs de inversionistas y tres escenarios.",
+    "agregado": [
+      "Franquicia opcional con casilla y porcentaje editable; valor inicial 15% y base ventas brutas.",
+      "Descarga CSV del primer año operativo, exactamente 12 meses desde el inicio, con electricidad, franquicia, variables, OPEX fijo, egresos, EBITDA y detalle OPEX.",
+      "PDF imprimible de la hoja de inversionistas, respetando la version viva o congelada que se esta viendo.",
+      "PDF comparativo de los tres escenarios usando el mismo motor financiero.",
+      "Costo de electricidad del Año 1 destacado en la vista y portal de inversionistas."
+    ],
+    "notas": [
+      "El costo de electricidad sigue marcado como preliminar: queda pendiente cerrar el blocker de demanda/FV del PR #8 antes de merge o release.",
+      "Sin cambios de main, PROD, RLS, DDL, Auth ni migraciones."
+    ]
+  },
+  {
     "v": "0.16.1",
     "fecha": "2026-09-25",
     "tipo": "parche",

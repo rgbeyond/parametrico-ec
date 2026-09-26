@@ -41,10 +41,12 @@ import { resumenInversionistas } from "../lib/finanzas/inversionistas.js";
 import { snapshotInversionista } from "../lib/finanzas/snapshot.js";
 import { vistaInversionistaHTML } from "../lib/finanzas/vista.js";
 import { finanzasDemo, ESCENARIO_DEMO } from "../lib/finanzas/demo.js";
-import { proyectar, agregar, aniosDeSerie, resumenPorAnio,
+import { proyectar, agregar, aniosDeSerie, resumenPorAnioOperacion,
   MESES_NOMBRE } from "../lib/finanzas/proyeccion.js";
 import { crearPublicacion, ordenadas, ultimaPublicacion, contratoConocido,
   hayCambiosSinPublicar } from "../lib/finanzas/publicacion.js";
+import { csvOpexAno1, nombreCsvAno1, documentoInversionistaHTML,
+  documentoEscenariosHTML, descargarTexto, abrirDialogoImpresion } from "../lib/finanzas/exportar.js";
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -79,6 +81,8 @@ const CAMPOS_CTRL = [
   ["#f_incCFE", "incCFE", "num"],
   ["#f_incMEM", "incMEM", "num"],
   ["#f_ahorroMem", "ahorroMem", "num"],
+  ["#f_franquiciaActiva", "franquiciaActiva", "bool"],
+  ["#f_franquiciaPct", "franquiciaPct", "num"],
   ["#f_cambioMem", "cambioMem", "txt"],
 ];
 
@@ -106,6 +110,7 @@ const RENGLONES_PROY = [
   { t: "Costo de electricidad", m: (x) => pesos(x.costoElectricidad), a: (g) => pesos(g.costoElectricidad) },
   { t: "Utilidad bruta", m: (x) => pesos(x.utilidadBruta), a: (g) => pesos(g.utilidadBruta), fuerte: 1, sep: 1 },
   { t: "Costos variables sobre ventas", m: (x) => pesos(x.costoVariable), a: (g) => pesos(g.costoVariable) },
+  { t: "Franquicia", m: (x) => pesos(x.costoFranquicia), a: (g) => pesos(g.costoFranquicia) },
   { t: "OPEX fijo", m: (x) => pesos(x.opexFijo), a: (g) => pesos(g.opexFijo) },
   { t: "Egresos totales", m: (x) => pesos(x.egresos), a: (g) => pesos(g.egresos) },
   { t: "EBITDA", m: (x) => pesos(x.ebitda), a: (g) => pesos(g.ebitda), fuerte: 1, sep: 1 },
@@ -125,6 +130,8 @@ export function montarFinanzas({ alCambiar }) {
      congelada, que ya no se mueve aunque el proyecto cambie. */
   let pubSel = null;
   let pubMsg = "";
+  let ultimaSerie = [];
+  let hojaActual = null;
 
   const vigente = () => demo || actual
     || { ctrl: finanzasNueva().ctrl, opex: [], variables: [], inversionistas: [], notas: "" };
@@ -250,10 +257,50 @@ export function montarFinanzas({ alCambiar }) {
     editar((f) => { f.notas = v; });
   });
 
+  $("#fin_opex_csv").addEventListener("click", () => {
+    const f = vigente(); const msg = $("#fin_opex_export_msg");
+    try {
+      if (!f.ctrl?.inicio) throw new Error("Captura la fecha de inicio de operación para descargar el primer año.");
+      const contenido = csvOpexAno1({ serie: ultimaSerie, opex: f.opex,
+        ipc: f.ctrl.ipc || 0, nombre: ultimo?.nombre || "proyecto" });
+      const nombre = nombreCsvAno1(ultimo?.nombre || "proyecto");
+      descargarTexto(nombre, contenido); msg.textContent = "Descargado " + nombre;
+    } catch (err) { msg.textContent = String(err?.message || err); }
+  });
+
+  $("#fin_pdf_inversionista").addEventListener("click", async () => {
+    if (!hojaActual) return;
+    const b=$("#fin_pdf_inversionista"), rot=b.textContent; b.disabled=true; b.textContent="Preparando…";
+    try { await abrirDialogoImpresion(documentoInversionistaHTML(hojaActual));
+      pubMsg="En el diálogo de impresión elige Guardar como PDF, tamaño Carta.";
+    } catch(err){ pubMsg=String(err?.message||err); }
+    b.disabled=false; b.textContent=rot; if(ultimo) pintar(ultimo);
+  });
+
+  $("#fin_pdf_escenarios").addEventListener("click", async () => {
+    const f=vigente(), msg=$("#fin_proy_export_msg");
+    const escenarios=(ultimo?.escenarios||[]).slice(0,3).map((e)=>{
+      const disponible=!!(e?.sesiones>0 && e?.kwhSesion>0);
+      if(!disponible) return {nombre:e?.nombre||"Escenario",disponible:false};
+      const s=proyectar({ctrl:f.ctrl,opex:f.opex,variables:f.variables,escenario:e,
+        tarifa:ultimo.tarifa,memInicial:ultimo.memInicial,generacion:ultimo.generacion,
+        potDiseno:ultimo.potDiseno,meses:12});
+      return {nombre:e.nombre,disponible:true,sesiones:e.sesiones,kwhSesion:e.kwhSesion,
+        dmax:e.dmax,resumen:agregar(s)};
+    });
+    const b=$("#fin_pdf_escenarios"), rot=b.textContent; b.disabled=true; b.textContent="Preparando…";
+    try { await abrirDialogoImpresion(documentoEscenariosHTML({nombre:ultimo?.nombre||"Proyecto",
+      ubicacion:ultimo?.ubicacion||"",escenarios,version:ultimo?.version||""}));
+      msg.textContent="En el diálogo de impresión elige Guardar como PDF, tamaño Carta.";
+    } catch(err){msg.textContent=String(err?.message||err);}
+    b.disabled=false;b.textContent=rot;
+  });
+
   // --- supuestos ----------------------------------------------------------
   for (const [sel, llave, tipo] of CAMPOS_CTRL) {
     $(sel).addEventListener("input", (e) => {
-      const v = tipo === "num" ? (parseFloat(e.target.value) || 0) : e.target.value;
+      const v = tipo === "bool" ? e.target.checked
+        : (tipo === "num" ? (parseFloat(e.target.value) || 0) : e.target.value);
       editar((f) => { f.ctrl[llave] = v; });
     });
   }
@@ -492,6 +539,7 @@ export function montarFinanzas({ alCambiar }) {
     $("#fin_pub_nota").innerHTML = nota;
 
     const hoja = sel && contratoConocido(sel) ? sel.snapshot : (sel ? null : vivo);
+    hojaActual = hoja;
     $("#fin-vista").innerHTML = hoja ? vistaInversionistaHTML(hoja) : "";
   }
 
@@ -520,10 +568,14 @@ export function montarFinanzas({ alCambiar }) {
     }
 
     // Supuestos
-    for (const [sel, llave] of CAMPOS_CTRL) {
+    for (const [sel, llave, tipo] of CAMPOS_CTRL) {
       const el = $(sel);
-      if (el && document.activeElement !== el) el.value = f.ctrl[llave] ?? "";
+      if (el && document.activeElement !== el) {
+        if (tipo === "bool") el.checked = f.ctrl[llave] === true;
+        else el.value = f.ctrl[llave] ?? "";
+      }
     }
+    $("#f_franquiciaPct").disabled = !f.ctrl.franquiciaActiva;
     const escProyecto = datos.escenarios[(f.ctrl.escenario || 2) - 1] || {};
     /* En modo demostración, y SÓLO si el proyecto no tiene ese escenario
        capturado, se usa el escenario de demostración: los escenarios viven en
@@ -559,6 +611,7 @@ export function montarFinanzas({ alCambiar }) {
       generacion: datos.generacion, potDiseno: datos.potDiseno,
       meses: Math.max(12, (f.ctrl.horizonte || 10) * 12),
     });
+    ultimaSerie = serie;
     $("#f_proy_esc").value = String(f.ctrl.escenario || 2);
     const g = pintaProyeccion(datos, f, serie, escSel);
 
@@ -577,6 +630,9 @@ export function montarFinanzas({ alCambiar }) {
     texto("#fin_opexfijo", pesos(g.opexFijo));
     texto("#fin_var", pesos(g.costoVariable));
     texto("#fin_var_x", `${dec(v.pctTotal, 2)}% de las ventas`);
+    texto("#fin_franquicia", pesos(g.costoFranquicia));
+    texto("#fin_franquicia_x", f.ctrl.franquiciaActiva
+      ? `${dec(f.ctrl.franquiciaPct, 2)}% de las ventas brutas` : "No aplicada");
     texto("#fin_opex_mes", pesos(o.mensual));
     texto("#fin_opex_mes_x", o.activos
       ? `${o.activos} concepto${o.activos === 1 ? "" : "s"} activo${o.activos === 1 ? "" : "s"}`
@@ -674,7 +730,7 @@ export function montarFinanzas({ alCambiar }) {
         capexTotal: datos.capex, deposito: datos.deposito,
         clase: datos.clase, precision: datos.precision,
         opex: o, fondeo: inv, participantes: inv.participantes,
-        operacion: resumenPorAnio(serie),
+        operacion: resumenPorAnioOperacion(serie),
         notas: f.notas || "",
         version: datos.version, fecha: new Date(),
         demo: enDemo || !!f.demo,

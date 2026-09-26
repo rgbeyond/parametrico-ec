@@ -43,12 +43,13 @@ function operacionHTML(s) {
     <div class="eyebrow">Proyección de operación</div>
     <div style="overflow-x:auto"><table style="margin-top:10px;min-width:520px">
       <thead><tr><th>Año</th><th class="num">Ventas</th>
-        <th class="num">Costo de electricidad</th><th class="num">Operación</th>
+        <th class="num">Costo de electricidad</th><th class="num">Franquicia</th><th class="num">Operación</th>
         <th class="num">EBITDA</th><th class="num">Margen</th></tr></thead>
       <tbody>${anios.map((a) => `<tr>
         <td>${esc(a.anio)}</td>
         <td class="num">${pesos(a.ventas)}</td>
         <td class="num">${pesos(a.costoEnergia)}</td>
+        <td class="num">${pesos(a.franquicia || 0)}</td>
         <td class="num">${pesos(a.opex)}</td>
         <td class="num" style="font-weight:600">${pesos(a.ebitda)}</td>
         <td class="num">${pct(a.margen)}</td></tr>`).join("")}
@@ -63,6 +64,7 @@ function operacionHTML(s) {
 export function vistaInversionistaHTML(snap) {
   if (!snap) return "";
   const s = snap;
+  const a1 = (s.operacion || [])[0] || null;
   const brecha = s.fondeo.faltante > 0
     ? cifra("Falta por fondear", pesos(s.fondeo.faltante),
       `Cubierto ${pct(s.fondeo.cobertura)} de la inversión total`, "#B4590C")
@@ -131,6 +133,10 @@ export function vistaInversionistaHTML(snap) {
     ? cifra("Depósito en garantía", pesos(s.capex.deposito),
       "Reembolsable, fuera del costo de obra")
     : ""}
+      ${a1 ? cifra("Costo de electricidad proyectado — Año 1", pesos(a1.costoEnergia),
+        "Proyección preliminar · pendiente de validación del modelo de demanda y FV", "#B4590C") : ""}
+      ${a1 && (a1.franquicia || 0) > 0 ? cifra("Franquicia — Año 1", pesos(a1.franquicia),
+        `${((a1.franquiciaPct || 0)).toFixed(2)}% de ventas brutas`) : ""}
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px;margin-top:26px">
@@ -167,8 +173,9 @@ export function vistaInversionistaHTML(snap) {
     ? `El rango esperado de la inversión es ${esc(s.capex.precision)} sobre la cifra mostrada.`
     : ""}
       El gasto de operación son supuestos capturados para este proyecto, sin
-      facturación ni histórico real. No incluye ingresos, retorno, impuestos ni
-      financiamiento: esas cifras no están modeladas todavía.
+      facturación ni histórico real. La proyección de electricidad es preliminar
+      mientras se valida el tratamiento de demanda y FV. No incluye retorno,
+      impuestos ni financiamiento: esas cifras no están modeladas todavía.
       <div style="margin-top:6px">${esc(s.meta.fechaTxt)} · ${esc(s.meta.version)}</div>
     </div>
   </div>`;

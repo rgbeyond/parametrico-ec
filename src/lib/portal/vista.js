@@ -77,7 +77,20 @@ function resumenHTML(m) {
       t.generacion.rendimiento ? `${ent(t.generacion.rendimiento)} kWh/kWp al mes` : "")
     : cifra("Generación fotovoltaica", "No incluida")}
   </div>
-  ${estadoFinancieroHTML(m)}`;
+  ${estadoFinancieroHTML(m)}${resumenFinancieroHTML(m)}`;
+}
+
+function resumenFinancieroHTML(m) {
+  const a1 = m.finanzas?.snapshot?.operacion?.[0];
+  if (!a1) return "";
+  return `<div class="cifras">
+    ${cifra("Ventas — Año 1", pesos(a1.ventas))}
+    ${cifra("Costo de electricidad — Año 1", pesos(a1.costoEnergia),
+      "Proyección preliminar · pendiente de validación de demanda y FV", true)}
+    ${(a1.franquicia || 0) > 0 ? cifra("Franquicia — Año 1", pesos(a1.franquicia),
+      `${(Number(a1.franquiciaPct || 0)).toFixed(2)}% de ventas brutas`) : ""}
+    ${cifra("EBITDA — Año 1", pesos(a1.ebitda), `Margen ${pct(a1.margen)}`)}
+  </div>`;
 }
 
 function estadoFinancieroHTML(m) {
@@ -163,12 +176,13 @@ function proyeccionHTML(m) {
   <div class="tabla-envoltura">
     <table>
       <thead><tr><th>Año</th><th class="num">Ventas</th>
-        <th class="num">Costo de electricidad</th><th class="num">Operación</th>
+        <th class="num">Costo de electricidad</th><th class="num">Franquicia</th><th class="num">Operación</th>
         <th class="num">EBITDA</th><th class="num">Margen</th></tr></thead>
       <tbody>${op.map((a) => `<tr>
         <td>${esc(a.anio)}</td>
         <td class="num">${pesos(a.ventas)}</td>
         <td class="num">${pesos(a.costoEnergia)}</td>
+        <td class="num">${pesos(a.franquicia || 0)}</td>
         <td class="num">${pesos(a.opex)}</td>
         <td class="num fuerte">${pesos(a.ebitda)}</td>
         <td class="num">${pct(a.margen)}</td></tr>`).join("")}
