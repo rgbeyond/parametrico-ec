@@ -631,7 +631,7 @@ test("costoUnitario no inventa un costo cuando no hay tarifa", () => {
 
 // --- el snapshot con la proyeccion ------------------------------------------
 
-test("el snapshot lleva el resumen anual y solo cinco cifras por ano", () => {
+test("el snapshot lleva el resumen anual curado, incluida la franquicia", () => {
   const s = snapshotInversionista({
     nombre: "P", capexTotal: 100,
     operacion: resumenPorAnio(proy({
@@ -642,7 +642,8 @@ test("el snapshot lleva el resumen anual y solo cinco cifras por ano", () => {
   assert.equal(s.operacion.length, 3);
   for (const a of s.operacion) {
     assert.deepEqual(Object.keys(a).sort(),
-      ["anio", "costoEnergia", "ebitda", "margen", "opex", "ventas"]);
+      ["anio", "costoEnergia", "costosVariables", "ebitda", "franquicia",
+        "franquiciaPct", "margen", "opex", "opexFijo", "ventas"]);
   }
   assert.deepEqual(Object.keys(s).sort(), [...CAMPOS_SNAPSHOT].sort());
 });

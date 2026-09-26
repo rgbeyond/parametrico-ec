@@ -108,6 +108,8 @@ test("una publicación hecha por una versión posterior se conserva tal cual", (
   assert.deepEqual(p.campoQueEstaVersionNoConoce, { a: 1 });
   assert.equal(contratoConocido(p), false, "y la interfaz tiene que saber que no la entiende");
   assert.equal(contratoConocido(pub()), true);
+  assert.equal(contratoConocido({ ...pub(), contrato: 1 }), true,
+    "una publicación contrato 1 sigue siendo legible después de subir a contrato 2");
 });
 
 test("normalizar una lista que no es lista devuelve una lista vacía", () => {
@@ -179,15 +181,15 @@ test("lo que se entregaría a otro sistema es autocontenido y declarado", () => 
 
 // --- el estado --------------------------------------------------------------
 
-test("el estado financiero va por la versión 3 y guarda las publicaciones", () => {
-  assert.equal(VERSION_FINANZAS, 3);
+test("el estado financiero va por la versión 4 y guarda las publicaciones", () => {
+  assert.equal(VERSION_FINANZAS, 4);
   const f = normalizarFinanzas({ v: 2, publicaciones: [pub()] });
-  assert.equal(f.v, 3);
+  assert.equal(f.v, 4);
   assert.equal(f.publicaciones.length, 1);
   assert.equal(f.publicaciones[0].snapshot.capex.total, 48670755);
 });
 
-test("un finanzas v2 sin publicaciones se actualiza sin perder nada", () => {
+test("un finanzas v2 sin publicaciones se actualiza a v4 sin perder nada", () => {
   const f = normalizarFinanzas({
     v: 2,
     ctrl: { ipc: 4.5, precioKwh: 8.5 },
@@ -196,7 +198,7 @@ test("un finanzas v2 sin publicaciones se actualiza sin perder nada", () => {
     notas: "nota",
     campoDeUnaVersionPosterior: { z: 1 },
   });
-  assert.equal(f.v, 3);
+  assert.equal(f.v, 4);
   assert.deepEqual(f.publicaciones, [], "la colección nueva existe y está vacía");
   assert.equal(f.ctrl.ipc, 4.5);
   assert.equal(f.opex[0].monto, 45000);

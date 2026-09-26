@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { modeloPortal, elegirPublicacion, versionesDisponibles,
   CAMPOS_PORTAL } from "../src/lib/portal/modelo.js";
 import { portalHTML, seccionesVisibles } from "../src/lib/portal/vista.js";
-import { crearPublicacion } from "../src/lib/finanzas/publicacion.js";
+import { CONTRATO, crearPublicacion } from "../src/lib/finanzas/publicacion.js";
 import { snapshotInversionista } from "../src/lib/finanzas/snapshot.js";
 
 /* Un proyecto con la forma del de Ecatepec: sin `estado.finanzas`, que es como
@@ -218,7 +218,7 @@ test("con publicación se enseña la versión congelada, sin recalcularla", () =
   const pub = conPublicacion();
   const m = modeloPortal(ECATEPEC, pub);
   assert.equal(m.finanzas.etiqueta, "Comité");
-  assert.equal(m.finanzas.contrato, 1);
+  assert.equal(m.finanzas.contrato, CONTRATO);
   assert.deepEqual(m.finanzas.snapshot.operacion, pub.snapshot.operacion,
     "el portal renderiza la publicación tal cual: no la vuelve a calcular");
   const html = portalHTML(m);

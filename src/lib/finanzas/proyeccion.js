@@ -337,8 +337,11 @@ export function resumenPorAnioOperacion(serie = []) {
     grupos.get(k).push(x);
   }
   return [...grupos.entries()].sort((a,b)=>a[0]-b[0]).map(([k,s]) => ({
-    anio: k + 1,
     ...agregar(s),
+    /* `agregar()` trae el año calendario del primer mes. Aquí manda el año
+       OPERATIVO: si la estación abre en septiembre, Sep–Ago tiene que decir
+       Año 1 y no 2026. Por eso esta llave va DESPUÉS del spread. */
+    anio: k + 1,
     inicio: s[0]?.etiqueta || "",
     fin: s[s.length - 1]?.etiqueta || "",
   }));

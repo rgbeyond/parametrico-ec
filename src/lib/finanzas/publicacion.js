@@ -45,7 +45,10 @@
    se sube sólo cuando la forma cambie de verdad.
 */
 
-export const CONTRATO = 1;
+/* Contrato 2 añade a cada anualidad publicada el desglose explícito de
+   franquicia, otros variables y OPEX fijo. Las publicaciones contrato 1 siguen
+   siendo legibles: `contratoConocido()` acepta cualquier contrato <= actual. */
+export const CONTRATO = 2;
 
 let contador = 0;
 const idNuevo = () => {
