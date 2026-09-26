@@ -158,6 +158,8 @@ export function proyectar({
   const uptime = Math.max(0, Math.min(100, n(ctrl.uptime, 100))) / 100;
   const perdidas = Math.max(0, Math.min(90, n(ctrl.perdidas))) / 100;
   const vars = resumenVariables(variables);
+  const franquiciaPct = ctrl.franquiciaActiva
+    ? Math.max(0, Math.min(100, n(ctrl.franquiciaPct, 15))) : 0;
   const inicio = leerMes(ctrl.inicio)
     || { anio: hoy.getFullYear(), mes: hoy.getMonth() };
   const cambio = leerMes(ctrl.cambioMem);
@@ -225,8 +227,9 @@ export function proyectar({
 
     const utilidadBruta = ventas - costoElectricidad;
     const costoVariable = ventas * vars.pctTotal / 100;
+    const costoFranquicia = ventas * franquiciaPct / 100;
     const opexFijo = opex.reduce((a, r) => a + montoEnMes(r, m, ipc), 0);
-    const egresos = costoElectricidad + costoVariable + opexFijo;
+    const egresos = costoElectricidad + costoVariable + costoFranquicia + opexFijo;
     const ebitda = ventas - egresos;
 
     serie.push({
@@ -256,6 +259,8 @@ export function proyectar({
       costoElectricidad,
       utilidadBruta,
       costoVariable,
+      costoFranquicia,
+      franquiciaPct,
       opexFijo,
       egresos,
       ebitda,
@@ -297,6 +302,8 @@ export function agregar(serie = []) {
     costoElectricidad,
     utilidadBruta: suma("utilidadBruta"),
     costoVariable: suma("costoVariable"),
+    costoFranquicia: suma("costoFranquicia"),
+    franquiciaPct: s.length ? n(s[0].franquiciaPct) : 0,
     opexFijo: suma("opexFijo"),
     egresos,
     ebitda,
@@ -315,5 +322,24 @@ export function aniosDeSerie(serie = []) {
 export function resumenPorAnio(serie = []) {
   return aniosDeSerie(serie).map((anio) => ({
     anio, ...agregar(serie.filter((x) => x.anio === anio)),
+  }));
+}
+
+
+/* Resume por año OPERATIVO: bloques consecutivos de 12 meses desde el inicio.
+   Esto es lo correcto para un inversionista y para el CSV de Año 1; no se
+   confunde con el año calendario que usa el selector de la tabla interna. */
+export function resumenPorAnioOperacion(serie = []) {
+  const grupos = new Map();
+  for (const x of serie || []) {
+    const k = Number.isFinite(+x.anioOperacion) ? +x.anioOperacion : Math.floor((+x.m || 0) / 12);
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(x);
+  }
+  return [...grupos.entries()].sort((a,b)=>a[0]-b[0]).map(([k,s]) => ({
+    anio: k + 1,
+    ...agregar(s),
+    inicio: s[0]?.etiqueta || "",
+    fin: s[s.length - 1]?.etiqueta || "",
   }));
 }

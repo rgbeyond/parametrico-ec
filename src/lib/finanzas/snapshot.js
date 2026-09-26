@@ -99,7 +99,12 @@ export function snapshotInversionista({
       anio: Math.round(num(a.anio)),
       ventas: Math.round(num(a.ventas)),
       costoEnergia: Math.round(num(a.costoElectricidad ?? a.costoEnergia)),
-      opex: Math.round(num(a.opexFijo) + num(a.costoVariable)),
+      costosVariables: Math.round(num(a.costoVariable ?? a.costosVariables)),
+      franquicia: Math.round(num(a.costoFranquicia ?? a.franquicia)),
+      franquiciaPct: num(a.franquiciaPct),
+      opexFijo: Math.round(num(a.opexFijo)),
+      opex: Math.round(num(a.opexFijo) + num(a.costoVariable ?? a.costosVariables)
+        + num(a.costoFranquicia ?? a.franquicia)),
       ebitda: Math.round(num(a.ebitda)),
       margen: num(a.margen),
     })),

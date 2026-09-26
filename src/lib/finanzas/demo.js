@@ -52,7 +52,6 @@ const OPEX_DEMO = [
    comisión de concesionaria y un fee de O&M de esta especie. Los valores viven
    sólo en el modo demostración. */
 const VARIABLES_DEMO = [
-  ["Comisiones Concesionaria", 15],
   ["Fee de O&M", 7],
 ];
 
@@ -101,6 +100,8 @@ export function finanzasDemo() {
       incCFE: 5,
       incMEM: 4,
       ahorroMem: 12,
+      franquiciaActiva: true,
+      franquiciaPct: 15,
       cambioMem: "2028-01",
     }),
     opex: OPEX_DEMO.map(([concepto, categoria, monto]) => ({

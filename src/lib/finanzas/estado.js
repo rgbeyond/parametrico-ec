@@ -54,6 +54,9 @@
    - **v3**: agrega `publicaciones`, la lista de versiones congeladas de la
      hoja de inversionista. Ver `publicacion.js`: es el cimiento del portal de
      invitados, y vive aquí sólo mientras no exista su propia tabla.
+   - **v4**: agrega franquicia opcional como porcentaje sobre ventas brutas.
+     Arranca desactivada; el 15% es sólo el valor inicial del campo cuando se
+     decide aplicarla.
 
    Cada actualización es de lectura y no pierde nada. `estado.v` global NO
    cambia por ninguna de ellas.
@@ -61,7 +64,7 @@
 
 import { normalizarPublicaciones } from "./publicacion.js";
 
-export const VERSION_FINANZAS = 3;
+export const VERSION_FINANZAS = 4;
 
 /* Identificadores de renglón. Sirven para dos cosas: para que la interfaz
    pueda reconstruir la tabla sólo cuando cambia el conjunto de renglones —y no
@@ -108,6 +111,10 @@ export function ctrlNuevo(parcial = {}) {
     incCFE: n(parcial.incCFE),
     incMEM: n(parcial.incMEM),
     ahorroMem: n(parcial.ahorroMem),
+    /* Franquicia: costo variable explícito sobre ventas brutas. El 15% es el
+       valor inicial editable, pero NO se cobra mientras la casilla esté apagada. */
+    franquiciaActiva: parcial.franquiciaActiva === true,
+    franquiciaPct: Math.max(0, Math.min(100, n(parcial.franquiciaPct, 15))),
     /* Mes a partir del cual el suministro pasa a mercado mayorista, en formato
        AAAA-MM. Vacío significa que no hay cambio previsto. Si el proyecto ya
        declara MEM en Configuración (`cfg.mem`), el MEM aplica desde el mes
