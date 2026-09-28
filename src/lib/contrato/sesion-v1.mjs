@@ -1,4 +1,4 @@
-// COPIA de rgbeyond/beyond-platform:plataforma/contrato/sesion-v1.mjs @ c100049 (claude/core-f1-acceso).
+// COPIA de rgbeyond/beyond-platform:plataforma/contrato/sesion-v1.mjs (claude/core-f1-acceso).
 // No editar aquí: se cambia en Platform y se vuelve a copiar.
 // beyond-session-contract/v1 — parte ejecutable del contrato de sesión y
 // navegación (docs/arquitectura/contrato-sesion-navegacion-v1.md).
@@ -70,6 +70,10 @@ export function validarVolver(valor) {
   // nuestra; los navegadores normalizan «\» a «/» y abren «/\evil».
   if (/[\u0000-\u001f\u007f\\\s]/.test(valor)) return null;
   if (!valor.startsWith("/") || valor.startsWith("//")) return null;
+  // Separadores, puntos y saltos de línea CODIFICADOS: URL() los deja tal
+  // cual dentro del prefijo, pero un proxy o la app destino podrían
+  // decodificarlos y salirse de él («/energia/..%2f..%2fauth/callback»).
+  if (/%(2f|5c|2e|0d|0a|00)/i.test(valor)) return null;
   // Resolver contra un origen ficticio detecta cualquier truco que cambie
   // de host (codificaciones, «/%2f», etc.).
   let url;

@@ -1,4 +1,4 @@
-// COPIA de rgbeyond/beyond-platform:plataforma/contrato/adaptador-v1.mjs @ c100049 (claude/core-f1-acceso).
+// COPIA de rgbeyond/beyond-platform:plataforma/contrato/adaptador-v1.mjs (claude/core-f1-acceso).
 // No editar aquí: se cambia en Platform y se vuelve a copiar.
 // beyond-session-contract/v1 — adaptador de referencia para las apps
 // montadas bajo Platform (§6, §7, §8, §9 del contrato).
@@ -18,15 +18,27 @@ export const COLUMNAS_PERFIL = "id, correo, nombre, rol, activo";
 
 // Lee el perfil de la sesión. Distingue «no hay fila» (null) de «no pude
 // preguntar» (error): el segundo nunca se trata como el primero.
-export async function cargarPerfil(supabase, usuarioId) {
-  const { data, error } = await supabase
-    .from("perfiles").select(COLUMNAS_PERFIL).eq("id", usuarioId).maybeSingle();
-  return { perfil: error ? null : data ?? null, errorPerfil: error ?? null };
+//
+// En el PRIMER ingreso el perfil lo crea un disparador de la base
+// (fn_alta_perfil) y puede llegar un instante después que la sesión: sin
+// fila y sin error se reintenta (review F1, mismo criterio que las apps
+// standalone). Un error no se reintenta aquí: lo decide la pantalla.
+export const REINTENTOS_PERFIL = 3;
+export const ESPERA_PERFIL_MS = 400;
+export async function cargarPerfil(supabase, usuarioId,
+  { reintentos = REINTENTOS_PERFIL, espera = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  for (let intento = 0; ; intento++) {
+    const { data, error } = await supabase
+      .from("perfiles").select(COLUMNAS_PERFIL).eq("id", usuarioId).maybeSingle();
+    if (error) return { perfil: null, errorPerfil: error };
+    if (data || intento >= reintentos) return { perfil: data ?? null, errorPerfil: null };
+    await espera(ESPERA_PERFIL_MS);
+  }
 }
 
 // La decisión completa de la puerta para una superficie. `supabase` null
 // significa build sin configuración: se cierra.
-export async function consultarPuerta(supabase) {
+export async function consultarPuerta(supabase, opcionesPerfil) {
   if (!supabase) {
     return { estado: decidirPuerta({ configurado: false }), sesion: null, perfil: null };
   }
@@ -39,7 +51,7 @@ export async function consultarPuerta(supabase) {
   if (!sesion) {
     return { estado: decidirPuerta({ configurado: true, sesion: null }), sesion: null, perfil: null };
   }
-  const { perfil, errorPerfil } = await cargarPerfil(supabase, sesion.user.id);
+  const { perfil, errorPerfil } = await cargarPerfil(supabase, sesion.user.id, opcionesPerfil);
   return {
     estado: decidirPuerta({ configurado: true, sesion, perfil, errorPerfil }),
     sesion, perfil, error: errorPerfil ?? null,

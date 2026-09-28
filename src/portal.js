@@ -161,9 +161,12 @@ function pintar(proyecto, publicaciones, idVersion) {
     /* Bajo Platform: la puerta del contrato, no la pantalla propia. */
     const r = await exigirAcceso(supabase);
     if (r.estado !== ESTADOS_PUERTA.ABIERTA) {
-      if (r.estado === ESTADOS_PUERTA.SIN_CONFIGURACION || r.estado === ESTADOS_PUERTA.SIN_RESPUESTA) {
+      if (r.estado === ESTADOS_PUERTA.SIN_CONFIGURACION) {
         pantalla('No se pudo abrir el portal',
-          'No se pudo comprobar tu cuenta contra Beyond Platform. Vuelve a cargar la página.');
+          'Este despliegue no tiene configurado su servicio de identidad: el portal no se abre.');
+      } else if (r.estado === ESTADOS_PUERTA.SIN_RESPUESTA) {
+        pantalla('No se pudo abrir el portal',
+          'No se pudo comprobar tu cuenta contra Beyond Platform. No es un problema de permisos: vuelve a cargar la página.');
       }
       return;
     }
