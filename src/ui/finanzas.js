@@ -486,7 +486,7 @@ export function montarFinanzas({ alCambiar }) {
     const portal = $("#fin_portal");
     portal.classList.toggle("hide", !datos.proyectoId);
     if (datos.proyectoId) {
-      portal.href = `/portal-inversionista.html?proyecto=${encodeURIComponent(datos.proyectoId)}`
+      portal.href = `${import.meta.env?.BASE_URL ?? "/"}portal-inversionista.html?proyecto=${encodeURIComponent(datos.proyectoId)}`
         + (sel ? `&version=${encodeURIComponent(sel.id)}` : "");
     }
     $("#fin_pub_btn").disabled = enDemo || datos.puedeEditar === false;

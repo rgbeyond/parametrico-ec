@@ -11,7 +11,8 @@
     "seed": "node scripts/generar-seed.mjs",
     "test": "node --test pruebas/*.test.mjs",
     "test:ui": "npm run build && npm run build:prueba && node --test pruebas-navegador/*.test.mjs",
-    "build:prueba": "node scripts/build-prueba.mjs"
+    "build:prueba": "node scripts/build-prueba.mjs",
+    "build:platform": "VITE_BEYOND_PLATFORM=1 vite build --emptyOutDir"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"

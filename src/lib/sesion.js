@@ -1,4 +1,6 @@
 import { supabase, hayNube } from './supabase.js';
+import { BAJO_PLATFORM } from './platform.js';
+import { salir as salirPorPlatform } from './contrato/adaptador-v1.mjs';
 
 const DOMINIO = (import.meta.env.VITE_DOMINIO_PERMITIDO || 'beyond-ae.com').toLowerCase();
 
@@ -27,6 +29,8 @@ export const dominioValido = (correo) =>
 export const dominio = DOMINIO;
 
 export async function entrar(){
+  /* Bajo Platform no existe una segunda puerta: el acceso es de Platform. */
+  if(BAJO_PLATFORM) throw new Error('El acceso es de Beyond Platform');
   if(!hayNube) throw new Error('No hay conexión a la base configurada');
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -41,6 +45,8 @@ export async function entrar(){
 }
 
 export async function salir(){
+  /* Bajo Platform la salida es UNA y es de Platform (contrato §7). */
+  if(BAJO_PLATFORM){ salirPorPlatform(); return; }
   if(hayNube) await supabase.auth.signOut();
   sesion.usuario = null; sesion.perfil = null;
   window.location.reload();

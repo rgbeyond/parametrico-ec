@@ -1,9 +1,17 @@
 [build]
-  command = "npm run build"
+  # `build:platform` va DESPUÉS de `build`: escribe dist/ec/, el build que monta
+  # Beyond Platform (contrato de sesión v1); `build` vacía dist/ entero.
+  command = "npm run build && npm run build:platform"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
+
+# El build que monta Beyond Platform vive en /ec/ y tiene su propio index.
+[[redirects]]
+  from = "/ec/*"
+  to = "/ec/index.html"
+  status = 200
 
 # Aplicacion de una sola pagina: todo va al index
 [[redirects]]

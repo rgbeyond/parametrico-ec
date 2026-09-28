@@ -32,7 +32,10 @@ import './styles/portal.css';
 import logoUrl from './assets/logos/beyond-orange.png';
 import { VERSION_TXT } from './lib/version.js';
 import { iniciarSesion, entrar, sesion } from './lib/sesion.js';
-import { hayNube } from './lib/supabase.js';
+import { hayNube, supabase } from './lib/supabase.js';
+import { BAJO_PLATFORM, BASE, irAlAcceso } from './lib/platform.js';
+import { exigirAcceso, vigilarSesion } from './lib/contrato/adaptador-v1.mjs';
+import { ESTADOS_PUERTA } from './lib/contrato/sesion-v1.mjs';
 import { leerProyectoPortal } from './lib/datos.js';
 import { normalizarPublicaciones } from './lib/finanzas/publicacion.js';
 import { modeloPortal, elegirPublicacion, versionesDisponibles } from './lib/portal/modelo.js';
@@ -154,8 +157,21 @@ function pintar(proyecto, publicaciones, idVersion) {
   const id = (params.get('proyecto') || '').trim();
 
   /* 1. La sesión primero. Sin ella no se pide un solo dato. */
+  if (BAJO_PLATFORM) {
+    /* Bajo Platform: la puerta del contrato, no la pantalla propia. */
+    const r = await exigirAcceso(supabase);
+    if (r.estado !== ESTADOS_PUERTA.ABIERTA) {
+      if (r.estado === ESTADOS_PUERTA.SIN_CONFIGURACION || r.estado === ESTADOS_PUERTA.SIN_RESPUESTA) {
+        pantalla('No se pudo abrir el portal',
+          'No se pudo comprobar tu cuenta contra Beyond Platform. Vuelve a cargar la página.');
+      }
+      return;
+    }
+    vigilarSesion(supabase);
+  }
   await iniciarSesion();
   if (!hayNube || !sesion.perfil) {
+    if (BAJO_PLATFORM) { irAlAcceso(); return; }
     pantallaAcceso();
     return;
   }
@@ -163,7 +179,7 @@ function pintar(proyecto, publicaciones, idVersion) {
   if (!UUID.test(id)) {
     pantalla('Falta el proyecto',
       'La liga no trae un identificador de proyecto válido.',
-      { href: '/', texto: 'Ir a la aplicación' });
+      { href: BASE, texto: 'Ir a la aplicación' });
     return;
   }
 
@@ -174,13 +190,13 @@ function pintar(proyecto, publicaciones, idVersion) {
   } catch (err) {
     pantalla('No se pudo leer el proyecto',
       err && err.message ? err.message : 'Error de lectura.',
-      { href: '/', texto: 'Ir a la aplicación' });
+      { href: BASE, texto: 'Ir a la aplicación' });
     return;
   }
   if (!proyecto) {
     pantalla('Proyecto no disponible',
       'No se encontró ese proyecto, o tu cuenta no tiene acceso a él.',
-      { href: '/', texto: 'Ir a la aplicación' });
+      { href: BASE, texto: 'Ir a la aplicación' });
     return;
   }
 

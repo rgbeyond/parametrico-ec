@@ -11,13 +11,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
    el código que produjo sus cifras. */
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
+const PLATFORM = process.env.VITE_BEYOND_PLATFORM === '1';
+
 export default defineConfig({
+  /* Dos builds del mismo código (contrato de sesión v1 de Beyond Platform):
+     la raíz, como siempre, y `npm run build:platform` con base /ec/ en
+     dist/ec/, que es el que Platform monta por proxy (src/lib/platform.js). */
+  base: PLATFORM ? '/ec/' : '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString())
   },
   build: {
-    outDir: 'dist',
+    outDir: PLATFORM ? 'dist/ec' : 'dist',
     assetsInlineLimit: 0,
     target: 'es2020',
     /* Dos páginas: la aplicación y el portal de inversionistas. El portal es
