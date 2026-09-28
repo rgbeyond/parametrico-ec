@@ -3,9 +3,14 @@ import './styles/tokens.css';
 import './styles/app.css';
 import logoUrl from './assets/logos/beyond-orange.png';
 import { VERSION_TXT } from './lib/version.js';
-import { iniciarSesion, alCambiarSesion } from './lib/sesion.js';
+import { iniciarSesion, alCambiarSesion, sesion } from './lib/sesion.js';
 import { montarPortada } from './ui/portada.js';
 import { abrirProyecto } from './lib/contexto.js';
+import { tomarRetorno } from './lib/retorno.js';
+import { BAJO_PLATFORM } from './lib/platform.js';
+import { supabase } from './lib/supabase.js';
+import { exigirAcceso, vigilarSesion } from './lib/contrato/adaptador-v1.mjs';
+import { ESTADOS_PUERTA } from './lib/contrato/sesion-v1.mjs';
 
 /* app.js fija esta misma variable cuando se carga, pero eso pasa hasta que
    se abre un proyecto. La portada la necesita desde el primer render. */
@@ -54,8 +59,46 @@ window.volverAPortada = volverAPortada;
 
 let portada = null;
 
+/* Bajo Platform, la puerta del contrato va ANTES de todo: sin sesión o sin
+   alta se va al acceso de Platform con retorno a esta ruta; si falló la
+   consulta o falta configuración, se dice aquí y no se monta nada. Nunca se
+   pinta la portada propia con su «Continuar con Google». */
+async function puertaPlatform(){
+  const r = await exigirAcceso(supabase);
+  if (r.estado === ESTADOS_PUERTA.ABIERTA) {
+    vigilarSesion(supabase);
+    const volver = document.getElementById('volver-platform');
+    if (volver) volver.hidden = false;
+    return true;
+  }
+  if (r.estado === ESTADOS_PUERTA.SIN_CONFIGURACION || r.estado === ESTADOS_PUERTA.SIN_RESPUESTA) {
+    zonaPortada.innerHTML = `<div class="note warn" role="alert" style="margin:40px auto;max-width:560px">${
+      r.estado === ESTADOS_PUERTA.SIN_CONFIGURACION
+        ? 'Este despliegue no tiene configurado su servicio de identidad: el módulo no se abre.'
+        : 'No se pudo comprobar tu cuenta contra Beyond Platform. No es un problema de permisos: vuelve a cargar la página.'}</div>`;
+  }
+  return false;
+}
+
 (async () => {
+  if (BAJO_PLATFORM && !(await puertaPlatform())) return;
   await iniciarSesion();
+
+  /* RETORNO AL PORTAL DESPUÉS DE INICIAR SESIÓN.
+     Va aquí, después de resolver la sesión y ANTES de montar la portada: quien
+     abrió la liga de un portal y tuvo que entrar no debe ver de paso la
+     aplicación interna. Se consume una sola vez y sólo acepta rutas locales de
+     la lista blanca; ver `src/lib/retorno.js`.
+
+     La condición de sesión válida es lo que evita el bucle: sin perfil no se
+     consume nada, así que la ruta sigue esperando al siguiente intento en vez
+     de rebotar entre la raíz y el portal. */
+  /* Bajo Platform el retorno lo resuelve Platform (contrato §5). */
+  if (sesion.perfil && !BAJO_PLATFORM) {
+    const destino = tomarRetorno(window.sessionStorage);
+    if (destino) { window.location.replace(destino); return; }
+  }
+
   portada = montarPortada(zonaPortada, { alAbrir: abrir });
   alCambiarSesion(async () => { await iniciarSesion(); portada.refrescar(); });
 })();

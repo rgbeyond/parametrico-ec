@@ -142,6 +142,29 @@ export async function leerProyecto(id){
   return data;
 }
 
+/* LECTURA DEL PORTAL DE INVERSIONISTAS (issue #9).
+   ================================================
+   Un solo proyecto, por identificador, y con las columnas nombradas: no
+   `select('*')`. La diferencia importa aunque la sesión sea interna y ya
+   tenga derecho a todo: lo que no se pide no se puede filtrar por accidente,
+   y este `select` es lo que va a quedar escrito cuando el portal definitivo
+   pase a leer con las políticas de invitado.
+
+   Es SOLO LECTURA. Esta función no escribe, no llama a ningún RPC y no toca
+   `actualizado_en`.
+
+   `clave`, `creado_por`, `actualizado_por` y las marcas de tiempo
+   administrativas NO se piden: el portal no las enseña. */
+export async function leerProyectoPortal(id){
+  if(!id) return null;
+  if(!hayNube || !sesion.perfil) return null;
+  const { data, error } = await supabase.from('proyectos')
+    .select('id, nombre, ubicacion, estado')
+    .eq('id', id).maybeSingle();
+  if(error) throw error;
+  return data;
+}
+
 export async function duplicarProyecto(id, nombre){
   const orig = await leerProyecto(id);
   if(!orig) throw new Error('Proyecto no encontrado');

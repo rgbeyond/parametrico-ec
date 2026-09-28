@@ -1,9 +1,27 @@
 [build]
-  command = "npm run build"
+  # `build:platform` va DESPUÉS de `build`: escribe dist/ec/, el build que monta
+  # Beyond Platform (contrato de sesión v1); `build` vacía dist/ entero.
+  command = "npm run build && npm run build:platform"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Los Deploy Previews son el entorno E2E de desarrollo (bloque F1 de beyond-platform#7:
+# sin esto, los previews de este sitio heredaban las variables globales, que
+# apuntan al proyecto de produccion). Estas variables son
+# publicables por diseño (Vite las entrega al navegador) y apuntan SOLO a
+# Beyond DEV. No afectan el contexto production ni modifican `main`.
+[context.deploy-preview.environment]
+  VITE_SUPABASE_URL = "https://gtxvzbeyywtqihfcvezk.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_Ml5ta-Gkizo6ET16BNznyw_Lq6x_vWe"
+  VITE_DOMINIO_PERMITIDO = "beyond-ae.com"
+
+# El build que monta Beyond Platform vive en /ec/ y tiene su propio index.
+[[redirects]]
+  from = "/ec/*"
+  to = "/ec/index.html"
+  status = 200
 
 # Aplicacion de una sola pagina: todo va al index
 [[redirects]]

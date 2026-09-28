@@ -127,6 +127,120 @@ La verificación de quién puede escribir qué vive en la base de datos, en las
 políticas RLS y en las funciones `security definer`. Nunca mover esa
 validación al cliente: un navegador se puede alterar, una política no.
 
+**El proyecto tiene dos frentes: CAPEX y OPEX.** CAPEX es lo que cuesta
+construir la estación —las ocho pestañas técnicas de siempre—; OPEX es cómo
+opera y qué deja. Lo financiero vive dentro de OPEX y no como una tercera
+pestaña suelta: con CAPEX, OPEX y Finanzas al mismo nivel nadie sabría dónde
+buscar el precio de venta del kWh.
+
+**La tarifa, la generación, el almacenamiento y los escenarios de consumo se
+capturan en OPEX**, aunque alimenten cifras de CAPEX. Se mudó dónde se
+capturan, no se duplicaron: son los mismos campos con las mismas llaves de
+`cfg`. Hay una prueba que cuenta cada uno en toda la página y falla si aparece
+dos veces. El transformador y el balanceo se quedaron en CAPEX porque son los
+que dimensionan la subestación; su efecto sobre la operación entra en la
+proyección como techo físico de energía diaria.
+
+**El CAPEX de OPEX no se captura ni se recalcula.** El frente de operación
+recibe la inversión total de `totals()`, el mismo resultado que pinta el
+presupuesto y que alimenta la exportación. No hay campo donde escribirla y no
+hay una segunda ruta de cálculo: si la hubiera, un día la hoja de inversionista
+enseñaría una cifra distinta a la de la propuesta. Lo que la sección sí calcula
+—OPEX, participaciones, brecha de fondeo y la proyección mensual— vive en
+`src/lib/finanzas/`, en funciones puras sin DOM.
+
+**El escalamiento anual ocurre en el aniversario del inicio de operación**, no
+en enero. El año de operación de un mes es `floor(mes / 12)` y el factor es
+`(1 + tasa)^año`: un escalón por aniversario, no capitalización mensual. Con año
+calendario, una estación que abre en septiembre recibiría el aumento completo en
+su cuarto mes de vida. Aplica al OPEX, al precio de venta y al costo de la
+energía.
+
+**Ninguna cifra de la proyección puede salir de un supuesto plausible
+precargado.** IPC, precio de venta, incrementos y ahorro del MEM arrancan en
+cero; el uptime en 100%. Un valor «razonable» por omisión se convierte en dato
+sin que nadie lo decida. El ahorro del MEM frente a CFE es el caso claro: el
+material de referencia se contradice entre 10% y 15%, así que es un campo.
+
+**Lo financiero vive en `estado.finanzas`, con su propia versión, y sólo si
+alguien lo capturó.** Un proyecto que nunca tocó Finanzas no lleva esa llave, y
+abrir la sección no se la inventa: `normalizarFinanzas` devuelve `null` cuando
+no hay nada, y la llave sólo entra al estado guardado cuando deja de estar
+vacía. De eso depende que abrir un proyecto anterior no lo marque como sucio ni
+mueva su `actualizado_en`. Va por la versión 3: `ctrl` con los supuestos de
+operación, `opex` con su regla de incremento por renglón, `variables` con los
+costos como porcentaje de ventas, `inversionistas` y `publicaciones`. Un
+`finanzas` v1 o v2 se actualiza al leerlo sin perder nada. `estado.v` global **no** cambia por esto.
+
+**La vista de inversionista se arma de un snapshot con lista blanca**, campo por
+campo, nunca del estado completo. Ahí no pasan precios unitarios, códigos de
+concepto, la base de cada número, parámetros de tarifa, comentarios, usuarios ni
+roles. Un `{...estado}` en `snapshot.js` convertiría la frontera en decoración.
+La participación que muestra es la proporción del capital aportado y **no es una
+tabla accionaria**: la estructura societaria la define el acta constitutiva.
+
+**La hoja del inversionista se publica, y publicar congela.** La vista en vivo
+se recalcula en cada render: sirve para trabajar y no para enseñar. Una
+publicación guarda el snapshot **completo**, no una referencia al proyecto, con
+su fecha, su etiqueta y la versión del instrumento que la produjo. A quien se le
+enseñó un EBITDA el martes tiene que poder ver ese mismo EBITDA el viernes.
+
+Cada publicación lleva su propio número de **contrato** (`publicacion.js`), que
+versiona la forma del objeto publicado y no la del estado del proyecto: es lo
+que otro sistema leerá para saber interpretarlo. Una publicación hecha por una
+versión posterior se conserva intacta y la interfaz avisa que no sabe pintarla,
+en lugar de mentir sobre su contenido.
+
+**Hoy las publicaciones viven en `estado.finanzas.publicaciones`, así que
+todavía no hay frontera de lectura**: quien puede abrir el proyecto puede
+verlas. Es deliberado y temporal —esta iteración no hace migración—. El día que
+exista el portal de invitados, esa lista se muda a su propia tabla y la frontera
+pasa a la base de datos; el contenido no cambia. Hasta entonces, **no** se puede
+afirmar que un invitado sólo ve lo publicado.
+
+**Un `lector` no es un invitado.** Con las políticas actuales, cualquier usuario
+autenticado lee todos los proyectos, el catálogo maestro con precios unitarios,
+el historial de precios y los comentarios internos (`02_politicas.sql:34,41,71,74`),
+y `fn_alta_perfil` sólo admite correos del dominio. Darle una cuenta de sólo
+lectura a un inversionista le daría todo eso. Esconder botones con `puede.*` es
+cosmético: el dato ya viajó al navegador. El acceso de terceros necesita rol
+propio, asignación proyecto↔invitado, RLS y una decisión de Auth, y se coordina
+en `rgbeyond/beyond-platform` antes de tocar nada aquí.
+
+**El portal de inversionistas cura, no aísla.** `portal-inversionista.html` es
+una página aparte que lee un proyecto por identificador con la sesión del
+usuario que ya entró —un interno que ya tenía derecho a ver ese proyecto—. Lo
+que aporta es que, aunque reciba el proyecto completo, sólo pinta lo que
+`modeloPortal()` deja pasar. **No es una frontera de seguridad y la propia
+página lo dice en una banda visible.** El aislamiento real —rol de invitado,
+RLS, identidad de la plataforma— sigue bloqueado en `beyond-platform#10`.
+
+Tres reglas del portal: sin sesión **no se pide un solo dato** —primero se
+resuelve la sesión, y sólo si hay perfil se consulta—; es **sólo lectura**, un
+`select` con columnas nombradas y ningún `insert`, `update`, `delete` ni RPC; y
+**el CAPEX no se recalcula**, sale de `estado.total`. Si esa llave no está, la
+inversión se reporta como **pendiente, nunca como cero**: un cero se lee como
+resultado y ahí sería un hueco. Lo mismo con la proyección: sin publicación
+financiera, las secciones de Proyección e Inversionistas no se ofrecen.
+
+**Volver de OAuth es una lista blanca, no un redirect genérico.** El portal sin
+sesión anota su propia ruta en `sessionStorage` bajo `parametrico:returnTo` y
+lanza el acceso desde ahí; `main.js` la consume en cuanto hay sesión válida y
+**antes** de montar la portada. `src/lib/retorno.js` sólo acepta rutas locales
+declaradas en `RUTAS_PERMITIDAS` —hoy únicamente `/portal-inversionista.html`—:
+un «vuelve a donde estabas» que acepte cualquier destino es un redirect abierto
+y sirve para mandar a alguien a un sitio ajeno desde una liga que parece
+nuestra. La llave se borra **siempre** antes de redirigir, incluso si lo
+guardado es inválido, y el consumo exige perfil: sin esas dos reglas hay bucle
+entre la raíz y el portal. El fragmento se descarta, que es donde Supabase deja
+el token.
+
+**Las derivaciones de `cfg` viven en `src/lib/derivadas.js`**, no dentro de
+`app.js`. Equipos, puntos, potencia instalada, demanda de diseño y piso de
+demanda contratada las importan el estimador y el portal, así que las dos
+pantallas dicen lo mismo por construcción. Ahí no se calcula ni un peso: el
+CAPEX sigue saliendo de `totals()` y nadie más lo reconstruye.
+
 **Un concepto nuevo nace con ámbito de proyecto**, no en el maestro. Vive solo
 en esa estación hasta que un administrador lo promueve con
 `fn_promover_concepto`. Así una estación captura lo que necesita sin ensuciar
@@ -142,7 +256,9 @@ habría sido reescribirla. Si algún día se migra, que sea por partes.
 
 ```
 index.html                 marcado completo de la aplicación
+portal-inversionista.html  portal de inversionistas: página aparte, con su propia entrada
 src/main.js                orquestación: sesión, portada, carga diferida del estimador
+src/portal.js              entrada del portal: sesión, lectura por id y pintado
 src/ui/portada.js          pantalla de proyectos
 src/ui/usuarios.js         administración de roles
 src/lib/sesion.js          sesión con Google, roles, objeto `puede`
@@ -152,6 +268,12 @@ src/lib/app.js             núcleo del estimador
 src/lib/almacenamiento.js  respaldo local y modo sin cuenta
 src/lib/supabase.js        cliente; sin variables de entorno corre en modo local
 src/lib/fuentes.js         reglas @font-face para el documento de la propuesta
+src/lib/derivadas.js       derivaciones de cfg compartidas por el estimador y el portal
+src/lib/retorno.js         ruta pendiente tras iniciar sesion, con lista blanca
+src/lib/portal/           modelo curado y vista del portal de inversionistas
+src/lib/finanzas/          modelo de operacion: estado, OPEX, plantilla, inversionistas,
+                           proyeccion mensual, snapshot, publicacion y vista
+src/ui/finanzas.js         interfaz del frente OPEX
 src/data/catalogo.json     188 conceptos: precio, sustento y fuente
 src/styles/               tokens de marca, fuentes y estilos
 supabase/                 esquema, políticas RLS y semilla
@@ -179,8 +301,8 @@ Netlify tampoco.
 
 | Qué | Comando | Qué cubre |
 |---|---|---|
-| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible |
-| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada |
+| Node, sin navegador ni credenciales | `npm test` | `pruebas/exportar.test.mjs`: el modelo del export, el escapado del CSV y el documento imprimible. `pruebas/finanzas.test.mjs`: OPEX, escalamiento, participaciones, brecha de fondeo, la proyección mensual, la compatibilidad del estado y la lista blanca del snapshot. `pruebas/publicacion.test.mjs`: que publicar congele y que lo publicado no filtre datos internos. `pruebas/portal.test.mjs`: la lista blanca del portal, probada en negativo con datos internos sembrados en el proyecto |
+| Chromium | `npm run test:ui` | `pruebas-navegador/ui_exportar.test.mjs`: que el archivo exportado diga lo mismo que la pantalla, y que exportar no escriba nada. `pruebas-navegador/ui_portal.test.mjs`: que sin sesión el portal no pida un solo dato y que nunca escriba. `pruebas-navegador/ui_finanzas.test.mjs`: que los dos frentes naveguen, que el CAPEX de OPEX sea el del presupuesto y el del archivo, y que ni abrir un proyecto anterior ni el modo demostración le escriban nada |
 
 Están separadas a propósito: `npm test` tiene que poder correr en cualquier
 parte, y lo que comprueban las de navegador —que el archivo coincide con la
@@ -253,6 +375,23 @@ en modo local.
 
 ### Pendientes de producto
 
+- El frente OPEX llega hasta EBITDA: ventas, costo de electricidad, costos
+  variables y OPEX fijo, mes a mes. No hay retorno, TIR, VPN, payback, deuda,
+  impuestos, depreciación ni distribución de flujo, y tampoco facturación,
+  proveedores, contabilidad ni histórico real de pagos. El alcance siguiente se
+  define después de la validación de RG; no ampliarlo por inercia.
+- El almacenamiento no despacha en la proyección mensual: haría falta un
+  modelo horario. Donde hay BESS, el costo de electricidad proyectado es
+  conservador. El excedente fotovoltaico se reporta pero no se acredita ni se
+  vende, porque se paga a otro valor y ese dato no está capturado.
+- **Portal de invitados.** Existe la superficie (`portal-inversionista.html`) y
+  existe la publicación congelada, pero **todavía no hay acceso de terceros**:
+  la liga sólo funciona para quien ya tiene sesión del Paramétrico. Falta mover
+  las publicaciones a su propia tabla, el rol de invitado, la asignación
+  proyecto↔invitado y las RLS de sólo-publicaciones. Todo eso está bloqueado en
+  `rgbeyond/beyond-platform#10`, donde se decide cómo identifica la plataforma a
+  un invitado: construir el portal definitivo sobre un Auth que se va a
+  reemplazar es trabajo que se tira dos veces.
 - Interfaz para proponer y aprobar precios contra `precio_propuestas`. La base
   ya lo soporta; en la pantalla de base de datos la aprobación todavía vive en
   memoria de la sesión.
