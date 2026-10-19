@@ -67,7 +67,7 @@ after(async () => {
   await new Promise((r) => servidor?.close(r));
 });
 
-async function abrir({ colorScheme = "dark" } = {}) {
+async function abrir({ colorScheme = "dark", proyecto = PROYECTO } = {}) {
   const estado = { retenerEscrituras: false, retenidas: [], escrituras: 0, dialogos: [] };
   const contexto = await navegador.newContext({ viewport: { width: 1280, height: 900 }, colorScheme });
   const pagina = await contexto.newPage();
@@ -78,7 +78,7 @@ async function abrir({ colorScheme = "dark" } = {}) {
   await pagina.route(`**://${REF}.supabase.co/**`, (r) => json(r, []));
   await pagina.route("**/rest/v1/perfiles*", (r) => json(r, { id: USUARIO, correo: "edita@beyond-ae.com", nombre: "Quien prueba", rol: "editor", activo: true }));
   await pagina.route("**/rest/v1/proyectos*", (r) => {
-    if (r.request().method() === "GET") return json(r, [PROYECTO]);
+    if (r.request().method() === "GET") return json(r, [proyecto]);
     estado.escrituras++;
     const responder = () => json(r, { ...PROYECTO, ...JSON.parse(r.request().postData() || "{}") });
     if (estado.retenerEscrituras) return new Promise((soltar) => estado.retenidas.push(() => soltar(responder())));
@@ -91,7 +91,7 @@ async function abrir({ colorScheme = "dark" } = {}) {
     expires_at: expira, expires_in: 3600 * 24 * 365,
     user: { id: USUARIO, aud: "authenticated", role: "authenticated", email: "edita@beyond-ae.com", app_metadata: {}, user_metadata: {} } }]);
   await pagina.goto(`${base}/ec/`, { waitUntil: "domcontentloaded" });
-  await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).waitFor({ timeout: 20000 });
+  await pagina.locator(`[data-abrir="${proyecto.id}"]`).waitFor({ timeout: 20000 });
   return { pagina, contexto, estado, fallos };
 }
 
@@ -253,6 +253,57 @@ test("ruta «Proyectos» enlazada en el proyecto vuelve a la portada; «Todos lo
   await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).waitFor({ state: "visible", timeout: 10000 });
   assert.match(pagina.url(), /\/ec\/$/);
   assert.equal(await textoRuta(pagina), "Proyectos");
+  assert.deepEqual(fallos, []);
+  await contexto.close();
+});
+
+/* Contraste entre un color calculado del elemento (`prop`) y el fondo
+   efectivo sobre el que se dibuja (`desde`: "self" o "parent"). */
+const contrasteDe = (pagina, sel, prop, desde = "parent") => pagina.evaluate(([sel, prop, desde]) => {
+  const n = document.querySelector(sel);
+  const rgba = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return [0, 0, 0, 0]; const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
+  const mezclar = (a, b) => [0, 1, 2].map((k) => a[k] * a[3] + b[k] * (1 - a[3])).concat(1);
+  const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const capas = []; for (let x = desde === "self" ? n : n.parentElement; x; x = x.parentElement) { const c = rgba(getComputedStyle(x).backgroundColor); if (c[3] > 0) { capas.push(c); if (c[3] >= 1) break; } }
+  let bg = [255, 255, 255, 1]; for (const c of capas.reverse()) bg = mezclar(c, bg);
+  const st = getComputedStyle(n); const c = mezclar(rgba(st[prop]), bg);
+  const [x, y] = [lum(c), lum(bg)].sort((a, b) => b - a);
+  return { valor: st[prop], estilo: st.outlineStyle, ratio: Math.round(((x + 0.05) / (y + 0.05)) * 100) / 100 };
+}, [sel, prop, desde]);
+
+test("claro: foco de un campo del estimador con borde de 3:1 o más (review nativa UX H2)", async () => {
+  const { pagina, contexto, fallos } = await abrir({ colorScheme: "light" });
+  await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).click();
+  await pagina.locator("#v_nom").waitFor({ state: "visible", timeout: 20000 });
+  await pagina.focus("#v_nom");
+  await pagina.waitForTimeout(300);   // los campos tienen transition de 120 ms
+  const borde = await contrasteDe(pagina, "#v_nom", "borderTopColor");
+  console.log("# foco de formulario EC en claro: " + JSON.stringify(borde));
+  assert.ok(borde.ratio >= 3, `borde de foco ${borde.valor} a ${borde.ratio}:1`);
+  if (process.env.CAPTURAS) await pagina.locator("#v_nom").screenshot({ path: `${process.env.CAPTURAS}/ec-foco-formulario-claro.png` });
+  assert.deepEqual(fallos, []);
+  await contexto.close();
+});
+
+test("claro: «Excedente de fondeo» con texto de 4.5:1 o más (review nativa H2/H3, finanzas.js)", async () => {
+  // Proyecto sintético con un inversionista ficticio cuya aportación supera
+  // cualquier CAPEX: el estado de excedente sin datos reales.
+  // El estimador solo carga `finanzas` si el estado trae `cfg`.
+  const proyecto = { ...PROYECTO, estado: { cfg: { nom: PROYECTO.nombre, loc: PROYECTO.ubicacion }, finanzas: { inversionistas: [
+    { id: "inv-sintetico", nombre: "Inversionista sintético", aportacion: 999000000000, activo: true }] } } };
+  const { pagina, contexto, fallos } = await abrir({ colorScheme: "light", proyecto });
+  await pagina.locator(`[data-abrir="${proyecto.id}"]`).click();
+  await pagina.locator("#v_nom").waitFor({ state: "visible", timeout: 20000 });
+  await pagina.click('#wsNav [data-ws="opex"]');
+  if (process.env.DEPURAR_FIN) console.log("# opex: " + JSON.stringify(await pagina.evaluate(() => ({
+    lb: document.querySelector("#fin_brecha_lb")?.textContent, visible: !!document.querySelector("#fin_brecha")?.offsetParent,
+    subtabs: [...document.querySelectorAll(".subtab")].map((n) => n.textContent.trim()) }))));
+  await pagina.locator("#fin_brecha_lb", { hasText: "Excedente de fondeo" }).waitFor({ timeout: 20000 });
+  await pagina.locator("#fin_brecha").scrollIntoViewIfNeeded();
+  const texto = await contrasteDe(pagina, "#fin_brecha", "color");
+  console.log("# Excedente de fondeo en claro: " + JSON.stringify(texto));
+  assert.ok(texto.ratio >= 4.5, `«Excedente de fondeo» ${texto.valor} a ${texto.ratio}:1`);
+  if (process.env.CAPTURAS) await pagina.locator("#fin_brecha").locator("xpath=ancestor::div[contains(@class,'card')][1]").screenshot({ path: `${process.env.CAPTURAS}/ec-excedente-fondeo-claro.png` });
   assert.deepEqual(fallos, []);
   await contexto.close();
 });
