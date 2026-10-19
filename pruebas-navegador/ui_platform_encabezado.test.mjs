@@ -152,3 +152,52 @@ test("regreso con cambios del estimador: avisa mientras no se guardan; cancelar 
   assert.deepEqual(fallos, []);
   await contexto.close();
 });
+
+/* Contraste del claro en las vistas que el delta de tokens remapea: cada
+   texto visible con texto propio contra su fondo efectivo. 4.5:1, o 3:1 para
+   texto grande (24 px, o 18.66 px en negrita). */
+async function textosBajoContraste(pagina) {
+  return pagina.evaluate(() => {
+    const rgba = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return [0, 0, 0, 0]; const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
+    const mezclar = (a, b) => [0, 1, 2].map((k) => a[k] * a[3] + b[k] * (1 - a[3])).concat(1);
+    const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const fondo = (n) => { const capas = []; for (let x = n; x; x = x.parentElement) { const c = rgba(getComputedStyle(x).backgroundColor); if (c[3] > 0) { capas.push(c); if (c[3] >= 1) break; } } let b = [255, 255, 255, 1]; for (const c of capas.reverse()) b = mezclar(c, b); return b; };
+    const malos = new Map();
+    for (const n of document.querySelectorAll("body *")) {
+      if (!n.closest("#portada, #estimador, .bc-barra")) continue;
+      const propio = [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim());
+      if (!propio) continue;
+      const r = n.getBoundingClientRect(); const st = getComputedStyle(n);
+      if (!r.width || !r.height || st.visibility === "hidden" || st.opacity === "0") continue;
+      if (n.closest("[disabled], .doc, .hoja, iframe")) continue;
+      const bg = fondo(n); const c = mezclar(rgba(st.color), bg);
+      const [x, y] = [lum(c), lum(bg)].sort((a, b) => b - a); const ratio = (x + 0.05) / (y + 0.05);
+      const px = parseFloat(st.fontSize); const grande = px >= 24 || (px >= 18.66 && Number(st.fontWeight) >= 700);
+      if (ratio < (grande ? 3 : 4.5)) {
+        const clave = (n.className && typeof n.className === "string" ? "." + n.className.trim().split(/\s+/).join(".") : n.tagName.toLowerCase()) + " " + st.color;
+        if (!malos.has(clave)) malos.set(clave, { que: clave, ratio: Math.round(ratio * 100) / 100, texto: n.textContent.trim().slice(0, 30) });
+      }
+    }
+    return [...malos.values()];
+  });
+}
+
+test("claro: contraste de texto 4.5:1 (3:1 grande) en la portada y en las pestañas del proyecto sintético", async () => {
+  const { pagina, contexto, fallos } = await abrir({ colorScheme: "light" });
+  const hallazgos = (await textosBajoContraste(pagina)).map((h) => ({ vista: "portada", ...h }));
+  await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).click();
+  await pagina.locator("#v_nom").waitFor({ state: "visible", timeout: 20000 });
+  for (const ws of ["capex", "opex"]) {
+    await pagina.click(`#wsNav [data-ws="${ws}"]`);
+    const pestanas = ws === "capex" ? await pagina.locator("#tabsCapex .tab").evaluateAll((ns) => ns.map((n) => n.dataset.t)) : [null];
+    for (const t of pestanas) {
+      if (t) await pagina.click(`#tabsCapex [data-t="${t}"]`);
+      await pagina.waitForTimeout(150);
+      hallazgos.push(...(await textosBajoContraste(pagina)).map((h) => ({ vista: ws + (t ? ":" + t : ""), ...h })));
+    }
+  }
+  console.log("# hallazgos de contraste en claro: " + JSON.stringify(hallazgos));
+  assert.deepEqual(hallazgos, []);
+  assert.deepEqual(fallos, []);
+  await contexto.close();
+});

@@ -23,6 +23,7 @@
   --accent-ink:#B4590C; --accent-2-ink:#1C6E93;
   /* Acento COMO TEXTO: el naranja de marca en oscuro; en claro, la versión AA. */
   --accent-texto:var(--accent);
+  --accent-2-texto:var(--accent-2);
 
   --font-sans:Montserrat,system-ui,sans-serif;
   --r-md:10px; --r-lg:14px; --r-pill:999px; --ls-wide:.08em;
@@ -39,12 +40,19 @@
 html[data-tema="claro"]{
   --surface-base:#F0EFEC; --surface-1:#F7F7F5; --surface-2:#FFFFFF;
   --surface-3:#E6E4DF; --surface-4:#D8D6D0;
-  --text-primary:#1A1A1A; --text-secondary:#5A5A57; --text-tertiary:#8C8C88;
+  /* Texto terciario y semánticos un punto más oscuros que el papel de los
+     documentos: aquí van sobre superficies tintadas y chips suaves, donde
+     #8C8C88, #15803D, #B45309 y #DC2626 quedaban entre 3.4 y 4.3:1 (medido
+     en ui_platform_encabezado). */
+  --text-primary:#1A1A1A; --text-secondary:#5A5A57; --text-tertiary:#646460;
   --border-subtle:rgba(0,0,0,.09); --border-default:rgba(0,0,0,.16);
-  --success:#15803D; --warning:#B45309; --danger:#DC2626;
+  --success:#126B33; --warning:#92400E; --danger:#B91C1C;
   --accent-soft:rgba(180,89,12,.12); --accent-2-soft:rgba(28,110,147,.12);
   --success-soft:rgba(21,128,61,.12); --warning-soft:rgba(180,83,9,.12);
   --danger-soft:rgba(220,38,38,.12);
-  --accent-texto:var(--accent-ink,#B4590C);
+  /* #B4590C es AA sobre blanco, no sobre el papel tintado ni sobre el chip
+     naranja suave (3.8 a 4.5:1, medido): para TEXTO de acento, uno más
+     oscuro. Los rellenos de marca no cambian. */
+  --accent-texto:#9A4A08;
+  --accent-2-texto:var(--accent-2-ink,#1C6E93);
 }
-html[data-tema="claro"] .badge.b-fuente{color:var(--accent-2-ink,#1C6E93)}

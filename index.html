@@ -210,7 +210,7 @@
 <div class="grid g4">
 <div class="card stat"><span class="eyebrow">Costo directo</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_capex"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_capex_x"></span></div>
 <div class="card stat"><span class="eyebrow">Indirectos y contingencia</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_indir"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_indir_d"></span></div>
-<div class="card stat"><span class="eyebrow">Inversión total</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_total" style="color:var(--accent)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_total_x"></span></div>
+<div class="card stat"><span class="eyebrow">Inversión total</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_total" style="color:var(--accent-texto)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="s_total_x"></span></div>
 <div class="card stat sec"><span class="eyebrow">Depósito en garantía</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="s_dep"></span><span class="unit">MXN</span></div><span class="tiny muted">Garantía reembolsable, fuera del costo</span></div>
 </div>
 <div class="grid g4" style="margin-top:14px">
@@ -345,7 +345,7 @@
 <div class="grid g4" style="margin-bottom:14px">
 <div class="card stat"><span class="eyebrow">Conceptos en catálogo</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_tot" style="font-size:30px"></span><span class="unit">registros</span></div><span class="tiny muted">Todos con precio de referencia asignado</span></div>
 <div class="card stat"><span class="eyebrow">Con dato validado</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_val" style="font-size:30px;color:var(--success)"></span><span class="unit" style="color:var(--success)">conceptos</span></div><span class="tiny muted">Cotización o acuerdo confirmado</span></div>
-<div class="card stat"><span class="eyebrow">Con fuente identificable</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_fue" style="font-size:30px;color:var(--accent-2)"></span><span class="unit" style="color:var(--accent-2)">conceptos</span></div><span class="tiny muted">Lista de precio o referencia de mercado</span></div>
+<div class="card stat"><span class="eyebrow">Con fuente identificable</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_fue" style="font-size:30px;color:var(--accent-2-texto)"></span><span class="unit" style="color:var(--accent-2-texto)">conceptos</span></div><span class="tiny muted">Lista de precio o referencia de mercado</span></div>
 <div class="card stat"><span class="eyebrow">Usados en este proyecto</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="g_use" style="font-size:30px"></span><span class="unit">conceptos</span></div><span class="tiny muted">El catálogo del proyecto se alimenta de aquí</span></div>
 </div>
 <div class="card" style="padding-bottom:14px">
@@ -354,7 +354,7 @@
 <div class="tiny muted" style="margin-top:4px">Fuente única de precios. Ningún proyecto captura precios por fuera de aquí; cuando un proyecto confirma un precio, se promueve a este catálogo con su fuente y fecha.</div></div>
 </div>
 <div class="row sp" style="margin-bottom:14px">
-<div class="tiny muted" style="flex:1">Los conceptos de ámbito <b style="color:var(--accent)">proyecto</b> existen solo en esta estación. Un administrador los promueve al maestro cuando el precio se confirma.</div>
+<div class="tiny muted" style="flex:1">Los conceptos de ámbito <b style="color:var(--accent-texto)">proyecto</b> existen solo en esta estación. Un administrador los promueve al maestro cuando el precio se confirma.</div>
 <button class="btn ghost" id="g_nuevo">Agregar concepto a este proyecto</button>
 </div>
 <div id="g_nuevoBox" class="hide card" style="background:var(--surface-1);margin-bottom:16px">
@@ -432,7 +432,7 @@
 <!-- RESUMEN -->
 <div id="fin-res">
 <div class="grid g3">
-<div class="card stat"><span class="eyebrow">Inversión total (CAPEX)</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_capex" style="color:var(--accent)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_capex_x"></span></div>
+<div class="card stat"><span class="eyebrow">Inversión total (CAPEX)</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_capex" style="color:var(--accent-texto)"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_capex_x"></span></div>
 <div class="card stat"><span class="eyebrow">Ventas del año <span id="fin_anio_res"></span></span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_ventas"></span><span class="unit">MXN</span></div><span class="tiny muted" id="fin_ventas_x"></span></div>
 <div class="card stat"><span class="eyebrow">EBITDA del año</span><div class="row" style="gap:6px;align-items:baseline"><span class="fig" id="fin_ebitda"></span><span class="unit" id="fin_margen"></span></div><span class="tiny muted" id="fin_ebitda_x"></span></div>
 </div>

@@ -51,7 +51,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
 .stat{display:flex;flex-direction:column;gap:10px}
 .stat .fig{font-weight:200;font-size:38px;line-height:1;letter-spacing:-.02em}
 .stat .unit{font-weight:600;font-size:15px;color:var(--accent-texto)}
-.stat.sec .unit{color:var(--accent-2)}
+.stat.sec .unit{color:var(--accent-2-texto)}
 label.f{display:block;margin-bottom:14px}
 label.f .lb{display:block;font-size:11px;letter-spacing:var(--ls-wide);text-transform:uppercase;color:var(--text-secondary);font-weight:600;margin-bottom:6px}
 /* Regla de diseño: dentro de una retícula, una etiqueta que ocupa dos renglones
@@ -75,7 +75,7 @@ input[type=checkbox]{width:auto}
 .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap}
 .badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .b-validado{background:var(--success-soft);color:var(--success)}
-.b-fuente{background:var(--accent-2-soft);color:var(--accent-2)}
+.b-fuente{background:var(--accent-2-soft);color:var(--accent-2-texto)}
 .b-supuesto{background:var(--warning-soft);color:var(--warning)}
 .b-allowance{background:var(--danger-soft);color:var(--danger)}
 .b-neutral{background:var(--surface-3);color:var(--text-secondary)}
@@ -86,7 +86,7 @@ input[type=checkbox]{width:auto}
 .rung.now{background:var(--accent-soft);border-color:rgba(255,135,0,.55)}
 .rung.next{border-color:rgba(130,215,251,.45)}
 .rung .cn{font-weight:700;font-size:12px;letter-spacing:var(--ls-wide);text-transform:uppercase}
-.rung.now .cn{color:var(--accent-texto)} .rung.next .cn{color:var(--accent-2)}
+.rung.now .cn{color:var(--accent-texto)} .rung.next .cn{color:var(--accent-2-texto)}
 .rung .nm{font-size:13px;font-weight:600}
 .rung .rg{font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
 .track{position:relative;height:8px;border-radius:4px;background:var(--surface-4);margin:14px 0 6px;overflow:visible}
@@ -115,7 +115,7 @@ table.fit td.wrap{white-space:normal}
 input.money{text-align:right;font-variant-numeric:tabular-nums}
 select.tax{font-size:11px;font-weight:600;padding:4px 6px;border-radius:var(--r-pill);border:0;width:100%;cursor:pointer}
 select.tax.b-validado{background:var(--success-soft);color:var(--success)}
-select.tax.b-fuente{background:var(--accent-2-soft);color:var(--accent-2)}
+select.tax.b-fuente{background:var(--accent-2-soft);color:var(--accent-2-texto)}
 select.tax.b-supuesto{background:var(--warning-soft);color:var(--warning)}
 select.tax.b-allowance{background:var(--danger-soft);color:var(--danger)}
 select.tax option{background:var(--surface-2);color:var(--text-primary)}

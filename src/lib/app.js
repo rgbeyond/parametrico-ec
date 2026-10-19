@@ -663,7 +663,7 @@ nh=`<div class="note"><b>Para pasar a Clase ${nextCl.c} — ${nextCl.nom}</b> ha
 if(top&&top.list.length) nh+=`<div class="note" style="margin-top:14px"><b>Para llegar a Clase 1</b>, la de mayor precisión, hay que cotizar y validar ${top.list.length} partidas por <b>${mx(top.monto)}</b>, o sea ${(top.monto/t.tec*100).toFixed(0)}% del costo directo. Es el camino completo, no solo el siguiente escalón.</div>`;
 }
 $("#s_next").innerHTML=nh;
-$("#s_rango").innerHTML=`<span style="color:var(--accent-2)">${mx(t.total*(1+t.cl.lo/100))}</span> &nbsp;a&nbsp; <span style="color:var(--danger)">${mx(t.total*(1+t.cl.hi/100))}</span>`;
+$("#s_rango").innerHTML=`<span style="color:var(--accent-2-texto)">${mx(t.total*(1+t.cl.lo/100))}</span> &nbsp;a&nbsp; <span style="color:var(--danger)">${mx(t.total*(1+t.cl.hi/100))}</span>`;
 $("#s_rango_n").textContent=`Rango de clase ${t.cl.lo}% / +${t.cl.hi}%, para comunicar al exterior. Agregando el rango de cada partida el resultado es ${t.lo.toFixed(0)}% / +${t.hi.toFixed(0)}%: se usa el más amplio de los dos porque el agregado no captura el riesgo de alcance faltante.`;
 const alw=t.capex.filter(r=>r.tax==="allowance"), alwT=alw.reduce((a,b)=>a+b.imp,0);
 $("#s_cap").innerHTML=alw.length?`<b>${alw.length} partidas son provisiones sin base de precio</b>, por ${mx(alwT)} (${(alwT/t.tec*100).toFixed(0)}% del costo directo)${t.dep?`, más un depósito de garantía de ${mx(t.dep)} que también es extrapolación`:""}. El estimado no puede subir de clase hasta cotizarlas.`
