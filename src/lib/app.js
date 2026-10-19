@@ -342,6 +342,10 @@ k.v+=r.imp; k.w+=r.imp*S[r.tax]; k.lo+=r.imp*RNG[r.tax][0]; k.hi+=r.imp*RNG[r.ta
 return Object.values(m).filter(x=>x.v>0).map(x=>({...x,score:x.w/x.v,rlo:x.lo/x.v,rhi:x.hi/x.v,risk:x.v*(1-x.w/x.v)})).sort((a,b)=>b.v-a.v);
 }
 const scoreCol=s=>s>=.9?COL.validado:s>=.7?COL.fuente:s>=.4?COL.supuesto:COL.allowance;
+/* Misma escala, como clase: la hoja la pinta con tokens del tema (en oscuro,
+   los mismos valores de COL; en claro, versiones AA). UI-01: el texto y los
+   trazos del SVG con color fijo quedaban invisibles en claro. */
+const scoreCls=s=>"sc "+(s>=.9?"sc-validado":s>=.7?"sc-fuente":s>=.4?"sc-supuesto":"sc-allowance");
 function squarify(data,x,y,w,h){
 const out=[]; let items=[...data].sort((a,b)=>b.v-a.v), remaining=items.reduce((a,b)=>a+b.v,0);
 while(items.length&&w>.5&&h>.5&&remaining>0){
@@ -381,13 +385,13 @@ const sx=v=>lw+(W-lw-rw)*v/maxHi;
 const g=data.map((d,i)=>{
 const y=i*rh+16, lo=d.v*(1+d.rlo/100), hi=d.v*(1+d.rhi/100);
 return `<g data-goc="${d.cat}" style="cursor:pointer"><title>${CATN[d.cat]}: ${mx(d.v)} · de ${mx(lo)} a ${mx(hi)} · clic para editar en el catálogo</title>
-    <text x="0" y="${y+11}" font-size="11" font-weight="600" fill="#999">${d.cat}</text>
-    <rect x="${lw}" y="${y+2}" width="${Math.max(1,sx(d.v)-lw)}" height="13" rx="3" fill="${scoreCol(d.score)}" fill-opacity=".55"/>
-    <line x1="${sx(lo)}" y1="${y+8.5}" x2="${sx(hi)}" y2="${y+8.5}" stroke="${scoreCol(d.score)}" stroke-width="1.5"/>
-    <line x1="${sx(lo)}" y1="${y+3}" x2="${sx(lo)}" y2="${y+14}" stroke="${scoreCol(d.score)}" stroke-width="1.5"/>
-    <line x1="${sx(hi)}" y1="${y+3}" x2="${sx(hi)}" y2="${y+14}" stroke="${scoreCol(d.score)}" stroke-width="1.5"/>
-    <text x="${W-62}" y="${y+12}" font-size="11" fill="#fff" font-weight="500" text-anchor="end">${mxs(d.v)}</text>
-    <text x="${W-4}" y="${y+12}" font-size="10" fill="${scoreCol(d.score)}" text-anchor="end">+${d.rhi.toFixed(0)}%</text></g>`;
+    <text class="g-txt2" x="0" y="${y+11}" font-size="11" font-weight="600" fill="#999">${d.cat}</text>
+    <rect class="${scoreCls(d.score)}" x="${lw}" y="${y+2}" width="${Math.max(1,sx(d.v)-lw)}" height="13" rx="3" fill="${scoreCol(d.score)}" fill-opacity=".55"/>
+    <line class="${scoreCls(d.score)}" x1="${sx(lo)}" y1="${y+8.5}" x2="${sx(hi)}" y2="${y+8.5}" stroke="${scoreCol(d.score)}" stroke-width="1.5"/>
+    <line class="${scoreCls(d.score)}" x1="${sx(lo)}" y1="${y+3}" x2="${sx(lo)}" y2="${y+14}" stroke="${scoreCol(d.score)}" stroke-width="1.5"/>
+    <line class="${scoreCls(d.score)}" x1="${sx(hi)}" y1="${y+3}" x2="${sx(hi)}" y2="${y+14}" stroke="${scoreCol(d.score)}" stroke-width="1.5"/>
+    <text class="g-txt" x="${W-62}" y="${y+12}" font-size="11" fill="#fff" font-weight="500" text-anchor="end">${mxs(d.v)}</text>
+    <text class="${scoreCls(d.score)}" x="${W-4}" y="${y+12}" font-size="10" fill="${scoreCol(d.score)}" text-anchor="end">+${d.rhi.toFixed(0)}%</text></g>`;
 }).join("");
 $("#rangechart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg>`;
 }
@@ -398,18 +402,18 @@ const maxRisk=Math.max(...data.map(d=>d.risk),1);
 const maxRad=6+22;
 const sx=v=>Math.min(W-pr-maxRad,Math.max(pl+maxRad,pl+maxRad+(W-pl-pr-2*maxRad)*Math.sqrt(v/maxV)));
 const sy=r=>Math.min(H-pb-8,Math.max(pt,H-pb-(H-pb-pt)*(r/maxR)));
-const grid=[0,.25,.5,.75,1].map(f=>`<line x1="${pl}" y1="${sy(maxR*f)}" x2="${W-pr}" y2="${sy(maxR*f)}" stroke="rgba(255,255,255,.08)"/>
-    <text x="${pl-7}" y="${sy(maxR*f)+3}" font-size="10" fill="#666" text-anchor="end">+${Math.round(maxR*f)}%</text>`).join("");
+const grid=[0,.25,.5,.75,1].map(f=>`<line class="g-rejilla" x1="${pl}" y1="${sy(maxR*f)}" x2="${W-pr}" y2="${sy(maxR*f)}" stroke="rgba(255,255,255,.08)"/>
+    <text class="g-txt3" x="${pl-7}" y="${sy(maxR*f)+3}" font-size="10" fill="#666" text-anchor="end">+${Math.round(maxR*f)}%</text>`).join("");
 const pts=data.map(d=>{
 const r=6+22*Math.sqrt(d.risk/maxRisk);
 return `<g data-goc="${d.cat}" style="cursor:pointer"><title>${CATN[d.cat]}: importe ${mx(d.v)} · puede subir +${d.rhi.toFixed(0)}% · dinero en riesgo ${mx(d.risk)} · clic para editar en el catálogo</title>
-    <circle cx="${sx(d.v)}" cy="${sy(d.rhi)}" r="${r}" fill="${scoreCol(d.score)}" fill-opacity=".28" stroke="${scoreCol(d.score)}" stroke-width="1.2"/>
-    <text x="${sx(d.v)}" y="${sy(d.rhi)+3.5}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${d.cat}</text></g>`;
+    <circle class="${scoreCls(d.score)}" cx="${sx(d.v)}" cy="${sy(d.rhi)}" r="${r}" fill="${scoreCol(d.score)}" fill-opacity=".28" stroke="${scoreCol(d.score)}" stroke-width="1.2"/>
+    <text class="g-txt" x="${sx(d.v)}" y="${sy(d.rhi)+3.5}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${d.cat}</text></g>`;
 }).join("");
 $("#scatter").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${grid}
-    <line x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="rgba(255,255,255,.14)"/>
-    <text x="${pl}" y="${H-12}" font-size="10" fill="#666">menor importe</text>
-    <text x="${W-pr}" y="${H-12}" font-size="10" fill="#666" text-anchor="end">mayor importe</text>
+    <line class="g-eje" x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="rgba(255,255,255,.14)"/>
+    <text class="g-txt3" x="${pl}" y="${H-12}" font-size="10" fill="#666">menor importe</text>
+    <text class="g-txt3" x="${W-pr}" y="${H-12}" font-size="10" fill="#666" text-anchor="end">mayor importe</text>
     ${pts}</svg>`;
 }
 function render(){
@@ -1210,8 +1214,12 @@ let autoT=null;
    en silencio. Un guardado fallido deja `dirty` en verdadero, así que
    también pregunta. */
 let guardando=0;
+/* Versión de lo capturado: cada cambio la sube. Un guardado solo limpia
+   `dirty` si guardó la versión vigente; si llegó otra edición mientras
+   tanto (con su autoguardado aún en espera), sigue pendiente. */
+let versionEdicion=0;
 window.estimadorPendiente=()=>dirty||guardando>0;
-function touch(){ dirty=true;
+function touch(){ dirty=true; versionEdicion++;
 $$(".dirty").forEach(e=>{e.textContent="Cambios sin guardar…";e.style.color="var(--accent-texto)";});
 clearTimeout(autoT); autoT=setTimeout(()=>save(null,true),700);
 }
@@ -1226,12 +1234,14 @@ return JSON.stringify(e); }
 async function save(btn,auto){ const o=btn?btn.textContent:"";
 if(DB.modo==="sin almacenamiento"){ $$(".dirty").forEach(e=>{e.textContent="Sin almacenamiento: usa Copiar respaldo";e.style.color="var(--warning)";}); return; }
 guardando++;
+const versionGuardada=versionEdicion;
 try{ const snap=snapshot();
 if(ctx.proyecto && puede.editar){ await guardarEstado(JSON.parse(snap)); }
 await DB.set(KEY,snap);
-dirty=false; if(btn)btn.textContent="Guardado";
+if(btn)btn.textContent="Guardado";
+if(versionGuardada===versionEdicion){ dirty=false;
 const t=new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
-$$(".dirty").forEach(e=>{e.textContent=(auto?"Guardado automático ":"Guardado ")+t;e.style.color="var(--success)";});
+$$(".dirty").forEach(e=>{e.textContent=(auto?"Guardado automático ":"Guardado ")+t;e.style.color="var(--success)";}); }
 } catch(e){
 if(btn)btn.textContent="No se pudo guardar";
 $$(".dirty").forEach(e=>{e.textContent="No se pudo guardar. Copia el respaldo.";e.style.color="var(--danger)";});

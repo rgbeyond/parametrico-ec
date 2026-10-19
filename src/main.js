@@ -7,7 +7,7 @@ import { iniciarSesion, alCambiarSesion, sesion } from './lib/sesion.js';
 import { montarPortada } from './ui/portada.js';
 import { abrirProyecto } from './lib/contexto.js';
 import { tomarRetorno } from './lib/retorno.js';
-import { BAJO_PLATFORM } from './lib/platform.js';
+import { BAJO_PLATFORM, BASE } from './lib/platform.js';
 import { supabase } from './lib/supabase.js';
 import { exigirAcceso, vigilarSesion } from './lib/contrato/adaptador-v1.mjs';
 import { ESTADOS_PUERTA } from './lib/contrato/sesion-v1.mjs';
@@ -66,7 +66,10 @@ async function abrir(proyecto){
   await abrirProyecto(proyecto);
   zonaPortada.classList.add('hide');
   zonaApp.classList.remove('hide');
-  migas([{ texto: 'Proyectos' }, { texto: proyecto?.nombre || 'Proyecto' }]);
+  /* «Proyectos» enlazado, como en Proyectos de Energía: vuelve a la portada
+     sin recargar (la lista no tiene ruta propia); el botón «Todos los
+     proyectos» del estimador, que hacía lo mismo, se oculta bajo Platform. */
+  migas([{ texto: 'Proyectos', href: BASE, alActivar: () => volverAPortada() }, { texto: proyecto?.nombre || 'Proyecto' }]);
   if(!estimadorCargado){
     estimadorCargado = true;
     await import('./lib/app.js');

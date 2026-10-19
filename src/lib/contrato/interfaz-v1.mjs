@@ -1,4 +1,4 @@
-// COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.mjs (claude/ui-01-comun @ 5f4ba5b).
+// COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.mjs (claude/ui-01-comun @ d04141a).
 // No editar aquí: se cambia en Platform y se vuelve a copiar.
 // beyond-ui-contract/v1 — parte ejecutable del contrato de interfaz común
 // (docs/arquitectura/contrato-interfaz-v1.md): encabezado, regreso a
@@ -218,16 +218,24 @@ export function montarEncabezado(raiz, {
     barra,
     fijarCuenta: pintarCuenta,
     fijarTitulo(t) { tituloEl.textContent = t; },
-    // Migas de la app: [{ texto, href? }]. Vacío las oculta.
+    // Migas de la app: [{ texto, href?, alActivar? }]. Vacío las oculta. Una
+    // miga con `alActivar` es un enlace (href para abrir en otra pestaña) cuyo
+    // clic normal navega dentro de la app sin recargar: para apps cuya lista
+    // no tiene ruta propia (la portada de EC).
     fijarRuta(partes = []) {
       ruta.replaceChildren();
       ruta.hidden = !partes.length;
       partes.forEach((p, i) => {
         if (i) ruta.append(el("span", { class: "bc-sep", "aria-hidden": "true", texto: "/" }));
         const ultimo = i === partes.length - 1;
-        ruta.append(p.href && !ultimo
-          ? el("a", { href: p.href, texto: p.texto })
-          : el("span", { "aria-current": ultimo ? "page" : null, texto: p.texto }));
+        if (!p.href || ultimo) { ruta.append(el("span", { "aria-current": ultimo ? "page" : null, texto: p.texto })); return; }
+        const a = el("a", { href: p.href, texto: p.texto });
+        if (p.alActivar) a.addEventListener("click", (e) => {
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          p.alActivar();
+        });
+        ruta.append(a);
       });
     },
     destruir() { ctrl.abort(); soltarTema(); barra.remove(); },

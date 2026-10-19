@@ -1,4 +1,4 @@
-/* COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.css (claude/ui-01-comun @ 5f4ba5b).
+/* COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.css (claude/ui-01-comun @ d04141a).
    No editar aquí: se cambia en Platform y se vuelve a copiar. */
 /* beyond-ui-contract/v1 — estilos del encabezado común (contrato de
    interfaz §3). Se copia tal cual a cada app junto con interfaz-v1.mjs.
@@ -8,12 +8,13 @@
    oscuro de respaldo por si una superficie no lo tuviera. El tema lo decide
    `html[data-tema]`; las apps ya remapean sus tokens con ese atributo.
 
-   Texto de acento sobre claro: --accent-ink (#B4590C, AA), nunca el
-   naranja de marca, que sobre blanco no pasa contraste (design-system,
-   tokens/theme-light.css). El anillo de foco usa lo mismo por la misma
-   razón: el naranja puro sobre blanco no llega a 3:1. */
+   En claro el encabezado no usa los tokens de la superficie: fija los
+   valores de papel (ver el bloque html[data-tema="claro"] .bc-barra). El
+   anillo de foco en claro es #9A4A08, nunca el naranja de marca, que sobre
+   blanco no llega a 3:1 (design-system, tokens/theme-light.css). */
 
 .bc-barra{
+  --bc-menu: var(--surface-1, #1A1A1A);
   --bc-fondo: var(--surface-base, #000);
   --bc-texto: var(--text-primary, #fff);
   --bc-texto-2: var(--text-secondary, #999);
@@ -28,7 +29,17 @@
   font-family: var(--font-sans, Montserrat, system-ui, sans-serif);
   font-size: 15px; line-height: 1.4;
 }
-html[data-tema="claro"] .bc-barra{ --bc-foco: var(--accent-ink, #B4590C); }
+/* En claro el encabezado es blanco y AUTOSUFICIENTE en las tres superficies:
+   fondo, texto, borde, hover y menú son los valores de papel del design
+   system (tokens/theme-light.css), no los tokens de cada app, que difieren
+   (las apps usan #F0EFEC de base; Core, blanco). Mismo encabezado, mismos
+   colores, aunque una superficie no remapee nada. */
+html[data-tema="claro"] .bc-barra{
+  --bc-fondo: #FFFFFF; --bc-texto: #1A1A1A; --bc-texto-2: #5A5A57;
+  --bc-borde: rgba(0,0,0,.16); --bc-hover: #F0EFEC; --bc-menu: #FFFFFF;
+  --bc-foco: #9A4A08;
+  border-bottom-color: rgba(0,0,0,.10);
+}
 
 /* AISLAMIENTO. El encabezado es un <header> y las apps estilan `header` por
    elemento (flex, space-between, márgenes; en celular `header > div:...` con
@@ -86,7 +97,7 @@ header.bc-barra[data-contrato]{
 .bc-menu{
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
   min-width: 200px; margin: 0; padding: 6px; list-style: none;
-  background: var(--surface-1, #1A1A1A); border: 1px solid var(--bc-borde); border-radius: 10px;
+  background: var(--bc-menu, var(--surface-1, #1A1A1A)); border: 1px solid var(--bc-borde); border-radius: 10px;
   box-shadow: 0 8px 28px rgba(0,0,0,.28);
 }
 .bc-menu[hidden]{ display: none; }
@@ -131,6 +142,10 @@ header.bc-barra[data-contrato]{
   .bc-volver{ padding: 0 8px 0 6px; margin-left: -6px; }
   .bc-cuenta-texto{ max-width: 16ch; }
   .bc-logo{ height: 18px; }
+}
+/* La identidad completa como línea de contexto hasta 720 px: entre 641 y 720
+   (zoom 200 % sobre 1440) la fila superior también la recorta. */
+@media (max-width: 720px){
   .bc-identidad:not([hidden]){ display: block; margin-top: 2px; font-size: 13px; color: var(--bc-texto-2); overflow-wrap: anywhere; }
 }
 @media (max-width: 360px){

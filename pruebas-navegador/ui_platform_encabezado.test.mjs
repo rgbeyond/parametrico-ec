@@ -170,11 +170,14 @@ async function textosBajoContraste(pagina) {
       const r = n.getBoundingClientRect(); const st = getComputedStyle(n);
       if (!r.width || !r.height || st.visibility === "hidden" || st.opacity === "0") continue;
       if (n.closest("[disabled], .doc, .hoja, iframe")) continue;
-      const bg = fondo(n); const c = mezclar(rgba(st.color), bg);
+      // En SVG el color del texto es `fill`, no `color` (review nativa H1).
+      const tinta = n instanceof SVGElement ? st.fill : st.color;
+      const bg = fondo(n); const c = mezclar(rgba(tinta), bg);
       const [x, y] = [lum(c), lum(bg)].sort((a, b) => b - a); const ratio = (x + 0.05) / (y + 0.05);
       const px = parseFloat(st.fontSize); const grande = px >= 24 || (px >= 18.66 && Number(st.fontWeight) >= 700);
       if (ratio < (grande ? 3 : 4.5)) {
-        const clave = (n.className && typeof n.className === "string" ? "." + n.className.trim().split(/\s+/).join(".") : n.tagName.toLowerCase()) + " " + st.color;
+        const cls = typeof n.className === "string" ? n.className : n.getAttribute("class") || "";
+        const clave = (cls.trim() ? "." + cls.trim().split(/\s+/).join(".") : n.tagName.toLowerCase()) + " " + tinta;
         if (!malos.has(clave)) malos.set(clave, { que: clave, ratio: Math.round(ratio * 100) / 100, texto: n.textContent.trim().slice(0, 30) });
       }
     }
@@ -194,10 +197,62 @@ test("claro: contraste de texto 4.5:1 (3:1 grande) en la portada y en las pesta�
       if (t) await pagina.click(`#tabsCapex [data-t="${t}"]`);
       await pagina.waitForTimeout(150);
       hallazgos.push(...(await textosBajoContraste(pagina)).map((h) => ({ vista: ws + (t ? ":" + t : ""), ...h })));
+      if (t === "dist") {
+        // El barrido tiene que ver el texto de las gráficas: si no hay texto
+        // SVG medido, la prueba no prueba lo que dice (review nativa H1).
+        const svg = await pagina.evaluate(() => [...document.querySelectorAll("#p-dist svg text")]
+          .filter((n) => n.getBoundingClientRect().width > 0).map((n) => [n.getAttribute("class") || "", getComputedStyle(n).fill]));
+        if (process.env.DEPURAR_SVG) console.log("# svg dist: " + JSON.stringify([...new Set(svg.map((x) => x.join(" ")))]));
+        if (process.env.CAPTURAS) await pagina.locator("#p-dist").screenshot({ path: `${process.env.CAPTURAS}/ec-distribucion-claro.png` });
+        assert.ok(svg.length > 10, "no se midió el texto de las gráficas de Distribución");
+      }
     }
   }
   console.log("# hallazgos de contraste en claro: " + JSON.stringify(hallazgos));
   assert.deepEqual(hallazgos, []);
+  assert.deepEqual(fallos, []);
+  await contexto.close();
+});
+
+test("carrera del autoguardado: un guardado A que termina después de la edición B no la da por guardada; el regreso avisa", async () => {
+  const { pagina, contexto, estado, fallos } = await abrir();
+  await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).click();
+  await pagina.locator("#v_nom").waitFor({ state: "visible", timeout: 20000 });
+  estado.retenerEscrituras = true;
+  await pagina.fill("#v_nom", "Edición A");
+  await pagina.locator("#v_nom").dispatchEvent("input");
+  for (let i = 0; i < 60 && !estado.retenidas.length; i++) await pagina.waitForTimeout(50);
+  assert.equal(estado.retenidas.length, 1, "el guardado A no llegó a la red");
+  // Edición B mientras A está en vuelo; su autoguardado queda esperando 700 ms.
+  await pagina.fill("#v_nom", "Edición B");
+  await pagina.locator("#v_nom").dispatchEvent("input");
+  estado.retenerEscrituras = false;
+  estado.retenidas.splice(0).forEach((soltar) => soltar());
+  await pagina.waitForTimeout(100);   // A resolvió; B todavía no se envía
+  await pagina.click(".bc-volver");
+  await pagina.waitForTimeout(200);
+  assert.equal(estado.dialogos.length, 1, "con la edición B sin guardar no se avisó");
+  assert.equal(await pagina.inputValue("#v_nom"), "Edición B");
+  assert.doesNotMatch(await pagina.locator(".dirty").first().innerText(), /^Guardado/, "no debe decir «Guardado» con B pendiente");
+  await pagina.locator(".dirty", { hasText: /Guardado/ }).first().waitFor({ timeout: 5000 });
+  await pagina.click(".bc-volver");
+  await pagina.waitForURL(`${base}/`, { timeout: 10000 });
+  assert.equal(estado.dialogos.length, 1);
+  assert.deepEqual(fallos, []);
+  await contexto.close();
+});
+
+test("ruta «Proyectos» enlazada en el proyecto vuelve a la portada; «Todos los proyectos» no se duplica bajo Platform", async () => {
+  const { pagina, contexto, fallos } = await abrir();
+  await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).click();
+  await pagina.locator("#v_nom").waitFor({ state: "visible", timeout: 20000 });
+  assert.equal(await pagina.locator("#b_volver").isVisible(), false, "botón duplicado visible");
+  const enlace = pagina.locator(".bc-ruta a", { hasText: "Proyectos" });
+  assert.equal(await enlace.getAttribute("href"), "/ec/");
+  await enlace.click();
+  await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).waitFor({ state: "visible", timeout: 10000 });
+  assert.match(pagina.url(), /\/ec\/$/);
+  assert.equal(await textoRuta(pagina), "Proyectos");
   assert.deepEqual(fallos, []);
   await contexto.close();
 });

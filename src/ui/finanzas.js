@@ -649,7 +649,7 @@ export function montarFinanzas({ alCambiar }) {
     } else if (inv.excedente > 0) {
       texto("#fin_brecha_lb", "Excedente de fondeo");
       brechaEl.textContent = pesos(inv.excedente);
-      brechaEl.style.color = "var(--accent-2)";
+      brechaEl.style.color = "var(--accent-2-texto)";
       texto("#fin_brecha_x", "El capital aportado supera la inversión total");
     } else {
       texto("#fin_brecha_lb", "Brecha de fondeo");

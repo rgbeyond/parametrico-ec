@@ -229,3 +229,19 @@ table.proy td.anual,table.proy th.anual{background:var(--surface-1);font-weight:
 /* Bajo beyond core (UI-01): el logotipo ya está en el encabezado común; no se
    repite en la portada ni en la cabecera del estimador. */
 .integrada #portada .wordmark,.integrada #estimador header .wordmark{display:none}
+
+/* Gráficas SVG del estimador con tokens del tema (UI-01). En oscuro valen lo
+   mismo que los colores fijos de siempre (COL, #fff, #999, #666, rgba .08/.14);
+   en claro, las versiones AA. El CSS gana al atributo de presentación. El
+   treemap conserva su relleno: lleva texto negro encima. */
+.sc-validado{--sc:var(--success)} .sc-fuente{--sc:var(--accent-2-texto)}
+.sc-supuesto{--sc:var(--warning)} .sc-allowance{--sc:var(--danger)}
+text.sc,rect.sc,circle.sc{fill:var(--sc)} line.sc,circle.sc{stroke:var(--sc)}
+text.g-txt{fill:var(--text-primary)} text.g-txt2{fill:var(--text-secondary)} text.g-txt3{fill:var(--text-tertiary)}
+line.g-rejilla{stroke:var(--border-subtle)} line.g-eje{stroke:var(--border-default)}
+/* Foco de formularios en claro: el naranja de marca sobre papel no llega a
+   3:1; borde y halo con la tinta de acento. */
+html[data-tema="claro"] input:focus,html[data-tema="claro"] select:focus{border-color:var(--accent-texto);box-shadow:0 0 0 3px rgba(154,74,8,.35)}
+/* Bajo beyond core, «Proyectos» de la ruta común es el regreso a la lista:
+   el botón propio duplicaba ese destino. El standalone lo conserva. */
+.integrada #b_volver{display:none}
