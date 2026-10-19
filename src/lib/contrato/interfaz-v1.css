@@ -1,4 +1,4 @@
-/* COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.css (claude/ui-01-comun @ 378b58b).
+/* COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.css (claude/ui-01-comun @ d485185).
    No editar aquí: se cambia en Platform y se vuelve a copiar. */
 /* beyond-ui-contract/v1 — estilos del encabezado común (contrato de
    interfaz §3). Se copia tal cual a cada app junto con interfaz-v1.mjs.
@@ -101,7 +101,9 @@ html[data-tema="claro"] .bc-barra{ --bc-foco: var(--accent-ink, #B4590C); }
 .bc-ruta[hidden]{ display: none; }
 .bc-ruta a{ color: var(--bc-texto); text-decoration: underline; text-underline-offset: 3px; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
 .bc-ruta [aria-current]{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.bc-sep{ color: var(--text-tertiary, #666); }
+/* Separador con el texto secundario: el terciario (#8C8C88 en claro) no
+   llega a 4.5:1 sobre papel (medido: 2.94). */
+.bc-sep{ color: var(--bc-texto-2); }
 
 .bc-oculto{
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;

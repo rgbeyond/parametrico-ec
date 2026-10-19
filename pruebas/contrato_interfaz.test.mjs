@@ -8,10 +8,10 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { CONTRATO_UI } from "../src/lib/contrato/interfaz-v1.mjs";
 
-const ORIGEN = "378b58b";
+const ORIGEN = "d485185";
 const HUELLAS = {
   "interfaz-v1.mjs": "ae85f91cb233999a7a348892accb78a92fd24f07b0eec028d03573e1976fc82e",
-  "interfaz-v1.css": "4c1c03f5920eef2e88da44eed81797ba360b52aaddd9a74c25b72909b6f56b85",
+  "interfaz-v1.css": "c60a1104017d7b2d7a0f68e31435c3c58c625c8baf14184ca9df3e061ebbeae3",
 };
 
 test("la copia del contrato de interfaz es la de Core @ " + ORIGEN, () => {

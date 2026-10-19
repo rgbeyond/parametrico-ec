@@ -1,4 +1,4 @@
-// COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.mjs (claude/ui-01-comun @ 378b58b).
+// COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.mjs (claude/ui-01-comun @ d485185).
 // No editar aquí: se cambia en Platform y se vuelve a copiar.
 // beyond-ui-contract/v1 — parte ejecutable del contrato de interfaz común
 // (docs/arquitectura/contrato-interfaz-v1.md): encabezado, regreso a
