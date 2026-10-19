@@ -1,5 +1,21 @@
 [
   {
+    "v": "0.18.0",
+    "fecha": "2026-10-18",
+    "tipo": "menor",
+    "resumen": "Bajo beyond core (UI-01): encabezado común con regreso «← beyond core», tema claro u oscuro y cuenta informativa.",
+    "agregado": [
+      "Solo el build integrado (/ec/ bajo Platform): «← beyond core» a la izquierda, que vuelve a la Home sin cerrar sesión; tema y cuenta con correo y rol reales a la derecha. Cerrar sesión es de beyond core: el build integrado ya no muestra «Salir».",
+      "Tema claro u oscuro con la preferencia común del origen: la primera visita sigue al sistema y la elección manual persiste. El claro remapea los tokens del estimador con los valores de papel; el texto de acento usa la versión AA (--accent-texto).",
+      "Si el estimador tiene cambios sin guardar o un guardado en vuelo, volver a beyond core pregunta antes; cancelar conserva la ruta y lo capturado."
+    ],
+    "notas": [
+      "El build standalone no cambia: conserva su barra, su «Salir», su login y su tema oscuro.",
+      "Delta acotado de tokens para el claro, no un rediseño: documentos, portal de inversionistas y exportaciones conservan sus colores de papel.",
+      "Probado con red sustituida y en la composición local de beyond-platform; no acredita Auth real ni DEV. Sin cambios de main, PROD, RLS, DDL, Auth ni migraciones."
+    ]
+  },
+  {
     "v": "0.17.0",
     "fecha": "2026-09-25",
     "tipo": "menor",

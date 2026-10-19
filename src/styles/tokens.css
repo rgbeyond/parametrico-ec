@@ -21,7 +21,30 @@
   --paper-0:#FFFFFF; --paper-1:#F7F7F5; --paper-2:#F0EFEC; --paper-3:#E6E4DF;
   --doc-ink:#1A1A1A; --doc-body:#333330; --doc-secondary:#5A5A57; --doc-tertiary:#8C8C88;
   --accent-ink:#B4590C; --accent-2-ink:#1C6E93;
+  /* Acento COMO TEXTO: el naranja de marca en oscuro; en claro, la versión AA. */
+  --accent-texto:var(--accent);
 
   --font-sans:Montserrat,system-ui,sans-serif;
   --r-md:10px; --r-lg:14px; --r-pill:999px; --ls-wide:.08em;
 }
+
+/* ---------------------------------------------------------------
+   Tema claro del build integrado en beyond core (UI-01, contrato de
+   interfaz común §4). Lo activa `html[data-tema="claro"]`, que solo pone
+   el encabezado común bajo Platform: el build standalone sigue oscuro.
+   Mismos valores que el claro de Proyectos de Energía (tokens.css de
+   propuestas-fv), que a su vez derivan de la paleta de papel. El naranja
+   de marca se queda en rellenos; el texto de acento pasa a --accent-ink.
+   Delta acotado de tokens: no es un rediseño del estimador. */
+html[data-tema="claro"]{
+  --surface-base:#F0EFEC; --surface-1:#F7F7F5; --surface-2:#FFFFFF;
+  --surface-3:#E6E4DF; --surface-4:#D8D6D0;
+  --text-primary:#1A1A1A; --text-secondary:#5A5A57; --text-tertiary:#8C8C88;
+  --border-subtle:rgba(0,0,0,.09); --border-default:rgba(0,0,0,.16);
+  --success:#15803D; --warning:#B45309; --danger:#DC2626;
+  --accent-soft:rgba(180,89,12,.12); --accent-2-soft:rgba(28,110,147,.12);
+  --success-soft:rgba(21,128,61,.12); --warning-soft:rgba(180,83,9,.12);
+  --danger-soft:rgba(220,38,38,.12);
+  --accent-texto:var(--accent-ink,#B4590C);
+}
+html[data-tema="claro"] .badge.b-fuente{color:var(--accent-2-ink,#1C6E93)}

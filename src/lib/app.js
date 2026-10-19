@@ -654,11 +654,11 @@ const nx=nextCl?need(nextCl.idd):null, top=need(.92);
 let nh="";
 if(!nextCl){ nh=`<div class="note"><b>Nivel máximo alcanzado.</b> El estimado está en Clase 1 y puede sostenerse como precio contractual.</div>`; }
 else if(nx){
-nh=`<div class="note"><b>Para pasar a Clase ${nextCl.c} — ${nextCl.nom}</b> hay que llevar a dato validado ${nx.list.length} partida${nx.list.length===1?"":"s"}, que suman <b style="color:var(--accent)">${mx(nx.monto)}</b> (${(nx.monto/t.tec*100).toFixed(0)}% del costo directo). El rango se cerraría a ${nextCl.lo}% / +${nextCl.hi}%.</div>
+nh=`<div class="note"><b>Para pasar a Clase ${nextCl.c} — ${nextCl.nom}</b> hay que llevar a dato validado ${nx.list.length} partida${nx.list.length===1?"":"s"}, que suman <b style="color:var(--accent-texto)">${mx(nx.monto)}</b> (${(nx.monto/t.tec*100).toFixed(0)}% del costo directo). El rango se cerraría a ${nextCl.lo}% / +${nextCl.hi}%.</div>
     <div style="margin-top:12px">${nx.list.slice(0,6).map(r=>`<div class="gap">
 <span class="badge b-${r.tax}" style="min-width:132px;justify-content:center">${TAXN[r.tax]}</span>
 <span style="flex:1"><b>${r.c}</b> ${r.d}</span>
-<span class="num" style="color:var(--accent);font-weight:600">${mx(r.imp)}</span></div>`).join("")}
+<span class="num" style="color:var(--accent-texto);font-weight:600">${mx(r.imp)}</span></div>`).join("")}
       ${nx.list.length>6?`<div class="xs muted" style="padding-top:8px">y ${nx.list.length-6} partida(s) más</div>`:""}</div>`;
 if(top&&top.list.length) nh+=`<div class="note" style="margin-top:14px"><b>Para llegar a Clase 1</b>, la de mayor precisión, hay que cotizar y validar ${top.list.length} partidas por <b>${mx(top.monto)}</b>, o sea ${(top.monto/t.tec*100).toFixed(0)}% del costo directo. Es el camino completo, no solo el siguiente escalón.</div>`;
 }
@@ -688,7 +688,7 @@ if(t.dep) ex.push(["Depósito en garantía ante el suministrador","Garantía ree
 ex.push(["Obra civil oculta","Interferencias o condiciones de subsuelo distintas a las previstas."]);
 ex.push(["IVA",""]);
 $("#a_excl").innerHTML=ex.map(([a,b])=>`<div style="display:flex;gap:10px;align-items:flex-start">
-    <span style="color:var(--accent);font-weight:600;line-height:1.4">—</span>
+    <span style="color:var(--accent-texto);font-weight:600;line-height:1.4">—</span>
     <span><b style="font-size:13px">${a}</b>${b?`<div class="xs muted" style="margin-top:2px">${b}</div>`:""}</span></div>`).join("");
 const efe=[];
 const off=rows.filter(r=>r.pu===0&&r.q>0);
@@ -716,7 +716,7 @@ for(const r of groups[k]) html+=`<tr style="opacity:${r.q>0?1:.42}">
       <td class="num"><input type="number" step="any" min="0" value="${Math.round(r.q*100)/100}" data-c="${r.c}" data-k="q"></td>
       <td class="num"><input type="text" inputmode="decimal" class="money" value="${money(r.pu)}" data-c="${r.c}" data-k="pu"></td>
       <td class="num"><b>${mx(r.imp)}</b></td>
-      <td class="wrap"><select class="tax b-${r.tax}" data-c="${r.c}" data-k="tax">${["validado","fuente","supuesto","allowance"].map(k=>`<option value="${k}"${r.tax===k?" selected":""}>${TAXN[k]}</option>`).join("")}</select>${(r.eq||r.ep)?'<div class="xs" style="color:var(--accent);margin-top:4px">Monto editado</div>':""}</td>
+      <td class="wrap"><select class="tax b-${r.tax}" data-c="${r.c}" data-k="tax">${["validado","fuente","supuesto","allowance"].map(k=>`<option value="${k}"${r.tax===k?" selected":""}>${TAXN[k]}</option>`).join("")}</select>${(r.eq||r.ep)?'<div class="xs" style="color:var(--accent-texto);margin-top:4px">Monto editado</div>':""}</td>
       <td class="tiny muted wrap">${r.r}</td></tr>`;
 }
 $("#b_body").innerHTML=html;
@@ -743,7 +743,7 @@ let dEd=0;
 for(const r of rows){ const b=bm[r.c]; if(b&&(r.eq||r.ep)&&r.tr!=="dep") dEd+=r.imp-(b.q*b.pu); }
 const nAp=Object.keys(genApproved).length, nPr=Object.keys(genEdits).length;
 const parts=[];
-if(Object.keys(edits).length) parts.push(`<b>${Object.keys(edits).length} ${Object.keys(edits).length===1?"renglón editado":"renglones editados"} a mano.</b> Efecto neto sobre el costo directo: <b style="color:var(--accent)">${dEd>=0?"+":""}${mx(dEd)}</b> contra los precios del catálogo.`);
+if(Object.keys(edits).length) parts.push(`<b>${Object.keys(edits).length} ${Object.keys(edits).length===1?"renglón editado":"renglones editados"} a mano.</b> Efecto neto sobre el costo directo: <b style="color:var(--accent-texto)">${dEd>=0?"+":""}${mx(dEd)}</b> contra los precios del catálogo.`);
 if(nAp) parts.push(`<b>${nAp} ${nAp===1?"precio aprobado":"precios aprobados"}</b> en la base de datos ya alimentan este proyecto.`);
 if(nPr) parts.push(`<b style="color:var(--danger)">${nPr} ${nPr===1?"precio propuesto":"precios propuestos"} sin aprobar:</b> todavía no afectan ninguna cifra.`);
 $("#s_edits").innerHTML=parts.length?`<div class="note">${parts.join(" ")}</div>`:"";
@@ -827,7 +827,7 @@ $("#g_body").innerHTML=list.map(x=>{
 const on=usedCodes.has(x.c), pend=genEdits[x.c], apr=genApproved[x.c];
 const shown=pend!=null?pend:(apr!=null?apr:x.pu);
 return `<tr style="opacity:${on?1:.75}">
-    <td class="wrap" style="font-size:12px">${x.c}${on?'<div class="xs" style="color:var(--accent);margin-top:3px">En uso</div>':""}</td>
+    <td class="wrap" style="font-size:12px">${x.c}${on?'<div class="xs" style="color:var(--accent-texto);margin-top:3px">En uso</div>':""}</td>
     <td class="wrap"><b style="font-size:12.5px">${x.n}</b></td>
     <td class="u">${uab(x.u)}</td>
     <td class="num"><input type="text" inputmode="decimal" class="money${pend!=null?" pend":""}" value="${x.u==="%"?shown+"%":money(shown)}" data-g="${x.c}"></td>
@@ -1204,8 +1204,15 @@ $("#x_pdf").addEventListener("click",async e=>{
 const KEY="beyond:est:proyecto-activo";
 let dirty=false;
 let autoT=null;
+/* Guardados en vuelo. Con `dirty`, es lo que el regreso a beyond core
+   consulta antes de dejar la página (UI-01, contrato de interfaz §6): un
+   cambio sin guardar, o uno cuyo guardado todavía no responde, se perdería
+   en silencio. Un guardado fallido deja `dirty` en verdadero, así que
+   también pregunta. */
+let guardando=0;
+window.estimadorPendiente=()=>dirty||guardando>0;
 function touch(){ dirty=true;
-$$(".dirty").forEach(e=>{e.textContent="Cambios sin guardar…";e.style.color="var(--accent)";});
+$$(".dirty").forEach(e=>{e.textContent="Cambios sin guardar…";e.style.color="var(--accent-texto)";});
 clearTimeout(autoT); autoT=setTimeout(()=>save(null,true),700);
 }
 function snapshot(){ const t=totals();
@@ -1218,6 +1225,7 @@ if(finanzas && !finanzasVacias(finanzas)) e.finanzas=finanzas;
 return JSON.stringify(e); }
 async function save(btn,auto){ const o=btn?btn.textContent:"";
 if(DB.modo==="sin almacenamiento"){ $$(".dirty").forEach(e=>{e.textContent="Sin almacenamiento: usa Copiar respaldo";e.style.color="var(--warning)";}); return; }
+guardando++;
 try{ const snap=snapshot();
 if(ctx.proyecto && puede.editar){ await guardarEstado(JSON.parse(snap)); }
 await DB.set(KEY,snap);
@@ -1227,7 +1235,7 @@ $$(".dirty").forEach(e=>{e.textContent=(auto?"Guardado automático ":"Guardado "
 } catch(e){
 if(btn)btn.textContent="No se pudo guardar";
 $$(".dirty").forEach(e=>{e.textContent="No se pudo guardar. Copia el respaldo.";e.style.color="var(--danger)";});
-}
+} finally { guardando--; }
 if(btn) setTimeout(()=>btn.textContent=o,1800); }
 function restore(txt){
 try{ const d=JSON.parse(txt);

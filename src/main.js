@@ -11,6 +11,9 @@ import { BAJO_PLATFORM } from './lib/platform.js';
 import { supabase } from './lib/supabase.js';
 import { exigirAcceso, vigilarSesion } from './lib/contrato/adaptador-v1.mjs';
 import { ESTADOS_PUERTA } from './lib/contrato/sesion-v1.mjs';
+import { iniciarTema, montarEncabezado } from './lib/contrato/interfaz-v1.mjs';
+import './lib/contrato/interfaz-v1.css';
+import { ROLES } from './lib/sesion.js';
 
 /* app.js fija esta misma variable cuando se carga, pero eso pasa hasta que
    se abre un proyecto. La portada la necesita desde el primer render. */
@@ -32,6 +35,28 @@ if (pieVersion) {
 const zonaPortada = document.getElementById('portada');
 const zonaApp = document.getElementById('estimador');
 
+/* BAJO PLATFORM: ENCABEZADO Y TEMA COMUNES (beyond-ui-contract/v1).
+   «← beyond core», tema y cuenta informativa, iguales que en Core y en
+   Proyectos de Energía. Va antes de la puerta: si la consulta falla, el
+   regreso sigue ahí. Cerrar sesión es de Core: aquí no hay «Salir». El
+   standalone no lo monta y sigue en oscuro, con su barra y su «Salir». */
+let encabezado = null;
+if (BAJO_PLATFORM) {
+  document.documentElement.classList.add('integrada');
+  const tema = iniciarTema(document, window);
+  encabezado = montarEncabezado(document.getElementById('encabezado-comun'), {
+    superficie: 'app', titulo: 'Estaciones de Carga',
+    entorno: import.meta.env.VITE_BEYOND_ENTORNO || null, logo: logoUrl, tema,
+    /* El estimador guarda solo, 700 ms después de cada cambio. Si queda algo
+       sin guardar o un guardado en vuelo, regresar lo dejaría atrás: se
+       pregunta, y cancelar no toca la ruta ni lo capturado. */
+    antesDeVolver: () => (window.estimadorPendiente?.()
+      ? 'Hay cambios del proyecto que todavía no se guardan. Si vuelves ahora a beyond core, pueden perderse. ¿Volver de todos modos?'
+      : null),
+  });
+}
+const migas = (partes) => encabezado?.fijarRuta(partes);
+
 /* El estimador es un módulo grande que se monta a sí mismo al importarse.
    Lo cargamos sólo cuando hay un proyecto abierto, para que la portada
    aparezca de inmediato y no pague el costo de arrancarlo. */
@@ -41,6 +66,7 @@ async function abrir(proyecto){
   await abrirProyecto(proyecto);
   zonaPortada.classList.add('hide');
   zonaApp.classList.remove('hide');
+  migas([{ texto: 'Proyectos' }, { texto: proyecto?.nombre || 'Proyecto' }]);
   if(!estimadorCargado){
     estimadorCargado = true;
     await import('./lib/app.js');
@@ -53,6 +79,7 @@ async function abrir(proyecto){
 function volverAPortada(){
   zonaApp.classList.add('hide');
   zonaPortada.classList.remove('hide');
+  migas([{ texto: 'Proyectos' }]);
   if (portada) portada.refrescar();
 }
 window.volverAPortada = volverAPortada;
@@ -67,8 +94,9 @@ async function puertaPlatform(){
   const r = await exigirAcceso(supabase);
   if (r.estado === ESTADOS_PUERTA.ABIERTA) {
     vigilarSesion(supabase);
-    const volver = document.getElementById('volver-platform');
-    if (volver) volver.hidden = false;
+    encabezado.fijarCuenta({ correo: r.perfil?.correo || r.sesion?.user?.email || '',
+      rol: ROLES[r.perfil?.rol]?.etiqueta || r.perfil?.rol });
+    migas([{ texto: 'Proyectos' }]);
     return true;
   }
   if (r.estado === ESTADOS_PUERTA.SIN_CONFIGURACION || r.estado === ESTADOS_PUERTA.SIN_RESPUESTA) {

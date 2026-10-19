@@ -1,5 +1,6 @@
 import { sesion, puede, entrar, salir, dominio, ROLES } from '../lib/sesion.js';
 import { hayNube } from '../lib/supabase.js';
+import { BAJO_PLATFORM } from '../lib/platform.js';
 import * as datos from '../lib/datos.js';
 import { pantallaUsuarios } from './usuarios.js';
 
@@ -34,6 +35,9 @@ export function montarPortada(el, { alAbrir }) {
     const p = sesion.perfil;
     if (!hayNube) return '<span class="chip">Modo local · sin catálogo compartido</span>';
     if (!p) return '<button class="btn" data-acc="entrar">Entrar con Google</button>';
+    /* Bajo Platform, quién está dentro va en el encabezado común y cerrar
+       sesión es de beyond core: aquí solo queda lo que es de esta app. */
+    if (BAJO_PLATFORM) return puede.administrar ? '<button class="btn ghost" data-acc="usuarios">Usuarios</button>' : '';
     return `<span class="chip">${p.nombre || p.correo}</span>
       <span class="badge b-accent"><span class="dot"></span>${ROLES[p.rol]?.etiqueta || p.rol}</span>
       ${puede.administrar ? '<button class="btn ghost" data-acc="usuarios">Usuarios</button>' : ''}
@@ -87,7 +91,7 @@ export function montarPortada(el, { alAbrir }) {
       <div class="row sp" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border-subtle)">
         <span class="tiny muted">Actualizado ${fecha(p.actualizado_en)}</span>
         ${r.total
-          ? `<b style="color:var(--accent);font-variant-numeric:tabular-nums">${money(r.total)}</b>`
+          ? `<b style="color:var(--accent-texto);font-variant-numeric:tabular-nums">${money(r.total)}</b>`
           : '<span class="tiny muted">Sin estimado</span>'}
       </div>
       ${r.clase ? `<div class="xs muted" style="margin-top:6px">${r.clase}</div>` : ''}

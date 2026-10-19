@@ -32,7 +32,7 @@ h1,h2,h3,h4{margin:0;letter-spacing:-.02em}
 h2{font-size:30px;font-weight:600} h3{font-size:22px;font-weight:600} h4{font-size:18px;font-weight:600}
 .muted{color:var(--text-secondary)} .tiny{font-size:13px} .xs{font-size:11px}
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:18px 0 24px;border-bottom:1px solid var(--border-subtle);margin-bottom:24px;flex-wrap:wrap}
-.mark{font-family:var(--font-brand);font-weight:700;font-size:30px;color:var(--accent);line-height:1}
+.mark{font-family:var(--font-brand);font-weight:700;font-size:30px;color:var(--accent-texto);line-height:1}
 .tabs{display:flex;gap:2px;background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--r-pill);padding:4px;margin-bottom:24px;overflow-x:auto}
 .tab{flex:1 1 auto;min-width:0;background:none;border:0;color:var(--text-secondary);font-family:inherit;font-size:13px;font-weight:600;padding:9px 12px;border-radius:var(--r-pill);cursor:pointer;transition:120ms;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:880px){.tabs{border-radius:var(--r-lg);flex-wrap:wrap}.tab{flex:1 1 30%}}
@@ -50,7 +50,7 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
 @media(max-width:620px){.g4{grid-template-columns:1fr}}
 .stat{display:flex;flex-direction:column;gap:10px}
 .stat .fig{font-weight:200;font-size:38px;line-height:1;letter-spacing:-.02em}
-.stat .unit{font-weight:600;font-size:15px;color:var(--accent)}
+.stat .unit{font-weight:600;font-size:15px;color:var(--accent-texto)}
 .stat.sec .unit{color:var(--accent-2)}
 label.f{display:block;margin-bottom:14px}
 label.f .lb{display:block;font-size:11px;letter-spacing:var(--ls-wide);text-transform:uppercase;color:var(--text-secondary);font-weight:600;margin-bottom:6px}
@@ -79,14 +79,14 @@ input[type=checkbox]{width:auto}
 .b-supuesto{background:var(--warning-soft);color:var(--warning)}
 .b-allowance{background:var(--danger-soft);color:var(--danger)}
 .b-neutral{background:var(--surface-3);color:var(--text-secondary)}
-.b-accent{background:var(--accent-soft);color:var(--accent)}
+.b-accent{background:var(--accent-soft);color:var(--accent-texto)}
 .ladder{display:flex;flex-direction:column;gap:6px;margin:16px 0 0}
 .rung{display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center;padding:9px 12px;border-radius:var(--r-md);border:1px solid var(--border-subtle);background:var(--surface-1)}
 .rung.done{opacity:.55}
 .rung.now{background:var(--accent-soft);border-color:rgba(255,135,0,.55)}
 .rung.next{border-color:rgba(130,215,251,.45)}
 .rung .cn{font-weight:700;font-size:12px;letter-spacing:var(--ls-wide);text-transform:uppercase}
-.rung.now .cn{color:var(--accent)} .rung.next .cn{color:var(--accent-2)}
+.rung.now .cn{color:var(--accent-texto)} .rung.next .cn{color:var(--accent-2)}
 .rung .nm{font-size:13px;font-weight:600}
 .rung .rg{font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
 .track{position:relative;height:8px;border-radius:4px;background:var(--surface-4);margin:14px 0 6px;overflow:visible}
@@ -106,7 +106,7 @@ td{padding:9px 12px;border-bottom:1px solid var(--border-subtle);vertical-align:
 tr:hover td{background:var(--surface-3)}
 .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 td input{padding:5px 7px;font-size:13px;text-align:right}
-.catrow td{background:var(--surface-1);font-weight:600;font-size:12px;letter-spacing:var(--ls-wide);text-transform:uppercase;color:var(--accent)}
+.catrow td{background:var(--surface-1);font-weight:600;font-size:12px;letter-spacing:var(--ls-wide);text-transform:uppercase;color:var(--accent-texto)}
 .catrow:hover td{background:var(--surface-1)}
 .scroll{max-height:640px;overflow-y:auto;overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--border-subtle)}
 table.fit{table-layout:fixed;width:100%;min-width:0}
@@ -126,7 +126,7 @@ select.tax option{background:var(--surface-2);color:var(--text-primary)}
 .blk{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--border-subtle)}
 .blk:last-child{border-bottom:0}
 .blk .rank{font-weight:200;font-size:30px;line-height:1;color:var(--text-tertiary);min-width:34px}
-.impact{font-weight:600;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.impact{font-weight:600;color:var(--accent-texto);white-space:nowrap;font-variant-numeric:tabular-nums}
 .note{background:var(--surface-1);border-left:2px solid var(--accent);border-radius:0 var(--r-md) var(--r-md) 0;padding:13px 16px;font-size:13px;color:var(--text-secondary)}
 .note.warn{border-left-color:var(--danger)}
 .note b{color:var(--text-primary);font-weight:600}
@@ -136,7 +136,7 @@ select.tax option{background:var(--surface-2);color:var(--text-primary)}
    en las tres pantallas, incluida la de acceso. */
 .verfoot{max-width:1280px;margin:0 auto;padding:0 20px 26px;font-size:11px;color:var(--text-tertiary);text-align:right;letter-spacing:.02em}
 .verlink{background:none;border:0;padding:0;font-family:inherit;font-size:11px;letter-spacing:.02em;color:var(--text-tertiary);cursor:pointer;text-decoration:underline;text-decoration-color:var(--border-default);text-underline-offset:3px}
-.verlink:hover{color:var(--accent);text-decoration-color:var(--accent)}
+.verlink:hover{color:var(--accent-texto);text-decoration-color:var(--accent)}
 /* Ventana emergente. La tarjeta se desplaza dentro del fondo, no la página,
    para que la bitácora se pueda abrir desde cualquier pantalla. */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:44px 20px;overflow-y:auto}
@@ -200,7 +200,7 @@ table.proy td.anual,table.proy th.anual{background:var(--surface-1);font-weight:
 .subtabs{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap}
 .subtab{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);font-family:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r-pill);cursor:pointer;transition:120ms}
 .subtab:hover{background:var(--surface-3);color:var(--text-primary)}
-.subtab[aria-selected=true]{background:var(--surface-3);color:var(--accent);border-color:rgba(255,135,0,.55)}
+.subtab[aria-selected=true]{background:var(--surface-3);color:var(--accent-texto);border-color:rgba(255,135,0,.55)}
 /* En las tablas del estimador los campos van alineados a la derecha porque son
    cantidades. En Finanzas hay texto —el nombre del concepto y el del
    inversionista—, y un texto alineado a la derecha se lee mal. */
@@ -225,3 +225,7 @@ table.proy td.anual,table.proy th.anual{background:var(--surface-1);font-weight:
   border-radius:var(--r-lg);box-shadow:0 8px 24px rgba(0,0,0,.28);min-width:150px}
 /* En pantalla angosta el menú se ancla al borde y no se sale de la tarjeta. */
 @media(max-width:520px){.menu-op{position:fixed;right:12px;left:12px;min-width:0}}
+
+/* Bajo beyond core (UI-01): el logotipo ya está en el encabezado común; no se
+   repite en la portada ni en la cabecera del estimador. */
+.integrada #portada .wordmark,.integrada #estimador header .wordmark{display:none}

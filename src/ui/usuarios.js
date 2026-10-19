@@ -50,7 +50,7 @@ export async function pantallaUsuarios(el) {
           <tbody>
             ${lista.map((u) => `<tr>
               <td class="wrap"><b style="font-size:12.5px">${u.nombre || '—'}</b>
-                ${u.id === sesion.perfil.id ? '<div class="xs" style="color:var(--accent);margin-top:3px">Tú</div>' : ''}</td>
+                ${u.id === sesion.perfil.id ? '<div class="xs" style="color:var(--accent-texto);margin-top:3px">Tú</div>' : ''}</td>
               <td class="wrap tiny muted">${u.correo}</td>
               <td>
                 <select data-rol="${u.id}" ${u.id === sesion.perfil.id && admins <= 1 ? 'disabled' : ''}>${opciones(u.rol)}</select>
