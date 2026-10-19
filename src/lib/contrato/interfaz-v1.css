@@ -1,4 +1,4 @@
-/* COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.css (claude/ui-01-comun @ d485185).
+/* COPIA de rgbeyond/beyond-platform:plataforma/contrato/interfaz-v1.css (claude/ui-01-comun @ 5f4ba5b).
    No editar aquí: se cambia en Platform y se vuelve a copiar. */
 /* beyond-ui-contract/v1 — estilos del encabezado común (contrato de
    interfaz §3). Se copia tal cual a cada app junto con interfaz-v1.mjs.
@@ -29,6 +29,19 @@
   font-size: 15px; line-height: 1.4;
 }
 html[data-tema="claro"] .bc-barra{ --bc-foco: var(--accent-ink, #B4590C); }
+
+/* AISLAMIENTO. El encabezado es un <header> y las apps estilan `header` por
+   elemento (flex, space-between, márgenes; en celular `header > div:...` con
+   order y width). Sin esto el encabezado común se veía distinto en cada app
+   aunque el CSS fuera el mismo (review de diseño de UI-01). Los selectores
+   llevan especificidad suficiente para ganarle a esas reglas sin !important. */
+header.bc-barra[data-contrato]{
+  display: block; margin: 0; gap: 0; flex: none; flex-wrap: nowrap;
+  align-items: normal; justify-content: normal; width: auto; order: 0; text-align: left;
+}
+.bc-barra > .bc-fila, .bc-barra > .bc-contexto, .bc-barra > .bc-identidad{
+  flex: none; order: 0; width: auto; margin-left: 0; margin-right: 0; min-width: 0; text-align: left;
+}
 
 .bc-barra *, .bc-barra *::before, .bc-barra *::after{ box-sizing: border-box; }
 .bc-barra a, .bc-barra button{ font: inherit; color: inherit; }
