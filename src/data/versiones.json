@@ -1,5 +1,18 @@
 [
   {
+    "v": "0.18.1",
+    "fecha": "2026-10-19",
+    "tipo": "parche",
+    "resumen": "Bajo beyond core (UI-02): el módulo se llama «EV Charging Stations» en el encabezado común y en la pestaña del navegador.",
+    "agregado": [
+      "Nombre visible «EV Charging Stations» en el build integrado (/ec/ bajo Platform): título del encabezado común y del documento."
+    ],
+    "notas": [
+      "No cambian /ec/, IDs, contratos, permisos, lógica ni el nombre del repositorio. El build standalone conserva su nombre.",
+      "El favicon común de Beyond ya se publicaba bajo /ec/; se verifica en la prueba del build integrado."
+    ]
+  },
+  {
     "v": "0.18.0",
     "fecha": "2026-10-18",
     "tipo": "menor",

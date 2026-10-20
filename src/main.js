@@ -43,9 +43,12 @@ const zonaApp = document.getElementById('estimador');
 let encabezado = null;
 if (BAJO_PLATFORM) {
   document.documentElement.classList.add('integrada');
+  /* Nombre visible bajo beyond core (UI-02): «EV Charging Stations». No cambia
+     /ec/, IDs, contratos ni el nombre del repo; el standalone conserva el suyo. */
+  document.title = 'EV Charging Stations';
   const tema = iniciarTema(document, window);
   encabezado = montarEncabezado(document.getElementById('encabezado-comun'), {
-    superficie: 'app', titulo: 'Estaciones de Carga',
+    superficie: 'app', titulo: 'EV Charging Stations',
     entorno: import.meta.env.VITE_BEYOND_ENTORNO || null, logo: logoUrl, tema,
     /* El estimador guarda solo, 700 ms después de cada cambio. Si queda algo
        sin guardar o un guardado en vuelo, regresar lo dejaría atrás: se

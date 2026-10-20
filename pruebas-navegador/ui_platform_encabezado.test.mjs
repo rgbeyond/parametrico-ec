@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, extname, normalize } from "node:path";
 import { build } from "vite";
 import { chromium } from "playwright";
+import { createHash } from "node:crypto";
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 const raiz = join(aqui, "..");
@@ -101,7 +102,16 @@ test("encabezado común: «← beyond core», tema y cuenta real; sin «Salir»,
   const { pagina, contexto, fallos } = await abrir();
   assert.equal(await pagina.getAttribute(".bc-volver", "href"), "/");
   assert.equal(await pagina.getAttribute(".bc-volver", "aria-label"), "Volver a beyond core");
-  assert.equal(await pagina.locator(".bc-titulo").innerText(), "Estaciones de Carga");
+  // UI-02: nombre visible «EV Charging Stations» en el encabezado y en la
+  // pestaña del navegador; el favicon común de Beyond resuelve bajo /ec/.
+  assert.equal(await pagina.locator(".bc-titulo").innerText(), "EV Charging Stations");
+  assert.equal(await pagina.title(), "EV Charging Stations");
+  const icono = await pagina.evaluate(() => document.querySelector('link[rel="icon"]')?.href);
+  assert.equal(new URL(icono).pathname, "/ec/favicon.png", "favicon bajo el prefijo de la app");
+  const r = await pagina.request.get(icono);
+  assert.equal(r.status(), 200);
+  assert.equal(r.headers()["content-type"], "image/png");
+  assert.equal(createHash("sha256").update(await r.body()).digest("hex"), "1c850e718ec5e6d5268f34b6a847ad843d2ba2d32744bb147cf4b2cdcb479218", "favicon común de Beyond");
   await pagina.locator(".bc-cuenta-info").waitFor();
   assert.equal(await pagina.locator(".bc-cuenta-info").innerText(), "edita@beyond-ae.com · Editor");
   assert.equal(await pagina.getByRole("button", { name: /Salir|Entrar/ }).count(), 0);
