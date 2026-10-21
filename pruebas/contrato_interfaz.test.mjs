@@ -15,7 +15,7 @@ import { PREFIJOS_APPS, validarVolver } from "../src/lib/contrato/sesion-v1.mjs"
 const HUELLAS = {
   "interfaz-v1.mjs": ["d04141a", "096c0848b36af83169a1b7603b38bf4f81c9b54ca173e8a165039f9027acf6d0"],
   "interfaz-v1.css": ["d04141a", "00b6120156d4b9d5225cc943ba9e139f842835276508e2dad7f6d4bcd0128b4d"],
-  "sesion-v1.mjs": ["e0d47a4", "abaff5ff79a4265ddd4151b72187d834070a08821ed930456325dad36efa61da"],
+  "sesion-v1.mjs": ["187d740", "cbea0ec112c50eaba8fcd84f716f1a19ead6ea221a247fbd6b9c4bf2db02ec2d"],
 };
 
 test("las copias de los contratos son las de Core", () => {
@@ -32,4 +32,9 @@ test("las copias de los contratos son las de Core", () => {
 test("OM-01: /om/ está en la copia del contrato y es retorno válido", () => {
   assert.equal(PREFIJOS_APPS.om, "/om/");
   assert.equal(validarVolver("/om/#/i/inst-01"), "/om/#/i/inst-01");
+});
+
+test("MO-01: /mo/ está en la copia del contrato y es retorno válido", () => {
+  assert.equal(PREFIJOS_APPS.mo, "/mo/");
+  assert.equal(validarVolver("/mo/"), "/mo/");
 });
