@@ -1,4 +1,4 @@
-// COPIA de rgbeyond/beyond-platform:plataforma/contrato/sesion-v1.mjs (claude/core-f1-acceso).
+// COPIA de rgbeyond/beyond-platform:plataforma/contrato/sesion-v1.mjs (claude/ui-01-comun @ 51350fa).
 // No editar aquí: se cambia en Platform y se vuelve a copiar.
 // beyond-session-contract/v1 — parte ejecutable del contrato de sesión y
 // navegación (docs/arquitectura/contrato-sesion-navegacion-v1.md).
@@ -21,10 +21,11 @@ export const RUTAS = Object.freeze({
 export const PREFIJOS_APPS = Object.freeze({
   energia: "/energia/",
   ec: "/ec/",
+  sd: "/sd/",
 });
 
 // §5 — a dónde se puede volver tras entrar.
-const PREFIJOS_VOLVER = ["/energia/", "/ec/"];
+const PREFIJOS_VOLVER = ["/energia/", "/ec/", "/sd/"];
 const RUTAS_PROHIBIDAS = [RUTAS.acceso, RUTAS.callback, RUTAS.salir];
 const LARGO_MAXIMO = 2048;
 

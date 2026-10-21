@@ -1,5 +1,6 @@
-// La copia del contrato de interfaz común (beyond-ui-contract/v1) es la de
-// Core, byte por byte salvo la cabecera de procedencia. Si alguien la edita
+// Las copias del contrato de interfaz común (beyond-ui-contract/v1) y del
+// módulo de sesión (beyond-session-contract/v1) son las de Core, byte por
+// byte salvo la cabecera de procedencia. Si alguien la edita
 // aquí, esta prueba falla: el cambio se hace en Platform y se vuelve a copiar
 // (rgbeyond/beyond-platform, docs/arquitectura/contrato-interfaz-v1.md §8).
 import { test } from "node:test";
@@ -8,15 +9,17 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { CONTRATO_UI } from "../src/lib/contrato/interfaz-v1.mjs";
 
-const ORIGEN = "d04141a";
+// Cada archivo con el commit de Core del que se copió. sesion-v1 entra en
+// SD-01 (/sd/ en la lista de volver).
 const HUELLAS = {
-  "interfaz-v1.mjs": "096c0848b36af83169a1b7603b38bf4f81c9b54ca173e8a165039f9027acf6d0",
-  "interfaz-v1.css": "00b6120156d4b9d5225cc943ba9e139f842835276508e2dad7f6d4bcd0128b4d",
+  "interfaz-v1.mjs": ["d04141a", "096c0848b36af83169a1b7603b38bf4f81c9b54ca173e8a165039f9027acf6d0"],
+  "interfaz-v1.css": ["d04141a", "00b6120156d4b9d5225cc943ba9e139f842835276508e2dad7f6d4bcd0128b4d"],
+  "sesion-v1.mjs": ["51350fa", "d2b3f73f4e268c690ef0ce3a47f4e7e6e910ff16b14ed1bfa1490b78c5478ec6"],
 };
 
-test("la copia del contrato de interfaz es la de Core @ " + ORIGEN, () => {
+test("las copias de los contratos son las de Core", () => {
   assert.equal(CONTRATO_UI, "beyond-ui-contract/v1");
-  for (const [archivo, huella] of Object.entries(HUELLAS)) {
+  for (const [archivo, [ORIGEN, huella]] of Object.entries(HUELLAS)) {
     const texto = readFileSync(new URL("../src/lib/contrato/" + archivo, import.meta.url), "utf8");
     const lineas = texto.split("\n");
     assert.match(lineas[0], new RegExp("COPIA de rgbeyond/beyond-platform:plataforma/contrato/" + archivo.replace(".", "\\.") + " \\(claude/ui-01-comun @ " + ORIGEN + "\\)"));
