@@ -245,3 +245,10 @@ html[data-tema="claro"] input:focus,html[data-tema="claro"] select:focus{border-
 /* Bajo beyond core, «Proyectos» de la ruta común es el regreso a la lista:
    el botón propio duplicaba ese destino. El standalone lo conserva. */
 .integrada #b_volver{display:none}
+
+/* Compartir C2: entrada «Compartir» en la fila del encabezado común, con el
+   mismo aspecto que sus controles (src/lib/compartir_entrada.js). */
+.bc-compartir{ min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px;
+  border: 1px solid var(--bc-borde); border-radius: 10px; color: var(--bc-texto); text-decoration: none; font-weight: 600; flex: none; }
+.bc-compartir:hover{ background: var(--bc-hover); }
+.bc-compartir:focus-visible{ outline: 2px solid var(--bc-acento, currentColor); outline-offset: 2px; }

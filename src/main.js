@@ -14,6 +14,7 @@ import { ESTADOS_PUERTA } from './lib/contrato/sesion-v1.mjs';
 import { iniciarTema, montarEncabezado } from './lib/contrato/interfaz-v1.mjs';
 import './lib/contrato/interfaz-v1.css';
 import { ROLES } from './lib/sesion.js';
+import { fijarCompartir } from './lib/compartir_entrada.js';
 
 /* app.js fija esta misma variable cuando se carga, pero eso pasa hasta que
    se abre un proyecto. La portada la necesita desde el primer render. */
@@ -58,7 +59,9 @@ if (BAJO_PLATFORM) {
       : null),
   });
 }
-const migas = (partes) => encabezado?.fijarRuta(partes);
+/* La ruta interna y, con un proyecto abierto, la entrada «Compartir» de
+   beyond core (Compartir C2): solo navegación, sin datos del proyecto. */
+const migas = (partes, compartir = null) => { encabezado?.fijarRuta(partes); fijarCompartir(encabezado, compartir); };
 
 /* El estimador es un módulo grande que se monta a sí mismo al importarse.
    Lo cargamos sólo cuando hay un proyecto abierto, para que la portada
@@ -72,7 +75,7 @@ async function abrir(proyecto){
   /* «Proyectos» enlazado, como en Proyectos de Energía: vuelve a la portada
      sin recargar (la lista no tiene ruta propia); el botón «Todos los
      proyectos» del estimador, que hacía lo mismo, se oculta bajo Platform. */
-  migas([{ texto: 'Proyectos', href: BASE, alActivar: () => volverAPortada() }, { texto: proyecto?.nombre || 'Proyecto' }]);
+  migas([{ texto: 'Proyectos', href: BASE, alActivar: () => volverAPortada() }, { texto: proyecto?.nombre || 'Proyecto' }], { tipo: 'ev', id: proyecto?.id });
   if(!estimadorCargado){
     estimadorCargado = true;
     await import('./lib/app.js');
