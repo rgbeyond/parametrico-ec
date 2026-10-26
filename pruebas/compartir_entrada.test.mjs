@@ -21,3 +21,13 @@ test("sin estudio válido no hay enlace; un regreso que no es ruta propia se omi
   assert.equal(urlCompartir("pv", ID, "https://evil.example/"), `/compartir/pv/${ID}`);
   assert.equal(urlCompartir("pv", ID, null), `/compartir/pv/${ID}`);
 });
+
+// Las dos apps llevan el MISMO archivo (Energía y EV). Si una copia cambia,
+// esta huella falla en esa app y se actualiza en las dos y en el contrato de
+// Core (docs/operacion/shield-01/compartir-c2-contrato.md §4).
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+test("compartir_entrada.js es la copia común (huella)", () => {
+  const h = createHash("sha256").update(readFileSync(new URL("../src/lib/compartir_entrada.js", import.meta.url))).digest("hex");
+  assert.equal(h, "ead5f1831cd7352a306ec9265f9d2791def8a7f7332811f7f73d9da518c15236");
+});
