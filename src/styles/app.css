@@ -248,7 +248,12 @@ html[data-tema="claro"] input:focus,html[data-tema="claro"] select:focus{border-
 
 /* Compartir C2: entrada «Compartir» en la fila del encabezado común, con el
    mismo aspecto que sus controles (src/lib/compartir_entrada.js). */
-.bc-compartir{ min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px;
+.bc-compartir{ min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px;
   border: 1px solid var(--bc-borde); border-radius: 10px; color: var(--bc-texto); text-decoration: none; font-weight: 600; flex: none; }
 .bc-compartir:hover{ background: var(--bc-hover); }
 .bc-compartir:focus-visible{ outline: 2px solid var(--bc-acento, currentColor); outline-offset: 2px; }
+/* En angosto, solo el ícono: el texto añadía ancho y desbordaba a 320 px. */
+@media (max-width: 400px){
+  .bc-compartir{ padding: 0; width: 44px; }
+  .bc-compartir-texto{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

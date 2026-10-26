@@ -68,9 +68,9 @@ after(async () => {
   await new Promise((r) => servidor?.close(r));
 });
 
-async function abrir({ colorScheme = "dark", proyecto = PROYECTO } = {}) {
+async function abrir({ colorScheme = "dark", proyecto = PROYECTO, viewport = { width: 1280, height: 900 } } = {}) {
   const estado = { retenerEscrituras: false, retenidas: [], escrituras: 0, dialogos: [] };
-  const contexto = await navegador.newContext({ viewport: { width: 1280, height: 900 }, colorScheme });
+  const contexto = await navegador.newContext({ viewport, colorScheme });
   const pagina = await contexto.newPage();
   const fallos = [];
   pagina.on("pageerror", (e) => fallos.push(e.message));
@@ -317,3 +317,39 @@ test("claro: «Excedente de fondeo» con texto de 4.5:1 o más (review nativa H2
   assert.deepEqual(fallos, []);
   await contexto.close();
 });
+
+// ---- Compartir C2: entrada «Compartir» en el encabezado común -------------
+// PROYECTO.id es un UUID válido: con uno corto el enlace no aparecería y estas
+// pruebas pasarían en vacío (se comprueba).
+const CAPTURAS = process.env.CAPTURAS || null;
+const LARGO = { ...PROYECTO, nombre: "Electrolinera de flotilla urbana con cargadores rápidos, transformador dedicado y crecimiento por etapas" };
+for (const [ancho, esquema] of [[320, "dark"], [320, "light"], [375, "dark"], [375, "light"], [1280, "dark"]]) {
+  test(`Compartir C2 (${ancho} · ${esquema === "dark" ? "oscuro" : "claro"}): con el proyecto abierto aparece «Compartir», vuelve a la app y nada desborda`, async () => {
+    assert.match(PROYECTO.id, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, "fixture con UUID: si no, el enlace se ocultaría");
+    const { pagina, contexto, fallos } = await abrir({ colorScheme: esquema, proyecto: LARGO, viewport: { width: ancho, height: 800 } });
+    assert.equal(await pagina.locator(".bc-compartir").count(), 0, "en la portada no hay enlace");
+    await pagina.locator(`[data-abrir="${PROYECTO.id}"]`).click();
+    await pagina.locator(".bc-compartir").waitFor({ timeout: 20000 });
+    const u = new URL(await pagina.getAttribute(".bc-compartir", "href"), base);
+    assert.equal(u.pathname, `/compartir/ev/${PROYECTO.id}`);
+    const volver = u.searchParams.get("volver");
+    assert.ok(volver === new URL(pagina.url()).pathname + new URL(pagina.url()).search + new URL(pagina.url()).hash && volver.startsWith("/ec/"), `regresa a la app: ${volver}`);
+    const medidas = await pagina.evaluate(() => {
+      const caja = (sel) => { const r = document.querySelector(sel)?.getBoundingClientRect(); return r && { izq: r.left, der: r.right, alto: r.height, ancho: r.width }; };
+      return { desborde: document.documentElement.scrollWidth - innerWidth, ancho: innerWidth,
+        compartir: caja(".bc-compartir"), cuenta: caja(".bc-cuenta-info"), tema: caja(".bc-tema"), volver: caja(".bc-volver") };
+    });
+    assert.equal(medidas.desborde, 0, "sin desborde horizontal");
+    for (const k of ["compartir", "cuenta", "tema", "volver"]) {
+      assert.ok(medidas[k] && medidas[k].ancho > 0 && medidas[k].izq >= -0.5 && medidas[k].der <= medidas.ancho + 0.5, `${k} visible dentro del ancho: ${JSON.stringify(medidas[k])}`);
+    }
+    assert.ok(medidas.compartir.alto >= 44 && medidas.compartir.ancho >= 44, "objetivo táctil ≥44 px");
+    // En angosto solo el ícono, con el mismo nombre accesible.
+    const visible = await pagina.locator(".bc-compartir-texto").evaluate((n) => n.getBoundingClientRect().width > 1);
+    assert.equal(visible, ancho > 400, ancho > 400 ? "con texto" : "solo ícono");
+    assert.equal(await pagina.getByRole("link", { name: "Compartir este estudio" }).count(), 1, "nombre accesible");
+    if (CAPTURAS) await pagina.screenshot({ path: join(CAPTURAS, `ev-encabezado-compartir-${ancho}-${esquema === "dark" ? "oscuro" : "claro"}.png`) });
+    assert.deepEqual(fallos, []);
+    await contexto.close();
+  });
+}
