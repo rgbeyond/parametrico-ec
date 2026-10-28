@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-27 (OM-EV-ENERLINK §21, C3a §22 y C3b B0 DEV §23)
+**Última actualización:** 2026-10-28 (C3b B1 privado aplicado en DEV; §24)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–23 para OM-EV-ENERLINK/C3a/C3bB0; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–24 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -796,3 +796,20 @@ Claude14/14B0 y69/69regresiones seleccionadas; baselinePGlite18 excluye3migracio
 Tag `backup/pre-c3b-b0-20261028`→9339757 fija código previo; CP-PRE-C3 cifrado y SQLC3a40 preservados. NO es un nuevo backupglobal de datos/Auth. Compensación B0 ensayada y guardada, no aplicada; cualquier retorno exige reconciliar dependencias/ledger y nueva migración, sin reescribir41 ni restaurar globalmente datosviejos.
 
 Siguiente GPT/Claude: **B1, mutador seguro de asignación de nivel y techo propio** (no confundir con fn_asignar_rol legacy), con reviewers. Asignador sin nivel deniega; sin autoelevación. Bootstrap inicial concreto requiere persona/ámbito/capacidades/redundancia de RG cuando esté implementado/revisado; no ahora. Auditoría futura: capability ANDscope ANDjerarquía, eventos estructurados y propiaactividad con proyección mínima; reemplazar política/consumidor directo existentes. Concesiones manuales/plantillas e historial no se resuelven por etiquetas. Frontend/Fable para consola real; ninguna aprobación visual atribuida a B0. RG pide mínima fricción de permisos rutinarios, sin cambios de modos bypass ni autorización PROD implícita. O&M sigue en su otra sesión; no lo implementa este frente. C3aP0E2E y PROD bloqueados siguen abiertos.
+
+
+---
+
+## 24. C3b B1 — asignación/revocación privadas aplicadas sólo DEV (28 oct CDMX)
+
+Migración `20261028145417_c3b_b1_asignador_nivel`, ledger42; statement/archivo SHA256 `8ea4ff361d22a940431b7eb3e079bbd002aac219ba3bad4733a650921a64daac`. Claude149a702 formal, canónica2bbd433, loader3970f50; GPT cotejó bytes con servidor. [Resultado/evidencia/retorno](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/resultado-c3b-b1-dev-2026-10-28.md).
+
+Cuatro funciones nuevas CERRADAS a todo no-dueño, incluso service_role. Asignar/revocar/preview exigen sesión viva C2, perfil y organización activos, membresía organizacional activa, nivel Alpha/Omega y manage_users explícita. Alpha sólo N1–N3; Omega N1–Alpha; nadie se modifica a sí mismo ni modifica pares/superiores; Omega fuera del mutador ordinario. No rol legado→nivel. Sin capacidades otorgadas/retiradas, sin plantillas ni UI. Cero asignaciones reales.
+
+Locks canónico→org antes de autorizar, historial con marca única y piso histórico, path endurecido/consultas cualificadas y defensa temporal sólo de la sesión propia. Auditoría real obligatoria con rollback si falta. Preview no muestra datos de sujetos no administrables ni lista de capacidades; conflicto de costos sólo booleano con manage_capabilities explícita, si no desconocido. El nivel no borra permisos heredados.
+
+37/37B1+14/14B0 locales y56/56regresiones seleccionadas tras ajustar loader, cero skips. Baseline PGlite18 excluye4versiones de plan/dependencia C2; suites dedicadas conservan cortes históricos y shim C2, no se afirma reconstrucción42completa ni transporte JWT real. Reviews database/security Sonnet5.5 READ ONLY APTO con condiciones; GPT revisó los cierres. Ensayo REALPG17.6 antes de aplicar, instalación+compensación enROLLBACK,35tablas/112funciones/Auth/Storage iguales y3entradas sin sesión42501. Post:35tablas y112funciones anteriores idénticas;4nuevas privadas(116total),Auth14/Storage78,0asignaciones. Sin cambios de interfaz ni comandos de deploy por GPT.
+
+Tag `backup/pre-c3b-b1-20261028`→fc3ddf2 fija código previo B0; CP-PRE-C3 cifrado y SQL40/41 preservados. No nuevo backupglobal de datos/Auth. Compensación B1 ensayada, no aplicada, con guardas; retorno posterior por nueva migración y revisión de dependencias, sin reescribir42 ni restauración global antigua.
+
+Siguiente: preparar bootstrap de propietario y política/consumidores de auditoría de terceros. **No ejecutar un bootstrap real ni habilitar B1 antes del cierre de las rutas legacy de auditoría y revisión del flujo frontend/Fable.** La decisión real persona/ámbito/capacidades/redundancia la toma RG ante ficha concreta; su preferencia de mínimos permisos rutinarios no asigna Omega. Plantillas e interfaz completa pendientes. C3a sigue con P0E2E no acreditado y PROD bloqueado. GPT coordina/revisa y opera DEV; Claude implementa; RG sin intervención ahora. O&M sigue con su otra sesión, fuera de esta parcela.
