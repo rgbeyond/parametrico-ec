@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-28 (Compartir contextual / Settings preparados, sin cambios DEV; §25)
+**Última actualización:** 2026-10-28 (B elegida e implementada en DEV; §26)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–25 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–26 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -823,3 +823,13 @@ Siguiente: preparar bootstrap de propietario y política/consumidores de auditor
 - Fable real claude-fable-5 dirigió dos presentaciones comparables: A diálogo contextual (recomendada, móvil pantalla completa), B página contextual con regreso al estudio. Frontend real claude-sonnet-5-5 revisó independientemente flujo/casos, sin navegador ni Auth real. Ejecuciones restringidas de lectura con acceso existente; sin fallback. Maquetas aisladas y correcciones documentales en **ae539952baa23ff1d5222cd7b820031fc158f315**. [Entrega](https://github.com/rgbeyond/beyond-platform/blob/49329cf8e1d206c1200953c8520f5b409d84e19c/docs/operacion/shield-01/c3b-ux-2026-10-28/README.md).
 - Revisión GPT de B2/B3: falta cerrar captura confiable del nivel anterior, sesión viva en lectores/conteos, paginación/ámbito y ficha inicial vs redundancia antes de implementar. B3 se cierra con código+reviews+pruebas, no por editar contratos. Orden B3→B2→B1 público preservado; B1 sigue privado, cero asignaciones reales. No nueva pantalla en DEV por esta ronda, no deploy ni main/PROD/secretos/O&M.
 - Próximo: GPT verifica capturas y RG decide A/B antes de UI; GPT revisa y coordina la implementación posterior. No pedir a RG SQL/temporizadores ni elección de propietario hasta mecanismo concreto revisado. Radar del otro writer O&M permanece separado (issue8 comentario6474096867).
+
+
+## 26. RG elige B — primera implementación publicada sólo DEV (28 oct)
+
+- RG: «me inclino más por la opción B, adelante». **B sustituye la recomendación visual A** de §25; la decisión no cambia el modelo de autorización. Página contextual, recurso fijo a izquierda en escritorio/arriba en móvil, regreso seguro vigente.
+- **C3b-UI-B01** código final **c31b849bcb1f5069cb2ae2f770dbbeae77066e13**, Netlify **6ae263d2616af63281a2b0c4** ready en https://ui-01--beyond-platform-dev.netlify.app/ . Presentación real sobre C2, no maqueta. Cambió sólo Compartir/estilos/prueba; no API, niveles o Settings. Correo externo/vista previa/huella/idempotencia/revocación/aviso se conservan.
+-31/31casos iniciales y4/4responsive finales reportados por Claude, sin sumar repeticiones como casos únicos; GPT build final y114/114publicables por HTTP.109archivos de apps y fuentes3Functions preservados. Fable real claude-fable-5 y frontend claude-sonnet-5-5 APTO sobre670b40e; GPT verificó cierres finales y capturas. No Auth/RLS real acreditado por mocks; C3a P0 y PROD bloqueados permanecen.
+- Respaldo de código backup/pre-c3b-ui-b-20261028→ae539952baa23ff1d5222cd7b820031fc158f315, composición963f0eb conservada. No nuevo backup global. Sin main/PROD/migraciones/secretos/Auth ni niveles/permisos reales cambiados, sin tocar ramas O&M.
+- **Pendiente, no perdido:** directorio descubrible, capacidades delegables/alcance de recurso y administración de niveles en Settings. GPT coordina con Claude B3 antes de B2/B1 público y el siguiente encargo servidor. No controles falsos ni directorio global. RG sólo revisa producto; no intervención técnica ahora.
+- [Resultado canónico](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/c3b-ui-b01/resultado-2026-10-28.md). Las alternativas/maquetas de §25 quedan como comparación histórica, sin pedir de nuevo A/B.
