@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-27 (OM-EV-ENERLINK, decisiones RG; ver §21)
+**Última actualización:** 2026-10-27 (OM-EV-ENERLINK §21 y C3a DEV §22)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21 para OM-EV-ENERLINK; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–22 para OM-EV-ENERLINK/C3a; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -768,3 +768,16 @@ Primer entregable externo: diccionario/modelo (§8 del registro), sin código ni
 Abiertos: qué uptime mostrar (bruto incluye Faulted; ajustado requiere fórmula/eventos; no declarar cumplimiento NEVI); administrador/destino Drive; matriz de aprobación de reportes y acceso a correos; aviso de privacidad vigente. Cobranza no conciliada sin fuente JSON de ventas/pagos identificada. Nombre visible pendiente. Renombrar proyecto Supabase llamado parametrico-ec (PROD) es petición separada, no ejecutada ni autorizada por esta carga DEV.
 
 Siguiente: **Claude externo, diccionario/modelo; GPT, continuar C3 y coordinar revisión/ventana; RG, validar encargo y decisiones de negocio abiertas.**
+
+
+---
+
+## 22. C3a DEV — aplicada, regresión legítima verificada (27 oct CDMX)
+
+GPT aplicó sólo DEV la migración servidor `20261028005402_c3a_primera_confirmacion_sin_contrasena`, ledger40, funciónMD5`af025d7e723a3383d7eb22b605aa9d8a`, sobre fuente Claude `cccc10d` (SQLsha256`de1ccfb5ddeb3b50cbe4db82eb85b9937c9fff93af547d6999088fee59eeaf06`). Frontend/deploy C2 sin cambios. [Resultado completo y evidencia](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/resultado-c3a-dev-2026-10-27.md).
+
+Prueba distinta y legítima por invitación: baseline antes y candidato después confirmaron, sólo orgA/capacidades vacías; logout global rechazó JWT previo en RPC de publicaciones. Candidato descartó contraseña temporal. Sin password suministrado/signup/password grant; no se recreó arnés rechazado. **attack_tested:false; ataque original E2E no acreditado y PROD bloqueado.** No llamar a esto cierre global P0.
+
+Cierre verificado:3 Auth sintéticos nuevos bloqueados/perfiles inactivos,0sesiones/refresh/permisos/invitaciones vigentes;2orgs de prueba inactivas. Auth11→14 conserva historia, sin borrado duro.27 tablas ajenas a fixture mantienen filas/hashes; Storage78 sin escrituras. CP-PRE-C3 intacto; compensación ensayada no aplicada. Cuentas RG/casos reales/OM/main/PROD intactos.
+
+Reconciliación de código canónico publicada **933975704eb0e6f5d43e01abef302526dca5e5d5**, verificada por GPT contra bytes formales aplicados (SHA256 `5e5137697ab19d0b1e4d4df66c36b797eecacefd6179f4ded323ce4375041ae1`). Siguiente: GPT revisa/congela contrato C3b antes de encargar implementación. No asignar Omega ni inventar N1 por equivalencia legacy. OM continúa documental conforme §21; este resultado no abre aún su ventana DB. RG no requiere intervención de terminal.
