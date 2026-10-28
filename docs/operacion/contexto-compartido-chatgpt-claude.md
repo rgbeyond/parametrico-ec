@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-28 (retro RG: compartir la interfaz con permisos, no resumen; §27)
+**Última actualización:** 2026-10-28 (ficha Compartir y sesión O&M de relevo; §28)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–27 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–28 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -843,3 +843,14 @@ Siguiente: preparar bootstrap de propietario y política/consumidores de auditor
 - Objetivo: interfaz reconocible de la app y recurso, sólo datos/acciones autorizados; servidor no envía información prohibida (no esconder JSON íntegro con CSS), sin acceso a hermanos. Directorio/capacidades, invitación/login/retorno/revocación deben demostrarse. Acceso vivo vs versión fija y edición/descarga requieren decisión, no inferencia. GPT recomienda caso actualizado para Workspace; no implementado.
 - Antes de código GPT muestra ficha corta: resultado visible emisor/receptor, incluido/excluido, demostración con datos de ejemplo, aceptación E2E, tamaño/dependencias/riesgos concretos. RG valida producto una vez; luego autonomía operativa y mínimas confirmaciones. Cambio material de alcance vuelve a RG antes de consumir implementación. No estimaciones de tokens inventadas.
 - [Realineación canónica](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/compartir-realineacion-rg-2026-10-28.md). Siguiente: GPT concreta ficha/experiencia del receptor; incidencia de correo separada de diagnóstico de lectura.
+
+
+## 28. Dos frentes coordinados: ficha Compartir y relevo local O&M (RG, 28 oct)
+
+- RG confirmó correo no recibido tampoco en spam. Solicitó ficha y otra sesión Claude para continuar O&M desde este chat; consultará al writer anterior antes de cerrar allá. No autoriza implementar una ficha todavía no validada ni dos writers en las mismas ramas.
+- [Ficha Compartir](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/ficha-compartir-interfaz-2026-10-28.md): propuesta de interfaz de la app con datos/acciones limitados, EV como piloto recomendado (puede cambiar RG), visualización inicial del caso actualizado al abrir/recargar; edición/descargas/apps adicionales fuera del primer bloque propuesto, por validar. Invitación→login→recurso→revocación se prueban, no basta preview. No estimación inventada de horas/tokens. B visual sigue elegida. Implementación Compartir espera validación del alcance/demostración.
+- Nueva sesión **beyond-om-enerlink**, Herdrw5:pB, modo plan/restringido, MCP vacío, acceso existente; Agent expuesto y4definiciones database/security/frontend/UX Fable cargadas, no ejecutadas. Árbol local om-01/beyond-om sigue claude/om-01-core aa2bf6a; sólo fetch de referencia EV. Acuse completado por lectura; no cambios de código, datos reales, secretos o nube.
+- SHAs de recepción O&M: beyond-platform claude/om-ev-enerlink **6fa05940dc3e49daaf7e6e3b4fdf699ce43b311b**, registro hasta§16/decisiones34–36; beyond-om misma rama **acbb7414b20425ca9d48872c2319fef5b6386f81**. Nuevo contexto incluye UI EV local, catálogo/bajas, expediente universal exp_, datos bancarios restringidos propuestos, comisión16% única y contrato/facturación pendiente Legal/contador. No se acredita Supabase/DEV por esos documentos.
+- Writer de claude.ai NO liberado: antes de escribir, debe publicar SHAs finales, cambios sin publicar, decisiones/pendientes y referencias privadas sin datos, y liberar escritura. Nueva sesión acusa delta si hay commits nuevos. GPT define encargo mínimo y ventana compartida; no exp_/migraciones/importación/deploy implícitos. No acceso automático al historial del otro chat.
+- Dos frentes en este chat con escritor/ramas separados: Core/Compartir/C3 (beyond-b3-claude) y O&M/Enerlink/alta (beyond-om-enerlink después del relevo). GPT coordina/contexto/issue8/reviewers y una cola para Supabase/publicación DEV; RG producto. Mantener ambos chats abiertos como consulta es compatible, pero no dos escritores sobre la misma rama.
+- [Relevo para cotejar desde el otro chat](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/relevo-sesion-local-2026-10-28.md). Siguiente responsables: RG valida ficha y pide relevo a sesión antigua; GPT reconcilia SHAs finales y encargo; Claude nuevo espera sin implementar.
