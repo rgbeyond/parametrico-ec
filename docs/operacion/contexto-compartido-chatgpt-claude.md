@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-28 (B elegida e implementada en DEV; §26)
+**Última actualización:** 2026-10-28 (retro RG: compartir la interfaz con permisos, no resumen; §27)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–26 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–27 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -833,3 +833,13 @@ Siguiente: preparar bootstrap de propietario y política/consumidores de auditor
 - Respaldo de código backup/pre-c3b-ui-b-20261028→ae539952baa23ff1d5222cd7b820031fc158f315, composición963f0eb conservada. No nuevo backup global. Sin main/PROD/migraciones/secretos/Auth ni niveles/permisos reales cambiados, sin tocar ramas O&M.
 - **Pendiente, no perdido:** directorio descubrible, capacidades delegables/alcance de recurso y administración de niveles en Settings. GPT coordina con Claude B3 antes de B2/B1 público y el siguiente encargo servidor. No controles falsos ni directorio global. RG sólo revisa producto; no intervención técnica ahora.
 - [Resultado canónico](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/c3b-ui-b01/resultado-2026-10-28.md). Las alternativas/maquetas de §25 quedan como comparación histórica, sin pedir de nuevo A/B.
+
+
+## 27. Retro RG: Compartir es la interfaz de la app con permisos, no resumen (28 oct)
+
+- RG esperaba la misma interfaz, datos/secciones/acciones no autorizados ausentes; no le sirve la publicación de unos indicadores. La elección B fue visual, no aceptación del alcance C2. GPT reconoce reducción de producto sin validación suficiente; reviewers/tests acotados no acreditan la intención de RG.
+- RG probó correo personal: invitación no recibida y acceso no logrado. Dirección no registrada; causa no diagnosticada. Dar acceso no manda automáticamente el aviso en el flujo actual; solicitud no acredita entrega. No presumir SMTP/spam ni reenviar o revocar su ensayo sin encargo.
+- UI-B01 permanece en DEV con su evidencia visual/técnica, pero Compartir NO tiene aceptación funcional de RG. Claude estaba idle; no se despacha implementación B3/directorio u otra dependiente hasta validar alcance y demostración concretos. No rollback ni cambios de datos/permisos/Auth/PROD/O&M por esta retro.
+- Objetivo: interfaz reconocible de la app y recurso, sólo datos/acciones autorizados; servidor no envía información prohibida (no esconder JSON íntegro con CSS), sin acceso a hermanos. Directorio/capacidades, invitación/login/retorno/revocación deben demostrarse. Acceso vivo vs versión fija y edición/descarga requieren decisión, no inferencia. GPT recomienda caso actualizado para Workspace; no implementado.
+- Antes de código GPT muestra ficha corta: resultado visible emisor/receptor, incluido/excluido, demostración con datos de ejemplo, aceptación E2E, tamaño/dependencias/riesgos concretos. RG valida producto una vez; luego autonomía operativa y mínimas confirmaciones. Cambio material de alcance vuelve a RG antes de consumir implementación. No estimaciones de tokens inventadas.
+- [Realineación canónica](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/compartir-realineacion-rg-2026-10-28.md). Siguiente: GPT concreta ficha/experiencia del receptor; incidencia de correo separada de diagnóstico de lectura.
