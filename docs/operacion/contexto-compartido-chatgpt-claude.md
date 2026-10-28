@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-27 (OM-EV-ENERLINK §21 y C3a DEV §22)
+**Última actualización:** 2026-10-27 (OM-EV-ENERLINK §21, C3a §22 y C3b B0 DEV §23)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–22 para OM-EV-ENERLINK/C3a; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–23 para OM-EV-ENERLINK/C3a/C3bB0; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -781,3 +781,18 @@ Prueba distinta y legítima por invitación: baseline antes y candidato después
 Cierre verificado:3 Auth sintéticos nuevos bloqueados/perfiles inactivos,0sesiones/refresh/permisos/invitaciones vigentes;2orgs de prueba inactivas. Auth11→14 conserva historia, sin borrado duro.27 tablas ajenas a fixture mantienen filas/hashes; Storage78 sin escrituras. CP-PRE-C3 intacto; compensación ensayada no aplicada. Cuentas RG/casos reales/OM/main/PROD intactos.
 
 Reconciliación de código canónico publicada **933975704eb0e6f5d43e01abef302526dca5e5d5**, verificada por GPT contra bytes formales aplicados (SHA256 `5e5137697ab19d0b1e4d4df66c36b797eecacefd6179f4ded323ce4375041ae1`). Siguiente: GPT revisa/congela contrato C3b antes de encargar implementación. No asignar Omega ni inventar N1 por equivalencia legacy. OM continúa documental conforme §21; este resultado no abre aún su ventana DB. RG no requiere intervención de terminal.
+
+
+---
+
+## 23. C3b B0 — persistencia privada de niveles aplicada sólo DEV (27 oct CDMX)
+
+Migración `20261028032334_c3b_b0_niveles_base`, ledger41, statementSHA256 `b00aaf4c5a44451adf1a13469143c7a9bfd231b22e0a8f2a24002c88429cf156`; código Claude reconciliado `fc3ddf24f1464ef6d760fef1357e9771ab4a5218`, verificado por GPT contra archivo/ledger real. [Resultado, evidencia y retorno](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/resultado-c3b-b0-dev-2026-10-27.md).
+
+B0 crea únicamente catálogo privado5niveles(N1/N2/N3/Alpha/Omega) y asignaciones organizacionales VACÍAS. Cero asignaciones reales, sin derivar roles legacy, sin mutadores/API/plantillas/bootstrap/UI. RLS forzada y REVOKE explícito a PUBLIC/anon/authenticated/service_role; cero privilegios efectivos. Nivel común entre apps, permisos por proyecto/recurso separados; no implica capacidades acumulativas ni un N1 sin costos si conserva concesiones previas. No llamar a esto C3b terminado.
+
+Claude14/14B0 y69/69regresiones seleccionadas; baselinePGlite18 excluye3migraciones con plan de datos, no reconstruye40completo. Reviews nativos database/security Sonnet5.5 APTOcondicionado, lecturaestática; GPT revisó delta y probó instalación+compensación REALPG17.6 enROLLBACK antes de aplicar:112funciones/33tablas/Auth/Storage iguales. Trasaplicar33tablas anteriores iguales por hash/filas,Auth14/Storage78,C3aaf02preservada. No cuentas/sesiones/casos cloud nuevos, sin OM/main/PROD/secretos. FrontendC2 y URLDEV conservados, sin deploy.
+
+Tag `backup/pre-c3b-b0-20261028`→9339757 fija código previo; CP-PRE-C3 cifrado y SQLC3a40 preservados. NO es un nuevo backupglobal de datos/Auth. Compensación B0 ensayada y guardada, no aplicada; cualquier retorno exige reconciliar dependencias/ledger y nueva migración, sin reescribir41 ni restaurar globalmente datosviejos.
+
+Siguiente GPT/Claude: **B1, mutador seguro de asignación de nivel y techo propio** (no confundir con fn_asignar_rol legacy), con reviewers. Asignador sin nivel deniega; sin autoelevación. Bootstrap inicial concreto requiere persona/ámbito/capacidades/redundancia de RG cuando esté implementado/revisado; no ahora. Auditoría futura: capability ANDscope ANDjerarquía, eventos estructurados y propiaactividad con proyección mínima; reemplazar política/consumidor directo existentes. Concesiones manuales/plantillas e historial no se resuelven por etiquetas. Frontend/Fable para consola real; ninguna aprobación visual atribuida a B0. RG pide mínima fricción de permisos rutinarios, sin cambios de modos bypass ni autorización PROD implícita. O&M sigue en su otra sesión; no lo implementa este frente. C3aP0E2E y PROD bloqueados siguen abiertos.
