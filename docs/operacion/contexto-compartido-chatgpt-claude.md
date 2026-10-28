@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-28 (C3b B1 privado aplicado en DEV; §24)
+**Última actualización:** 2026-10-28 (Compartir contextual / Settings preparados, sin cambios DEV; §25)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–24 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–25 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -813,3 +813,13 @@ Locks canónico→org antes de autorizar, historial con marca única y piso hist
 Tag `backup/pre-c3b-b1-20261028`→fc3ddf2 fija código previo B0; CP-PRE-C3 cifrado y SQL40/41 preservados. No nuevo backupglobal de datos/Auth. Compensación B1 ensayada, no aplicada, con guardas; retorno posterior por nueva migración y revisión de dependencias, sin reescribir42 ni restauración global antigua.
 
 Siguiente: preparar bootstrap de propietario y política/consumidores de auditoría de terceros. **No ejecutar un bootstrap real ni habilitar B1 antes del cierre de las rutas legacy de auditoría y revisión del flujo frontend/Fable.** La decisión real persona/ámbito/capacidades/redundancia la toma RG ante ficha concreta; su preferencia de mínimos permisos rutinarios no asigna Omega. Plantillas e interfaz completa pendientes. C3a sigue con P0E2E no acreditado y PROD bloqueado. GPT coordina/revisa y opera DEV; Claude implementa; RG sin intervención ahora. O&M sigue con su otra sesión, fuera de esta parcela.
+
+
+## 25. Compartir contextual y Settings — preparación UX (RG, 28 oct)
+
+- Entrada principal desde el propio recurso, sin pedir seleccionarlo de nuevo. Buscar integrantes de Beyond o escribir correo externo; lista de capacidades delegables según actor/destinatario/recurso. Enlace restringido; una acción final con resultado por persona; concesión y correo separados.
+- Settings administra cuenta, niveles N1/N2/N3/Alpha/Omega, roles/capacidades y facultades para invitar. “Shield” es referencia interna, no etiqueta UI. Compartir no asigna/eleva niveles ni roles. Nadie puede invitar con clearance superior al propio; eso no habilita administrar pares, conceder Omega ni delegar capacidades fuera de autoridad.
+- Externos hoy sólo publicación técnica curada de lectura; internos legado por contenedor. No prometer permiso aislado de caso cuando se abren hermanos. Directorio autorizado y lista de delegables requieren backend revisado; no fingir implementación mediante casillas.
+- Fable real claude-fable-5 dirigió dos presentaciones comparables: A diálogo contextual (recomendada, móvil pantalla completa), B página contextual con regreso al estudio. Frontend real claude-sonnet-5-5 revisó independientemente flujo/casos, sin navegador ni Auth real. Ejecuciones restringidas de lectura con acceso existente; sin fallback. Maquetas aisladas y correcciones documentales en **ae539952baa23ff1d5222cd7b820031fc158f315**. [Entrega](https://github.com/rgbeyond/beyond-platform/blob/49329cf8e1d206c1200953c8520f5b409d84e19c/docs/operacion/shield-01/c3b-ux-2026-10-28/README.md).
+- Revisión GPT de B2/B3: falta cerrar captura confiable del nivel anterior, sesión viva en lectores/conteos, paginación/ámbito y ficha inicial vs redundancia antes de implementar. B3 se cierra con código+reviews+pruebas, no por editar contratos. Orden B3→B2→B1 público preservado; B1 sigue privado, cero asignaciones reales. No nueva pantalla en DEV por esta ronda, no deploy ni main/PROD/secretos/O&M.
+- Próximo: GPT verifica capturas y RG decide A/B antes de UI; GPT revisa y coordina la implementación posterior. No pedir a RG SQL/temporizadores ni elección de propietario hasta mecanismo concreto revisado. Radar del otro writer O&M permanece separado (issue8 comentario6474096867).
