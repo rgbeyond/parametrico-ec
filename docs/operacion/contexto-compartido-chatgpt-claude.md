@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-09-05 (cierre bilateral y correcciones de S1; ver §20)
+**Última actualización:** 2026-10-27 (OM-EV-ENERLINK, decisiones RG; ver §21)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente y protocolo de cierre bilateral: §20.** Las referencias anteriores de secuencia son históricas cuando contradigan esa sección.
+> **Estado vigente:** control maestro y §21 para OM-EV-ENERLINK; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -743,3 +743,28 @@ RG solicita distinguirlas gráficamente y mejorar el diseño, sugiriendo áreas 
 Siguiente paso propuesto: maqueta visual acotada de la gráfica dentro de S1 → aprobación visual de RG → integración por Claude → revisión ChatGPT → validación final RG de S1. La dirección visual propuesta aún requiere aprobación; este cierre no encarga implementar ni habilita Datos, login/home, I1 o cambios tarifarios. Último SHA funcional sigue `e0b7dbc` (v0.39.3); HEAD verificado antes de esta documentación `fd2fc9e`, PR #7 Draft/NO MERGE. No hay handoff posterior al cierre revisado.
 
 Claude debe leer y acusar este cierre al retomar; publicar no prueba recepción. Se mantienen las reservas de §20.4. No se repiten tests por este cambio exclusivamente documental.
+
+
+---
+
+## 21. OM-EV-ENERLINK — frente paralelo preparado (27 oct 2026, CDMX)
+
+Identificador confirmado por GPT. Writer: sesión Claude de RG en claude.ai, sólo `claude/om-ev-enerlink` de `beyond-platform` y `beyond-om`; GPT conserva coordinación/operación DEV y continúa C3 con su Claude local. **Sólo documentación por ahora; implementación no despachada.** No escribir ramas de otro frente ni main, cloud, Auth o secretos.
+
+Fuentes leídas: registro Platform inicial `28a624ec3440a888124d47dc555eeb354b6e2c16`, actualizado **`0baf9a9a64291cc8e4c782dee87141c251d1a257`**; discovery O&M **`e145a42476c829fb0e6d1d8118e4b771ab0bf0d6`**. Bases `6c459cb` / `aa2bf6a`. [Encargo preparado, convivencia, reviewers y preguntas](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/coordinacion-y-encargo-2026-10-27.md); bitácora en Platform#8.
+
+Decisiones RG que **sustituyen** criterios previos:
+
+- **O&M antes de Service Delivery** en ruta v2 y hoja de ruta; también en la v3 recomendada. No desplaza cierre de seguridad C3 ni elimina desarrollos existentes.
+- **Supabase del entorno, fuente principal de este subsistema; copias exportadas a Drive.** Excepción acotada a la decisión Drive principal del contrato de integración 1.0 citada en el registro. No cambia todas las apps ni acredita conector/cuenta/backup Drive operativos.
+- **Estaciones O&M se crean sin proyecto Core obligatorio.** `bp_proyectos` opcional, enlazable desde ambos lados. Sustituye aquí la dependencia de entrega/proyecto; organización y autorización propias obligatorias. Vincular no concede permisos ni mueve historia.
+- **RG autoriza datos reales Enerlink en DEV el 27 oct 17:18 CDMX**: sesiones, ventas, uptime, catálogo e histórico desde octubre de 2025. Sustituye pendiente de autorización inicial; no PROD/GitHub/fixtures/pruebas/logs. Carga sólo tras tablas coordinadas y RLS probada; correos finales exclusivamente en tabla restringida y fuera de reportes. Uso mercadotécnico sujeto a revisión del aviso y capability específica. No volver a pedir permiso de carga ya recibido.
+- **Frecuencias aceptadas**: estado 5 min; sesiones/ventas 15 min; catálogo 6 h; uptime diario; cierre día 5 a las 06:00 CDMX. Arranque dos semanas a 15/60 min para estado/sesiones. Sustituye frecuencia pendiente. Endpoint de estado y límites siguen por verificar; no habilitar cron ni inventar fuente ahora.
+
+Convivencia: **C3a aplicado o compensado y ledger reconciliado → contrato servidor C3b requerido congelado y dependencias aplicadas → OM modelo/RLS → ingesta/cierres → reportes/copias**. No hace falta esperar toda la UI C3b si sus dependencias de servidor están cubiertas y probadas. Nombres lógicos reservados `om_ev_01_modelo_y_rls`, `om_ev_02_ingesta_y_cierres`, `om_ev_03_reportes_y_copias`; timestamps reales por CLI sólo al abrir ventana. Migraciones canónicas sólo Platform, rama de integración dedicada asignada por GPT; nadie modifica las aplicadas ni reserva ordinal40. **GPT único aplicador DEV**, ventana exclusiva C3/OM, freeze/SHA/respaldo/review/compensación y verificación RLS/JWT antes de carga. Claude externo no aplica. Preparación documental puede avanzar en paralelo ya.
+
+Primer entregable externo: diccionario/modelo (§8 del registro), sin código ni migraciones. Implementación posterior requiere validación del encargo por RG y despacho de GPT. Reviewers asignados por función: database/Supabase, security/accesos, frontend/E2E+funcional y diseño **Fable real**, convocados por GPT/Claude con evidencia de modelo/SHA; no se atribuyen revisiones aún no ejecutadas.
+
+Abiertos: qué uptime mostrar (bruto incluye Faulted; ajustado requiere fórmula/eventos; no declarar cumplimiento NEVI); administrador/destino Drive; matriz de aprobación de reportes y acceso a correos; aviso de privacidad vigente. Cobranza no conciliada sin fuente JSON de ventas/pagos identificada. Nombre visible pendiente. Renombrar proyecto Supabase llamado parametrico-ec (PROD) es petición separada, no ejecutada ni autorizada por esta carga DEV.
+
+Siguiente: **Claude externo, diccionario/modelo; GPT, continuar C3 y coordinar revisión/ventana; RG, validar encargo y decisiones de negocio abiertas.**
