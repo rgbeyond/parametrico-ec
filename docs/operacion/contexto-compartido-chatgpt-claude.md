@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-28 (ficha Compartir y sesión O&M de relevo; §28)
+**Última actualización:** 2026-10-28 (relevo O&M aceptado, decisiones24–36 y propuesta invitado Core; §29)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -9,7 +9,7 @@
 >
 > Alcance: conserva el contenido **operativo y de producto** de la conversación de trabajo Beyond entre RG, ChatGPT y Claude. No contiene razonamiento privado de los modelos, mensajes de sistema, credenciales, secretos ni PII innecesaria de clientes. Tampoco replica conversaciones personales/no relacionadas con el proyecto.
 
-> **Estado vigente:** control maestro y §21–28 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
+> **Estado vigente:** control maestro y §21–29 para OM-EV-ENERLINK/C3a/C3b; protocolo de cierre bilateral en §20. Las referencias anteriores de secuencia son históricas cuando contradigan decisiones posteriores de RG.
 
 ---
 
@@ -749,6 +749,8 @@ Claude debe leer y acusar este cierre al retomar; publicar no prueba recepción.
 
 ## 21. OM-EV-ENERLINK — frente paralelo preparado (27 oct 2026, CDMX)
 
+> **HISTÓRICO al primer registro. Estado vigente en§29.** El rótulo sólo documentación/primer modelo pendiente y el writer externo de esta sección quedaron sustituidos: ya hay proveedor/export/UI EV, decisiones24–36 y relevo aceptado. No interpretarlo como estado operativo actual. Se conservan las decisiones y límites que no hayan sido sustituidos.
+
 Identificador confirmado por GPT. Writer: sesión Claude de RG en claude.ai, sólo `claude/om-ev-enerlink` de `beyond-platform` y `beyond-om`; GPT conserva coordinación/operación DEV y continúa C3 con su Claude local. **Sólo documentación por ahora; implementación no despachada.** No escribir ramas de otro frente ni main, cloud, Auth o secretos.
 
 Fuentes leídas: registro Platform inicial `28a624ec3440a888124d47dc555eeb354b6e2c16`, actualizado **`0baf9a9a64291cc8e4c782dee87141c251d1a257`**; discovery O&M **`e145a42476c829fb0e6d1d8118e4b771ab0bf0d6`**. Bases `6c459cb` / `aa2bf6a`. [Encargo preparado, convivencia, reviewers y preguntas](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/coordinacion-y-encargo-2026-10-27.md); bitácora en Platform#8.
@@ -854,3 +856,33 @@ Siguiente: preparar bootstrap de propietario y política/consumidores de auditor
 - Writer de claude.ai NO liberado: antes de escribir, debe publicar SHAs finales, cambios sin publicar, decisiones/pendientes y referencias privadas sin datos, y liberar escritura. Nueva sesión acusa delta si hay commits nuevos. GPT define encargo mínimo y ventana compartida; no exp_/migraciones/importación/deploy implícitos. No acceso automático al historial del otro chat.
 - Dos frentes en este chat con escritor/ramas separados: Core/Compartir/C3 (beyond-b3-claude) y O&M/Enerlink/alta (beyond-om-enerlink después del relevo). GPT coordina/contexto/issue8/reviewers y una cola para Supabase/publicación DEV; RG producto. Mantener ambos chats abiertos como consulta es compatible, pero no dos escritores sobre la misma rama.
 - [Relevo para cotejar desde el otro chat](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/relevo-sesion-local-2026-10-28.md). Siguiente responsables: RG valida ficha y pide relevo a sesión antigua; GPT reconcilia SHAs finales y encargo; Claude nuevo espera sin implementar.
+
+
+## 29. O&M: sincronía y relevo aceptados; invitado Core propuesto (28 oct)
+
+- Leídos sincronía originala589710, registro hasta§19 y relevo writer en **01ecf9d6285dbf85a033f4ddcd19b5d8fbbf5f36**; O&M **78f17fa137758092e52e691bff657086ec19d6f3** (nuevo desdeacbb741 sólo docs/diseno/validacion-dev/). Pruebas259/259 y80+1omitida reportadas por writer sobreacbb741, no por GPT ni DEV. Ya existe código cliente/export/UI EV local; no sólo documentación. §21 marcado histórico y §28 ownership anterior sustituido.
+- **Ambas ramas LIBERADAS por la sesiónclaude.ai** desde01ecf9d; GPT acepta y asigna continuidad local a beyond-om-enerlink/w5:pB. No pedir liberar otra vez. La sesión nueva acusa delta documental, sigue en plan, árbol local OM-01aa2bf6a sin modificar hasta encargo/branch correcto. No se despachó código/SQL/DEV. Sesión anterior conserva artifacts privados y Drive como dueño, no se presumen trasladados ni acceso al chat completo.
+- Secuencia lógica se conserva: om_ev_01 modelo/RLS, om_ev_02 ingesta/cierres, om_ev_03 reportes/copias, con dependencias C3 efectivas y una cola GPT de operaciones. Claude local implementa código/SQL bajo encargo; GPT único aplicador DEV y coordinador de reviews. No abrir ventana ni reservar timestamps ahora. exp_/view_bank_data fuera sin decisión explícita de alcance.
+- Consolidación íntegra24–36 (ya se habían resumido en§28; la sincronía usó un canónico anterior):
+
+| # | Decisión vigente y su alcance |
+|---|---|
+|24|Sólo estaciones Beyond en O&M/Core; propiedad no confirmada requiere revisión, no atribución automática.|
+|25|Combinar las dos bases Airtable por campo, con trazabilidad y discrepancias visibles, más IDs del CMS.|
+|26|Baja = día de la última sesión, no día siguiente. Conservar historia y aplicar la regla de periodos del registro vigente; la primera §13 quedó sustituida por la segunda de10:35.|
+|27|RG aportó un contrato tipo después del pendiente inicial. Sigue faltando capturar contratos vigentes de las estaciones; no aprobar liquidaciones sin términos.|
+|28|Comisión16% única sobre ventas; Beyond la recibe. La relación con el holding es interna, no comisión adicional al cliente. Base con/sinIVA sigue abierta.|
+|29|Formato de alta universal, adaptable a contratos; nuevos contratos se contrastan contra el catálogo.|
+|30|Estado del campo derivado del valor/nota; la persona decide Validar/No aplica. Quién valida y cuatro ojos siguen por decidir.|
+|31|Datos bancarios dentro del expediente con acceso restringido. `view_bank_data` es propuesta, no capability aplicada.|
+|32|Datos OCPP independientes del CMS; Enerlink es proveedor actual, no supuesto permanente.|
+|33|Expediente como módulo propio/montable, hoy relacionado con O&M y reubicable. `exp_` no entra a migraciones sin decisión explícita de alcance.|
+|34|No doble comisión; cliente recibe remanente después de comisión única y costos. Modelo actualizado; baseIVA no decidida por IA.|
+|35|Contrato revisado es borrador; blancos de firmas/fechas no se señalan como defecto de ejecución.|
+|36|RG descarta/contempla inconveniencia de asociación en participación; propuesta contractual documentada, con figura/facturación final a cargo de Legal/contador. No convertirla en regla fiscal implementada por inferencia.|
+
+
+- Hallazgos nuevos de ingesta/validación: precio_sin_iva/precio_con_iva evitan nombres neto/bruto invertidos del proveedor; corte uptimeUTC inferido; conservar datos de bajas y filtrar indicadores; valores negativos/cero/sesiones abiertas no se corrigen silenciosamente; diferidas/nulas no distinguibles en paquete; discrepancias de energía frente al proveedor sin explicar. Plantilla SQL sin ejecutar; datos/clave HMAC privados, no leer para este acuse. No declarar energía/cobranza conciliadas ni equivalencia a reporte certificado.
+- [Ficha O&M propuesta](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/ficha-dev-2026-10-28.md): objetivo completo5vistas conserva; primer incremento operativo conectado a datos reales, acceso financiero restringido y validación independiente; contratos/liquidaciones/reportes/copias requieren sus hitos y decisiones. No cifras/éxitos ficticios de producto. Pendiente validar con RG y review acotado del código existente antes de implementación.
+- Duda de RG sobre invitado: GPT recomienda **Core limitado** a recursos/apps/secciones autorizados, más entrada directa desde enlace; alternativa sólo recurso/listado compartido. **Propuesta por validar**, no decisión RG ni implementación actual. Sin otras apps/casos/administración/datos globales, sin membresía o nivel automático; autorización servidor común, no sólo menú oculto. C2 actual ofrece publicaciones y listado, no esa experiencia completa. No ampliar concesiones antiguas por cambiar UI. [Detalle](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/shield-01/invitado-core-propuesta-2026-10-28.md).
+- [Recepción del relevo](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/recepcion-relevo-2026-10-28.md). Siguiente: GPT presenta alcance concreto, RG valida producto; Claude nuevo implementa sólo tras encargo/ventana. No implementación DEV arrancada por esta sincronización.
