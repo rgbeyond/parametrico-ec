@@ -947,3 +947,16 @@ Sustituye §33 y anteriores únicamente donde dicen Enerlink pendiente de creden
 16/16API real +28/28navegador real sin mock.30/30gateway, SQL3/3, cache12/12,vendor5/5 y17hashes. Fable real claude-fable-5 revisó sólo código; texto MEDIUM corregido, sin atribuirle screenshots/tests. Probe temporal eliminado. Respaldos anteriores y tags pre-connectors preservados. Cuentas sintéticas se bloquean y limpian con comprobación independiente; detalle definitivo en#8. No main/PROD/Auth por este incremento. La preferencia contractual nivel3/Alpha/Omega sigue vigente; excepciónnivel2 y alertas/capacidad no implementadas.
 
 Siguiente responsable RG valida cargador en uso en DEV; GPT coordina pendientes autónomos/contractuales y otros frentes sin confundirlos con este cierre. Ya no pedir a RG credenciales Enerlink ni repetir descubrimiento del endpoint.
+
+
+## 35. OM-UX-05 aprobado — O&M unificado y telemetría (30 oct 2026, en curso)
+
+RG aprobó la [ficha](om-ev-enerlink/ficha-om-unificado-2026-10-30.md) con «sí, adelante». Sustituye la siguiente acción anterior de sólo validarEV04: Claude implementa portadaO&M→EV/BESS→lista→fichaúnica actual/histórico; gráfico temporal de sesión SoC% y potencia medida si existe, animación sóloCharging+online+fresco y popupaccesible. No reunir todos los equipos abiertos en una megapágina. VínculoProyectoCore opcional. Históricos/cortes/reportes/Paradox se conservan, ejemplos separados.
+
+GPT coordina/revisa/operaciónDEV; Claude beyond-om-enerlink implementa OMclaude/om-ev-enerlink y Platformclaude/om-ev-dev-01. Backup remoto/local backup/om-ux05-pre-20261030→OM854c93c/Platform7d1d9e1; respaldos cifrados anteriores intactos. Fable real claude-fable-5 orientóconceptualmente (modelUsageverificado), no revisiónfinal ni tests/screenshots; reviewers funcional/security/database asignados.
+
+Probe acotado real con accesosexistentes: GETsampled_values/by_transaction devolvió1015muestrascompletas en2páginas999+16, primera másreciente,203SoCvalidasPercent/cadencia10s; ningunaPower.Active.Import en ESA sesiónactiva. No inferir potencia conI×V ni generalizar ausencia a todosequipos. Timestampsnaive de muestras se interpretarán según convenciónUTC observada en códigoCMS `.utc().tz()`; no confirmaciónformalAPI ni cambioa notificacionesdeestado sinzonaverificada. Sondas temporales retiradas; fuentes/pruebas localescommitted Platforma7baf8a/5b53189, aún no pushed.14/14pruebassonda yreviewerseguridad cerró3hallazgos; no valores reales/PII/credenciales enGit.
+
+Objetivo piloto120s con caché/lease compartidos y límite técnico nuestro60peticiones/300s contandoautenticación, retroceso429/fallos; no cuotaformal certificada ni cron24x7. Ventas24h no se danporactuales conhistóricoantiguo. Accesos porrecurso/serviciosesiónviva; no invitadosnuevos niSLA/umbralesprivados. DBmigraciónCLIcreada20261030215038_om_ux05_telemetria.sql ENPREPARACIÓN, NOaplicada. DEV sigueEV04 (ledger45/48tablas,deploy6ae4babc33c54586a3a26abd), sin nuevaUIpublicada. Nomain/PROD/Authconfig porUX05. Otrasramas/frentesintactos.
+
+Siguiente responsable Claude termina código y pruebas; GPT verifica/revisa/Fablefinal y publicaDEV traspasarchecks, entrega liga yregistraSHAs. RG no necesitaintervenirahora; validaráproductoalpublicar. No repetir instalación ni descubrimiento general ni solicitar credenciales.
