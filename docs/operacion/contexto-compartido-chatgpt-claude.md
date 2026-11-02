@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-10-28 (relevo O&M aceptado, decisiones24–36 y propuesta invitado Core; §29)
+**Última actualización:** 2026-11-02 (propuesta OM-UX-06; §36)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -960,3 +960,14 @@ OM8211e235f67f88ba3963625e6278186b972a2ae0 / Platforme86dd0cba1e240238396905a8c2
 Sonda real1015registroscompletos/203SoCvalidas/cadencia10s sinPowerenesasesión; retirada. APIreal16/16 ybrowserreal80/80 sinmock(390/1440,claro/oscuro); backend316+1skip,UI131+1skip,mocks67,SQL23,vendor5/17hashes. Reviewersecurity/database/funcionalAPTO; Fablerealclaude-fable-5cerró0HIGH/MEDIUM porlecturacódigo, no screenshots/testspropios. GPTinspeccionócapturasprivadas.3fixturespropiasretiradasconproofcero sesiones/refresh/perfiles; Auth14/Storage78/hist9968/fixtures0.
 
 Backupremoto/localom-ux05-pre-20261030→OM854c93c/Platform7d1d9e1; cifradosprevios ypaquetes preservados. No main/PROD/Authconfig/rotaciónsecretos/nuevosinvitados/controlremoto niumbralescontractualesporUX05. Nivelescontractuales3/Alpha/Omega conservancriterio, excepción2yalertas/capacidadpendientes. API/cuotaformal, ventasactuales/syncautónoma, C3/Compartir/prevenciónPROD separados. Siguiente RGvalida estaciónenuso yParadox; GPTrecogeretro/priorizapendientes, sin pedir nuevascredencialesniinstalación.
+
+
+## 36. OM-UX-06 — decisiones RG cerradas; propuesta visual para VoBo (2 noviembre 2026)
+
+RG confirma disponibilidad operativa24h (conectividad y bruto mensual diferenciados, sin reemplazar fórmula contractual), tipo de usuario exclusivamente entregado por Enerlink (sin modificar CMS/EMS), ranking inicial energía con selector sesiones/importe según permiso, nombres EV Charging Stations O&M y BESS O&M. Correos/identidad/ranking nivel3/Alpha/Omega con capacidad de servidor; excepciones2 requieren concesión explícita. Tooltips personales opcionales en Settings; estados críticos/cobertura/frescura visibles. Ayuda/tutorial secundario, sin frente paralelo iniciado.
+
+RG solicita acceso Omega propio para validar interfaz. Preparar acto inicial de propietario sóloDEV para identidad/organización verificadas; sin selector de autoelevación ni equivalencia de roles heredados. No acceso concedido, no bootstrap ejecutado: mantener gates C3b/auditoría/frontendFable y delimitar capacidades del acto. La intención ya está autorizada; no repetir pregunta genérica.
+
+[Ficha](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/ficha-ux06-propuesta-2026-11-01.md) y [alcance/aceptación](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/ux06/alcance-producto.md). Propuesta interactiva local de entrada/lista/estación y Settings/BESS con datos ficticios, sin conexión; no funcionalidad entregada en DEV. Funcional revisó alcance; Fable real claude-fable-5 APTO para presentar por lectura, sin pruebas propias; GPT verificó51/51 comprobaciones locales a1024/390/320px e inspeccionó capturas. No equivalen a pruebas API/RLS ni aceptación del producto.
+
+Base DEV permanece OM8211e235, integracióne86dd0cb, deploy6ae57453de70ce6d3998b7ad; ledger46, sin publicación nueva. No código de apps, nube, permisos, datos, secretos, main/PROD ni control remoto por esta preparación. Compartir/C3 integral y prevenciónPROD siguen pendientes independientes. Siguiente RG valida propuesta visual una vez; GPT concreta encargo y coordina reviewers; Claude implementará después. No repetir instalación ni auditoría general.
