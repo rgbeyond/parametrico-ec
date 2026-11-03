@@ -1,7 +1,7 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
 **Estado:** documento vivo obligatorio
-**Última actualización:** 2026-11-02 (propuesta OM-UX-06; §36)
+**Última actualización:** 2026-11-03 (implementación UX06 reanudada; §38)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
 **Espejos:** mismo path en `rgbeyond/propuestas-fv` y `rgbeyond/parametrico-ec`
 
@@ -982,3 +982,14 @@ Monitoreo: tarjetas verticales por cargador con marca/modelo/kW, estado animado 
 Fuente: [alcance R2](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/ux06/alcance-producto.md). Propuesta local con datos ficticios; no conectada ni entregada en DEV. Reviewer funcional revisó criterios; Fable real claude-fable-5 APTO para presentar por lectura, con correcciones de mapa al redimensionar, resumen accesible por cargador y tokens de semáforo integradas por GPT. No se atribuyen capturas/pruebas a Fable.
 
 Siguiente RG revisa preview R2; GPT concreta encargo tras VoBo; Claude implementará aplicaciones con reviewers. Omega solicitado sigue por preparar con gatesC3b; no nueva asignación, migración, nube, datos, permisos, CMS/EMS, secretos, main/PROD ni control remoto. Base DEV UX05 no cambia.
+
+
+## 38. OM-UX-06 — RG ordena reanudar implementación (3 noviembre2026)
+
+RG confirmó retros acumulativas y ordenó reanudar; esto sustituye espera de otro VoBo visual de§36–37. [Encargo](https://github.com/rgbeyond/beyond-platform/blob/claude/infra-claude-code/docs/operacion/om-ev-enerlink/encargo-ux06-2026-11-03.md),9a5a62b y [acuse#8](https://github.com/rgbeyond/beyond-platform/issues/8#issuecomment-6609947146). O&Mwriter beyond-om-enerlink enOMclaude/om-ev-enerlink8211e235; Corewriter beyond-b3-claude enPlatformclaude/om-ev-dev-01e86dd0cb, sin tocarOM/vendor/gateway. Sesiones conservadas, no reinstalación. Tags remotos backup/om-ux06-pre-20261103 enambosrepos fijan esasbases; no nuevo snapshotglobal por tag.
+
+FrontendrealO&M en implementación/review, buildpasa; unitarias hallazgos2 iniciales corregidos/recorridosenvalidación. Coreayudas319f5c0 y B3.0snapshotbb1b125 locales, no desplegados, B3.1/B3.2/B2 pendientes; no cerrar C3b ni asignaciónOmega por documentación. Preferenciaayudas personal por verificar/corregir, no admitirglobalpororigencomoindividual. Reviewersfuncional/servidor detectaron solapamiento mapasesiones, PNGtrasrevocación y sesionesenvivolista; corrección encargada. No resultados finales niFablefinal atribuidos todavía.
+
+Sondaoperador temporalEdgeDEVom-ux06-uptime v1 desplegada,invocadaúnicavezpositiva(3llamadasCMS:login+catálogo+1GETuptime) y eliminada. GateRPCprivilegiado real; negativos401(sinsesión/anon) y400(query),lecturareal200.9/9testsoperador,6/6comprobacionesreales. Forma24h confirmada {Charging,Faulted,Idle,Offline},4stringsnuméricas0..100,suma100a0.1,periodonovacío; sin valores/IDs/PII entrazas. UTCsinZ porconvenciónCMSobservada. Presupuestopreflight noreserva atómica, no afirmarproteccióncuotacompartida deesta sonda;3peticionesextra, sinotraactividadproveedorobservada. SóloquedanEdgeom-livev6ycompartir-avisov5activas. Recursooperativodeproducto,método/cobertura/agregación/caché y ventasrecientes requierenimplementación/review; no100%-Offlinecomooperativa/noSLAcertificado.
+
+BaselineDEVreal46migraciones/última20261031034822,48tablaspúblicas,Auth14,Storage78;10estaciones/15cargadores/24conectores, máximo4conectoresporestación. Estadoobservado,nuevasmigracionescero,preservadosom-livev6yconfigAuth. No main/PROD/secretos/configCMS/controlremoto. SiguienteGPTcierrareviewseintegraciónyoperaDEVcuando pase; Claudecorrige/implementa,RGsinpasotécnicopendiente. No repetirnuevaaprobacióngenéricaRG.
