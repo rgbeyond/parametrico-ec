@@ -993,3 +993,19 @@ FrontendrealO&M en implementación/review, buildpasa; unitarias hallazgos2 inici
 Sondaoperador temporalEdgeDEVom-ux06-uptime v1 desplegada,invocadaúnicavezpositiva(3llamadasCMS:login+catálogo+1GETuptime) y eliminada. GateRPCprivilegiado real; negativos401(sinsesión/anon) y400(query),lecturareal200.9/9testsoperador,6/6comprobacionesreales. Forma24h confirmada {Charging,Faulted,Idle,Offline},4stringsnuméricas0..100,suma100a0.1,periodonovacío; sin valores/IDs/PII entrazas. UTCsinZ porconvenciónCMSobservada. Presupuestopreflight noreserva atómica, no afirmarproteccióncuotacompartida deesta sonda;3peticionesextra, sinotraactividadproveedorobservada. SóloquedanEdgeom-livev6ycompartir-avisov5activas. Recursooperativodeproducto,método/cobertura/agregación/caché y ventasrecientes requierenimplementación/review; no100%-Offlinecomooperativa/noSLAcertificado.
 
 BaselineDEVreal46migraciones/última20261031034822,48tablaspúblicas,Auth14,Storage78;10estaciones/15cargadores/24conectores, máximo4conectoresporestación. Estadoobservado,nuevasmigracionescero,preservadosom-livev6yconfigAuth. No main/PROD/secretos/configCMS/controlremoto. SiguienteGPTcierrareviewseintegraciónyoperaDEVcuando pase; Claudecorrige/implementa,RGsinpasotécnicopendiente. No repetirnuevaaprobacióngenéricaRG.
+
+
+## OM-UX-06 — actualización 2026-11-04: entrega DEV, validación de producto pendiente
+
+Esta entrada sustituye la espera de implementación de UX06 de §38, sin cerrar los frentes pendientes de C3b/Omega.
+
+- Publicado en https://ui-01--beyond-platform-dev.netlify.app/om/ ; deploy `6aebd29f8a3b3611f5dea16e`.
+- O&M `9378530f65179cd26d150ee9c0af3c54d38f3758`: navegación gráfica EV/BESS, tarjetas accionables, cargadores/conectores, monitoreo y estadísticas, paneles movibles, gráficas y disponibilidad operativa 24h. Ayudas personales en Settings desde Core `cd92d82a5dc7b8812f2be00e2a4c690ace5a0c81`.
+- Integración Core/gateway `1430d0005a11ee52e90fe5db11c7aad40a559cb5`; backend OM `06c7e67`. Supabase DEV om-live v7; ledger47, migración `20261104203433_om_ux06_disponibilidad`;48tablas, ACLhelperscerradas, presupuesto60/300 intacto. No B3/Omega aplicado.
+- Disponibilidad: Idle+Charging, ventana24h, promedio de los conectores esperados; incompleto→sin total. Caché compartida15min; revalidación de sesión y catálogo antes de servir, y purga UI ante denegación. No es SLA contractual ni certificación de cobertura.
+- Revisiones Fable5.1 por código y funcional/security independientes. Backend345pass1skip; SQLformal9/9; Core101/101 y71/71. UI194pass1skip antes de última corrección; corrección acotada6/6 y navegador lista/estación pasan. El detalle de versiones y límites está en el informe de cierre.
+- Verificación HTTP: 127 hashes públicos,9rutas y4funciones.97archivos de otras apps idénticos. Se recuperaron118archivos del despliegueUX05; netlify.toml conservado por hash. Funciones reempaquetadas: FIX/Diagnóstico mantienen respuesta503 deliberada de DEV, POWER conserva su fuente y om-live su proxy. No confundir esos503 con una regresión ni declarar dichas integraciones activas.
+- Límites: no se ejecutó validación autenticada con datos reales en este cierre. Pendientes separados: Omega/N3 y permisos de identidad/ranking por correo, sincronización histórica/ventas actuales, revisión de RG sobre estación real y BESS. No se habilita control remoto de equipos.
+- PROD,main,Auth,secreto/configuración de proveedor intactos. Respaldo previo `backup/om-ux06-pre-20261103`, checkpoint de código y definiciones SQL previas preservados. Correcciones mediante nuevo despliegue, no restauración destructiva.
+
+Siguiente responsable: RG revisa recorrido real EV/BESS; GPT verifica datos reales y pendientes de accesos, con Claude como implementador. No se requiere reinstalación ni otro permiso general.
