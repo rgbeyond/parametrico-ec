@@ -1024,3 +1024,16 @@ RG autorizó expresamente la ficha de datos vigentes y correos: «ok si, inicia 
 - Estado: EN IMPLEMENTACIÓN. No publicación ni migración de SYNC01 todavía; DEV conserva UX06. PROD/main/secretos de proveedor intactos.
 
 Siguiente responsable: Claude entrega contratos y cambios aislados; GPT reconcilia y revisa antes de aplicar. Sin intervención de RG pendiente.
+
+
+## OM-SYNC-01 — checkpoint de implementación y revisión conjunta
+
+Estado EN IMPLEMENTACIÓN; no listo para publicar. O&M checkpoint `66b4aff` en beyond-om/claude/om-ev-enerlink, push confirmado. No cambios PROD/main ni activación de cron/migraciones/Edge de SYNC01.
+
+Verificación GPT sobre checkpoint: backend402pass/1skip; UI204pass/1skip;89/89 focalizadas;21/21 navegador estación con datos sintéticos; build correcto. No confundir con aceptación real Enerlink. Propuesta Core aún mutable y no aplicada;20/20 SQL de versión intermedia y27/27 de prerrequisitos B3.0/B2, insuficientes para cierre.
+
+Review independiente y GPT detectaron incompatibilidades reales: booleano coberturaVerificada interpretado como fecha en SQL (22007), estructura de conteos por estado de cobro diferente entre worker y SQL (cuadre falso con totales iguales), y versión de identidad ausente. Los dos primeros reproducidos con PGlite y resumenDia real. También debe avanzar versión fuente ante contenido igual para impedir que otra corrida vieja sobrescriba datos. Writers tienen correcciones y ensayo reproducible; no se requiere otro VoBo RG.
+
+Pendientes: SQL/Core y wrapper real (no stub), payloads alineados y pruebas conjuntas; luego respaldo acotado de datos, migración/cron DEV, habilitación mínima de RG y comparación con Enerlink real. DEV conserva UX06. La consulta agregada sigue mostrando9968sesiones, actualización fuente hasta2026-10-28; el histórico aún NO está actualizado.
+
+Responsables: Claude Core y O&M corrigen en sus superficies; GPT revisa e integra/operará DEV; RG valida producto después. Sin intervención RG pendiente.
