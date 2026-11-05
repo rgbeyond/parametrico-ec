@@ -1009,3 +1009,18 @@ Esta entrada sustituye la espera de implementación de UX06 de §38, sin cerrar 
 - PROD,main,Auth,secreto/configuración de proveedor intactos. Respaldo previo `backup/om-ux06-pre-20261103`, checkpoint de código y definiciones SQL previas preservados. Correcciones mediante nuevo despliegue, no restauración destructiva.
 
 Siguiente responsable: RG revisa recorrido real EV/BESS; GPT verifica datos reales y pendientes de accesos, con Claude como implementador. No se requiere reinstalación ni otro permiso general.
+
+
+## OM-SYNC-01 — aprobado por RG e implementación iniciada
+
+RG autorizó expresamente la ficha de datos vigentes y correos: «ok si, inicia esta implementación». No se necesita repetir VoBo de alcance. Prioridad sobre modificaciones visuales adicionales.
+
+- O&M: sesión Claude beyond-om-enerlink, repo beyond-om rama claude/om-ev-enerlink base9378530. Worker incremental/normalización y UI de estadísticas/sesiones/correos, sin nube.
+- Core/DB: sesión Claude beyond-b3-claude, checkout sh-01/core rama claude/om-ev-dev-01 base1430d00. Propuestas SQL, RLS, contratos RPC y wrapper de worker; no escribe O&M ni aplica DEV.
+- GPT coordina contratos, reviews database/security y funcional, ensayos y operación DEV. RG valida producto final. Reutilizadas ambas sesiones; no reinstalación ni cierre.
+- Respaldo de código: tag backup/om-sync01-pre-20261104 en ambos repos. No equivale a respaldo de datos; antes de migraciones reales corresponde snapshot del ámbito afectado.
+- Base verificada: DEV47migraciones/48tablas; niveles B0/B1 existen, cero asignaciones vigentes. Vault disponible; pg_cron/pg_net aún no instalados. No activar cron ni copiar credenciales hasta revisión de mecanismo cerrado.
+- Objetivo: sesiones finalizadas y estadísticas con sincronización programada15min, reconciliación diaria CDMX; monitoreo120s con muestras persistidas. Correo sólo por capacidad específica + nivel3/Alpha/Omega; invitados y niveles operativos no lo reciben. Habilitación de RG verificada, no bypass.
+- Estado: EN IMPLEMENTACIÓN. No publicación ni migración de SYNC01 todavía; DEV conserva UX06. PROD/main/secretos de proveedor intactos.
+
+Siguiente responsable: Claude entrega contratos y cambios aislados; GPT reconcilia y revisa antes de aplicar. Sin intervención de RG pendiente.
