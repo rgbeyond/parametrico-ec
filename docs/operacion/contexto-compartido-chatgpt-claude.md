@@ -1,5 +1,19 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
+## Estado vigente — OM-SYNC01, 2026-11-06 14:02 CDMX
+
+Esta actualización sustituye únicamente los estados anteriores de OM-SYNC01 «scheduler apagado», «UI pendiente» y bloqueo de autenticación; los demás frentes conservan sus pendientes.
+
+- DEV: ingesta recuperada del 28oct al 5nov, incremental completo sin backlog al cierre; 10262 sesiones y 332 contactos restringidos. Cobertura incremental verificada a las 13:46 CDMX. No se publican correos ni credenciales en documentación.
+- Migraciones DEV: 20261106185328, 20261106192708 y 20261106195713; om-sync v4. Programación activa: sesiones cada 15 min, muestras cada 2 min y conciliación diaria 02:30 CDMX. Primer ciclo automático de muestras 14:02 CDMX: cron succeeded y Edge HTTP200/completa, cero sesiones activas. No confundir ejecución de cron con prueba de curvas persistidas.
+- Seguridad: scheduler con firma ligada a destino/cuerpo, TTL120s y nonce atómico; clave no se encola en pg_net. Reviewer coordinación APTO; 80 pruebas iniciales y 7 enfocadas tras endurecer compensación. Reversión exige detener jobs y esperar caducidad de nonces. No se omitieron controles de permisos.
+- Frontend O&M53974c3 publicado: deploy6aee31ab3e05a8fbe6e1f3f1, [login DEV](https://ui-01--beyond-platform-dev.netlify.app/). Se preservaron 103 archivos externos a /om/ y cuatro funciones Netlify; rutas principales y assets nuevos HTTP200. Core ea81f56 en claude/om-ev-dev-01. Commits O&M locales conservados sin push por instrucción previa; vendor completo versionado en Core.
+- Pendiente de aceptación: navegador autenticado y visualización de correos según nivel+capability; no se elevó a RG a Omega. Falta observar muestras guardadas durante carga activa. om-live v7 conservado; vínculo idBeyond no habilitado. No afirmar aceptación E2E completa.
+- No repetir login CLI, descubrimiento de Enerlink ni carga inicial. No main/PROD ni comandos al EMS. Siguiente responsable GPT: verificar carga activa y aceptación autenticada; RG: validar producto en DEV. Otros frentes y decisiones pendientes no se cierran por esta entrega.
+
+[Evidencia de operación](https://github.com/rgbeyond/beyond-platform/blob/claude/om-ev-dev-01/docs/operacion/om-ev-enerlink/estado-dev-sync01-2026-11-06.md). [Bitácora #8](https://github.com/rgbeyond/beyond-platform/issues/8).
+
+
 **Estado:** documento vivo obligatorio
 **Última actualización:** 2026-11-03 (implementación UX06 reanudada; §38)
 **Copia canónica:** `rgbeyond/beyond-platform`, rama `claude/infra-claude-code`
