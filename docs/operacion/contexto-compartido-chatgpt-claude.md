@@ -1,5 +1,18 @@
 # Contexto canónico compartido — ChatGPT + Claude Code
 
+## Estado vigente — OM-SYNC02, 2026-11-06 22:13 CDMX
+
+Sustituye los pendientes anteriores de curvas reales, aceptación autenticada de gráficas e idBeyond de OM-SYNC01; no cierra otros frentes ni la aceptación de correos con perfil autorizado.
+
+- Gráfica SoC/potencia 20% menos alta, ejes y puntos más discretos, detalle compacto. Lectura de páginas y listado/curva en paralelo; reutilización provisional de lectura reciente del mismo conector sin contacto. Sin benchmark comparable de latencia: no prometer un porcentaje de aceleración.
+- DEV publicado: O&M local `ad473ee`, deploy `6aeea402796c56493e02a23f`; [login](https://ui-01--beyond-platform-dev.netlify.app/). 103 archivos externos a /om/ idénticos y cuatro funciones conservadas. Respaldo: deploy anterior `6aee31ab3e05a8fbe6e1f3f1` y artefacto local OM-SYNC01-20261106/publicacion. Commits O&M permanecen locales por instrucción previa de no push.
+- Validación real: 8140 muestras de ocho sesiones observadas; gráfica histórica persistida y carga activa verificada en Chrome (SoC 27%, 39.2 kW). Conciliación del 5nov completa; incremental completo hasta 6nov22:11 CDMX. Continúan jobs 15min sesiones, 2min muestras, conciliación 02:30 CDMX. Cuotas preservadas.
+- om-live previo real v11, corrige referencia antigua v7. Publicado v12 con vendor O&M53974c3 y OM_LIVE_ID_BEYOND=on sólo DEV. Vínculo positivo comprobado en conector activo y última sesión del otro conector; resolver exacto y sin PII. Core `e4b944a`, cierre `0643e27`, rama claude/om-ev-dev-01.
+- Contactos: cuenta RG muestra «requiere permiso»; no se concedió Omega ni nuevas capacidades. Falta aceptación positiva con perfil autorizado. Seguridad revisada: 19/19 checks del vínculo y 79 checks focales de gráfica/lectura. Suite Claude UI217+1omitida, backend411+1omitida. No afirmar aceptación visual exhaustiva móvil.
+- Sin PROD/main ni comandos al EMS. Siguiente: RG valida presentación en DEV; GPT atiende retro y mantiene pendiente la prueba de contactos autorizados.
+
+[Evidencia de cierre](https://github.com/rgbeyond/beyond-platform/blob/claude/om-ev-dev-01/docs/operacion/om-ev-enerlink/cierre-sync02-2026-11-06.md).
+
 ## Estado vigente — OM-SYNC01, 2026-11-06 14:02 CDMX
 
 Esta actualización sustituye únicamente los estados anteriores de OM-SYNC01 «scheduler apagado», «UI pendiente» y bloqueo de autenticación; los demás frentes conservan sus pendientes.
